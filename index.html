@@ -645,9 +645,10 @@ async function updateUIForLoggedInUser(user) {
   // 嘗試讀取暱稱，沒有就先用 email 前綴
   let displayName = user.email.split('@')[0];
   try {
-    const { data } = await supabaseClient.from('users').select('display_name').eq('id', user.id).single();
+    const { data, error } = await supabaseClient.from('users').select('display_name').eq('id', user.id).single();
+    if (error) console.warn('讀取暱稱失敗:', error.message, error);
     if (data?.display_name) displayName = data.display_name;
-  } catch(e) {}
+  } catch(e) { console.warn('讀取暱稱發生例外:', e); }
 
   document.getElementById('user-email-display').textContent = displayName;
   document.getElementById('user-avatar-initial').textContent = displayName.charAt(0).toUpperCase();
