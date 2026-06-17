@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>個人頁面 - QuizDrop</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+  * { font-family: 'Noto Sans TC', sans-serif; }
+  body { background: #fafaf9; color: #1f1f1f; margin: 0; }
+
+  .topbar {
+    height: 64px; background: rgba(255,255,255,0.92); backdrop-filter: blur(10px);
+    border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; padding: 0 20px; gap: 14px;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .back-btn { display:flex; align-items:center; gap:6px; font-weight:700; font-size:14px; color:#444; text-decoration:none; }
+  .logo { font-weight: 900; font-size: 18px; margin-left: auto; }
+  .logo .drop { color: #ff5da2; }
+
+  .wrap { max-width: 680px; margin: 0 auto; padding: 40px 20px 80px; }
+
+  .profile-card {
+    background: #fff; border-radius: 24px; padding: 32px 28px; margin-bottom: 28px;
+    border: 1px solid #f0f0f0; box-shadow: 0 4px 20px -8px rgba(0,0,0,0.06);
+  }
+
+  .avatar-big {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: linear-gradient(120deg,#ff5da2,#ff8a5c); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; font-weight: 800; margin-bottom: 16px;
+  }
+
+  .field-label { font-size: 12px; font-weight: 700; color: #999; margin-bottom: 6px; display:block; }
+  .input-field {
+    width: 100%; padding: 12px 16px; border-radius: 12px; border: 1.5px solid #ececec;
+    font-size: 14.5px; margin-bottom: 16px; outline: none; transition: border-color .2s;
+  }
+  .input-field:focus { border-color: #ff8aae; }
+  .input-field:disabled { background: #f7f7f7; color: #999; }
+
+  .btn-save {
+    padding: 12px 28px; border-radius: 99px; background: linear-gradient(120deg,#ff5da2,#ff8a5c);
+    color: #fff; font-weight: 800; border: none; cursor: pointer; font-size: 14px; transition: opacity .2s;
+  }
+  .btn-save:hover { opacity: 0.9; }
+  .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .save-msg { font-size: 13px; padding: 8px 0; display: none; }
+  .save-msg.success { color: #2da44e; display: block; }
+  .save-msg.error { color: #d83b3b; display: block; }
+
+  .section-title { font-size: 18px; font-weight: 900; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+
+  .history-item {
+    background: #fff; border: 1px solid #f0f0f0; border-radius: 16px; padding: 18px 20px;
+    display: flex; align-items: center; gap: 14px; margin-bottom: 10px; transition: all .2s;
+  }
+  .history-item:hover { box-shadow: 0 6px 16px -6px rgba(0,0,0,0.08); }
+  .history-emoji { font-size: 28px; flex-shrink: 0; }
+  .history-info { flex: 1; }
+  .history-title { font-weight: 700; font-size: 14.5px; }
+  .history-result { font-size: 13px; color: #ff5da2; font-weight: 600; margin-top: 2px; }
+  .history-date { font-size: 11.5px; color: #bbb; margin-top: 2px; }
+
+  .empty-state { text-align: center; padding: 50px 20px; color: #bbb; }
+  .empty-state .emoji { font-size: 44px; margin-bottom: 12px; display: block; }
+
+  .login-required { text-align: center; padding: 80px 20px; }
+  .login-required .emoji { font-size: 56px; margin-bottom: 16px; display: block; }
+  .login-required h2 { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+  .login-required p { color: #999; font-size: 14px; margin-bottom: 24px; }
+  .login-required a {
+    display: inline-block; padding: 13px 32px; border-radius: 99px;
+    background: linear-gradient(120deg,#ff5da2,#ff8a5c); color: #fff; font-weight: 800;
+    text-decoration: none; font-size: 14.5px;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="index.html" class="back-btn">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    回首頁
+  </a>
+  <div class="logo">Quiz<span class="drop">Drop</span></div>
+</div>
+
+<div class="wrap">
+
+  <!-- Not logged in state -->
+  <div id="login-required-view" class="login-required hidden">
+    <span class="emoji">🔒</span>
+    <h2>請先登入</h2>
+    <p>登入後才能查看你的個人頁面與測驗紀錄</p>
+    <a href="index.html">回首頁登入 →</a>
+  </div>
+
+  <!-- Logged in state -->
+  <div id="profile-view" class="hidden">
+
+    <div class="profile-card">
+      <div class="avatar-big" id="avatar-initial">U</div>
+      <label class="field-label">暱稱</label>
+      <input type="text" class="input-field" id="nickname-input" maxlength="20" />
+
+      <label class="field-label">Email</label>
+      <input type="text" class="input-field" id="email-display" disabled />
+
+      <button class="btn-save" onclick="saveProfile()" id="save-btn">儲存變更</button>
+      <div class="save-msg" id="save-msg"></div>
+    </div>
+
+    <div class="section-title">📜 我的測驗紀錄</div>
+    <div id="history-list">
+      <div class="empty-state">
+        <span class="emoji">🌱</span>
+        載入中...
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+const SUPABASE_URL = 'https://xsflpzozgdgbtrtdzdlj.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzZmxwem96Z2RnYnRydGR6ZGxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTMyMzUsImV4cCI6MjA5NzE4OTIzNX0.Uyi5dYa73h0JJ9KwT2bP0C79wV_H-PoYneiR5xsbT6I';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUser = null;
+
+async function init() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+
+  if (!session) {
+    document.getElementById('login-required-view').classList.remove('hidden');
+    document.getElementById('profile-view').classList.add('hidden');
+    return;
+  }
+
+  currentUser = session.user;
+  document.getElementById('login-required-view').classList.add('hidden');
+  document.getElementById('profile-view').classList.remove('hidden');
+
+  // 載入 users 表的資料（暱稱）
+  const { data: userRow, error } = await supabaseClient
+    .from('users')
+    .select('display_name, email')
+    .eq('id', currentUser.id)
+    .single();
+
+  const displayName = userRow?.display_name || currentUser.email.split('@')[0];
+  document.getElementById('nickname-input').value = displayName;
+  document.getElementById('email-display').value = currentUser.email;
+  document.getElementById('avatar-initial').textContent = displayName.charAt(0).toUpperCase();
+
+  loadHistory();
+}
+
+async function saveProfile() {
+  const nickname = document.getElementById('nickname-input').value.trim();
+  const btn = document.getElementById('save-btn');
+  const msg = document.getElementById('save-msg');
+
+  if (!nickname) {
+    msg.textContent = '暱稱不能空白';
+    msg.className = 'save-msg error';
+    return;
+  }
+
+  btn.disabled = true;
+  try {
+    const { error } = await supabaseClient
+      .from('users')
+      .update({ display_name: nickname })
+      .eq('id', currentUser.id);
+
+    if (error) throw error;
+
+    msg.textContent = '已儲存！';
+    msg.className = 'save-msg success';
+    document.getElementById('avatar-initial').textContent = nickname.charAt(0).toUpperCase();
+  } catch (err) {
+    msg.textContent = '儲存失敗：' + err.message;
+    msg.className = 'save-msg error';
+  } finally {
+    btn.disabled = false;
+    setTimeout(() => { msg.style.display = 'none'; }, 3000);
+  }
+}
+
+async function loadHistory() {
+  const listEl = document.getElementById('history-list');
+
+  const { data, error } = await supabaseClient
+    .from('quiz_results')
+    .select('result_label, result_title, played_at, quiz_id, quizzes(title)')
+    .eq('user_id', currentUser.id)
+    .order('played_at', { ascending: false });
+
+  if (error || !data || data.length === 0) {
+    listEl.innerHTML = `
+      <div class="empty-state">
+        <span class="emoji">🌱</span>
+        還沒有測驗紀錄，去玩第一個測驗吧！
+      </div>
+    `;
+    return;
+  }
+
+  listEl.innerHTML = data.map(item => {
+    const date = new Date(item.played_at).toLocaleDateString('zh-TW', { year:'numeric', month:'long', day:'numeric' });
+    const quizTitle = item.quizzes?.title || '未知測驗';
+    return `
+      <div class="history-item">
+        <span class="history-emoji">✨</span>
+        <div class="history-info">
+          <div class="history-title">${escapeHtml(quizTitle)}</div>
+          <div class="history-result">結果：${escapeHtml(item.result_title || item.result_label)}</div>
+          <div class="history-date">${date}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// XSS 防護：簡單轉義特殊字元
+function escapeHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+init();
+</script>
+</body>
+</html>

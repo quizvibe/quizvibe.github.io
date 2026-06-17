@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>驗證成功 - QuizDrop</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+  * { font-family: 'Noto Sans TC', sans-serif; }
+  body {
+    background: linear-gradient(160deg, #fff 0%, #fff5f8 100%);
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    margin: 0; padding: 20px;
+  }
+  .card {
+    background: #fff; border-radius: 28px; padding: 48px 36px; max-width: 420px; width: 100%;
+    text-align: center; box-shadow: 0 24px 60px -12px rgba(0,0,0,0.12); border: 1px solid #f5f5f5;
+  }
+  .icon-wrap {
+    width: 84px; height: 84px; border-radius: 50%;
+    background: linear-gradient(120deg,#ff5da2,#ff8a5c);
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 22px;
+    box-shadow: 0 12px 30px -6px rgba(255,93,162,0.5);
+    animation: pop 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes pop { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  .title { font-size: 24px; font-weight: 900; margin-bottom: 8px; }
+  .sub { color: #999; font-size: 14px; line-height: 1.7; margin-bottom: 28px; }
+  .btn-go {
+    display: inline-block; padding: 14px 36px; border-radius: 99px;
+    background: linear-gradient(120deg,#ff5da2,#ff8a5c); color: #fff; font-weight: 800;
+    text-decoration: none; font-size: 15px; transition: transform .2s;
+  }
+  .btn-go:hover { transform: translateY(-2px); }
+  .loading { color: #bbb; font-size: 13px; margin-top: 16px; }
+  .error-box { background: #fff0f0; color: #d83b3b; padding: 14px 18px; border-radius: 12px; font-size: 13.5px; margin-bottom: 20px; text-align: left; display: none; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div id="success-view">
+    <div class="icon-wrap">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </div>
+    <div class="title">驗證成功！</div>
+    <p class="sub">你的帳號已經啟用了，歡迎加入 QuizDrop 🎉<br>準備好找到今天的答案了嗎？</p>
+    <a href="index.html" class="btn-go">開始探索測驗 →</a>
+    <p class="loading" id="redirect-note"></p>
+  </div>
+
+  <div id="error-view" class="hidden">
+    <div class="icon-wrap" style="background:linear-gradient(120deg,#999,#bbb)">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </div>
+    <div class="title">驗證連結已失效</div>
+    <p class="sub">這個連結可能已經過期或被使用過了。<br>請回到首頁重新註冊或直接登入。</p>
+    <a href="index.html" class="btn-go">回到首頁 →</a>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://xsflpzozgdgbtrtdzdlj.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzZmxwem96Z2RnYnRydGR6ZGxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTMyMzUsImV4cCI6MjA5NzE4OTIzNX0.Uyi5dYa73h0JJ9KwT2bP0C79wV_H-PoYneiR5xsbT6I';
+
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Supabase 驗證連結點擊後，token 會在 URL hash 或 query string 中
+// supabase-js 會自動處理 session，我們只需要檢查是否成功取得 session
+async function checkVerification() {
+  const { data: { session }, error } = await supabaseClient.auth.getSession();
+
+  if (session) {
+    document.getElementById('success-view').classList.remove('hidden');
+    document.getElementById('error-view').classList.add('hidden');
+    // 3 秒後自動跳轉回主頁
+    let count = 3;
+    const note = document.getElementById('redirect-note');
+    const interval = setInterval(() => {
+      note.textContent = `${count} 秒後自動跳轉...`;
+      count--;
+      if (count < 0) {
+        clearInterval(interval);
+        window.location.href = 'index.html';
+      }
+    }, 1000);
+  } else {
+    document.getElementById('success-view').classList.add('hidden');
+    document.getElementById('error-view').classList.remove('hidden');
+  }
+}
+
+checkVerification();
+</script>
+</body>
+</html>
