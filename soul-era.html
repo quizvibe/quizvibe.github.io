@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>你是哪個時代的靈魂？</title>
+<meta name="description" content="12題測出你的靈魂屬於哪個時代！你是古代武士、文藝復興天才，還是未來探索者？">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+  :root{--bg:#0c1220;--bg2:#121a2e;--card:#1a2340;--accent:#4ecdc4;--accent2:#a8e6cf;--gold:#f5c842;--text:#e8f4ff;--muted:#7a9ab0;--radius:16px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 60px;}
+  body.lang-ja{font-family:'Noto Sans JP',sans-serif;}
+  .lang-bar{position:fixed;top:12px;right:16px;display:flex;gap:6px;z-index:999;}
+  .lang-btn{background:var(--card);border:1px solid rgba(78,205,196,0.25);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:13px;cursor:pointer;transition:all .18s;font-family:inherit;}
+  .lang-btn.active{background:rgba(78,205,196,0.18);border-color:var(--accent);color:var(--accent);}
+  .hero{text-align:center;padding:56px 16px 32px;max-width:600px;}
+  .hero-emoji{font-size:56px;display:block;margin-bottom:16px;animation:float 3s ease-in-out infinite;}
+  @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+  .hero h1{font-size:clamp(20px,5vw,30px);font-weight:700;line-height:1.3;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px;}
+  .hero p{color:var(--muted);font-size:15px;line-height:1.7;}
+  .progress-wrap{width:100%;max-width:560px;margin:24px auto 0;}
+  .progress-bar{height:4px;background:var(--card);border-radius:99px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width .4s ease;width:0%;}
+  .progress-label{font-size:12px;color:var(--muted);margin-top:6px;text-align:right;}
+  .quiz-card{background:var(--card);border:1px solid rgba(78,205,196,0.15);border-radius:var(--radius);padding:32px 28px;max-width:560px;width:100%;margin-top:28px;}
+  .q-num{font-size:12px;color:var(--accent);font-weight:500;letter-spacing:.08em;margin-bottom:8px;}
+  .q-text{font-size:18px;font-weight:600;line-height:1.5;margin-bottom:24px;}
+  .options{display:flex;flex-direction:column;gap:10px;}
+  .opt{background:var(--bg2);border:1.5px solid rgba(78,205,196,0.1);border-radius:12px;padding:14px 18px;cursor:pointer;font-size:15px;line-height:1.5;transition:all .18s;text-align:left;color:var(--text);display:flex;align-items:center;gap:12px;font-family:inherit;}
+  .opt:hover{border-color:var(--accent);background:rgba(78,205,196,0.08);transform:translateX(4px);}
+  .opt.selected{border-color:var(--accent);background:rgba(78,205,196,0.15);transform:translateX(4px);}
+  .opt-icon{font-size:20px;flex-shrink:0;}
+  .btn-next{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0c1220;border:none;border-radius:12px;padding:15px 36px;font-size:16px;font-weight:700;cursor:pointer;margin-top:24px;width:100%;transition:opacity .2s,transform .2s;font-family:inherit;opacity:.4;pointer-events:none;}
+  .btn-next.active{opacity:1;pointer-events:all;}
+  .btn-next.active:hover{transform:translateY(-2px);}
+  .result-card{background:var(--card);border:1px solid rgba(78,205,196,0.2);border-radius:var(--radius);padding:40px 28px;max-width:560px;width:100%;margin-top:28px;text-align:center;display:none;}
+  .result-emoji{font-size:80px;display:block;margin-bottom:16px;}
+  .result-title{font-size:28px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;}
+  .result-subtitle{color:var(--gold);font-size:14px;font-weight:500;margin-bottom:20px;}
+  .result-desc{color:var(--muted);font-size:15px;line-height:1.75;margin-bottom:24px;text-align:left;}
+  .trait-wrap{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:28px;}
+  .trait{background:rgba(78,205,196,0.12);border:1px solid rgba(78,205,196,0.25);color:var(--accent);font-size:13px;padding:5px 14px;border-radius:99px;font-weight:500;}
+  .share-title{font-size:13px;color:var(--muted);margin-bottom:12px;}
+  .share-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
+  .share-btn{border:none;border-radius:12px;padding:12px 10px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .2s,transform .2s;font-family:inherit;}
+  .share-btn:hover{opacity:.85;transform:translateY(-2px);}
+  .btn-twitter{background:#000;color:#fff;}
+  .btn-line{background:#06C755;color:#fff;}
+  .btn-fb{background:#1877F2;color:#fff;}
+  .btn-copy{background:var(--bg2);color:var(--text);border:1.5px solid rgba(78,205,196,0.3);}
+  .btn-retry{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0c1220;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;transition:opacity .2s;}
+  #start-screen{max-width:560px;width:100%;margin-top:28px;text-align:center;}
+  .btn-start{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0c1220;border:none;border-radius:14px;padding:18px 48px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;transition:transform .2s;box-shadow:0 8px 32px rgba(78,205,196,.25);}
+  .btn-start:hover{transform:translateY(-3px);}
+  .notice{color:var(--muted);font-size:13px;margin-top:14px;}
+  .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--accent);color:#0c1220;padding:10px 24px;border-radius:99px;font-size:14px;font-weight:600;opacity:0;transition:all .3s;pointer-events:none;z-index:9999;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .home-link{margin-top:24px;text-align:center;}
+  .home-link a{color:var(--muted);font-size:13px;text-decoration:none;border-bottom:1px solid rgba(122,154,176,0.3);padding-bottom:2px;}
+</style>
+</head>
+<body>
+<div class="lang-bar">
+  <button class="lang-btn active" onclick="setLang('zh')">中文</button>
+  <button class="lang-btn" onclick="setLang('ja')">日本語</button>
+  <button class="lang-btn" onclick="setLang('en')">EN</button>
+</div>
+<div class="hero">
+  <span class="hero-emoji">⏳</span>
+  <h1 id="hero-title"></h1>
+  <p id="hero-sub"></p>
+</div>
+<div id="start-screen">
+  <button class="btn-start" onclick="startQuiz()" id="btn-start-label"></button>
+  <p class="notice" id="notice-label"></p>
+</div>
+<div class="progress-wrap" id="progress-wrap" style="display:none">
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  <div class="progress-label" id="progress-label"></div>
+</div>
+<div class="quiz-card" id="quiz-card" style="display:none">
+  <div class="q-num" id="q-num"></div>
+  <div class="q-text" id="q-text"></div>
+  <div class="options" id="options"></div>
+  <button class="btn-next" id="btn-next" onclick="nextQ()"></button>
+</div>
+<div class="result-card" id="result-card">
+  <span class="result-emoji" id="r-emoji"></span>
+  <div class="result-title" id="r-title"></div>
+  <div class="result-subtitle" id="r-subtitle"></div>
+  <div class="result-desc" id="r-desc"></div>
+  <div class="trait-wrap" id="r-traits"></div>
+  <p class="share-title" id="share-label"></p>
+  <div class="share-grid">
+    <button class="share-btn btn-twitter" onclick="shareTwitter()">𝕏 Twitter / X</button>
+    <button class="share-btn btn-line" onclick="shareLine()">💬 LINE</button>
+    <button class="share-btn btn-fb" onclick="shareFacebook()">📘 Facebook</button>
+    <button class="share-btn btn-copy" onclick="copyResult()" id="btn-copy-label"></button>
+  </div>
+  <button class="btn-retry" onclick="retry()" id="btn-retry-label"></button>
+  <div class="home-link"><a href="index.html" id="home-link-label"></a></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const i18n={
+  zh:{title:"你是哪個時代的靈魂？",sub:"12題測出你靈魂真正屬於的年代\n古代武士？文藝復興天才？還是未來探索者？",start:"開始測驗 →",notice:"共 12 題 · 約 3 分鐘",qLabel:(c,t)=>`問題 ${c} / ${t}`,next:"下一題 →",finish:"查看結果 ✨",shareLabel:"分享你的時代靈魂",copy:"📋 複製",copied:"已複製！",retry:"再測一次",home:"← 回首頁",pLabel:(c,t)=>`${c} / ${t}`,shareText:(e,ti,su)=>`⏳ 我是「${e} ${ti}」的靈魂！(${su})\n快來測測你屬於哪個時代！`},
+  ja:{title:"あなたの魂はどの時代に属する？",sub:"12の質問で魂が本当に属する時代を診断\n古代の武士？ルネサンスの天才？未来の探求者？",start:"テストを始める →",notice:"全12問 · 約3分",qLabel:(c,t)=>`質問 ${c} / ${t}`,next:"次へ →",finish:"結果を見る ✨",shareLabel:"結果をシェア",copy:"📋 コピー",copied:"コピーしました！",retry:"もう一度",home:"← ホームへ",pLabel:(c,t)=>`${c} / ${t}`,shareText:(e,ti,su)=>`⏳ 私は「${e} ${ti}」の魂！(${su})\nあなたも試してみて！`},
+  en:{title:"Which Era Does Your Soul Belong To?",sub:"12 questions to reveal your soul's true time period\nAncient warrior? Renaissance genius? Future explorer?",start:"Start Quiz →",notice:"12 questions · About 3 min",qLabel:(c,t)=>`Question ${c} / ${t}`,next:"Next →",finish:"See Result ✨",shareLabel:"Share your soul era",copy:"📋 Copy",copied:"Copied!",retry:"Try Again",home:"← Back to Home",pLabel:(c,t)=>`${c} / ${t}`,shareText:(e,ti,su)=>`⏳ I'm a "${e} ${ti}" soul! (${su})\nFind out which era you belong to!`}
+};
+const questions={
+  zh:[
+    {text:"你最嚮往哪種生活方式？",opts:[{icon:"⚔️",text:"用自己的力量守護重要的人",scores:{ancient:2,medieval:1}},{icon:"🎨",text:"探索藝術與知識，留下偉大作品",scores:{renaissance:2,enlighten:1}},{icon:"🏭",text:"用科技改變世界，創造新事物",scores:{industrial:2,modern:1}},{icon:"🚀",text:"突破極限，探索未知的疆域",scores:{future:2,modern:1}}]},
+    {text:"你的決策方式是？",opts:[{icon:"🧭",text:"憑直覺與經驗，果斷行動",scores:{ancient:2,medieval:1}},{icon:"📚",text:"廣泛研究後理性判斷",scores:{renaissance:2,enlighten:1}},{icon:"📊",text:"用數據和效率評估",scores:{industrial:2,modern:1}},{icon:"🧪",text:"大膽假設、小心求證",scores:{future:2,enlighten:1}}]},
+    {text:"你理想中的英雄形象是？",opts:[{icon:"🗡️",text:"武藝精湛、重情重義的俠客",scores:{ancient:2,medieval:1}},{icon:"🧑‍🎨",text:"才華橫溢、思想超前的藝術家",scores:{renaissance:2,enlighten:1}},{icon:"🔧",text:"改變時代的發明家或企業家",scores:{industrial:2,modern:1}},{icon:"🌌",text:"跨越星際的宇宙探索者",scores:{future:2,modern:1}}]},
+    {text:"遇到衝突你會怎麼解決？",opts:[{icon:"⚔️",text:"直接面對，以強制強",scores:{ancient:2,medieval:1}},{icon:"💬",text:"用智慧和辯才說服對方",scores:{renaissance:1,enlighten:2}},{icon:"📋",text:"制定規則，按程序來",scores:{industrial:2,modern:1}},{icon:"🤝",text:"尋求創新共識，共同進化",scores:{future:2,modern:1}}]},
+    {text:"你最珍視什麼？",opts:[{icon:"🏯",text:"榮譽、忠誠與傳承",scores:{ancient:2,medieval:1}},{icon:"🎭",text:"美、真理與人文精神",scores:{renaissance:2,enlighten:1}},{icon:"💰",text:"效率、進步與實際成果",scores:{industrial:2,modern:1}},{icon:"🌐",text:"連結、自由與無限可能",scores:{future:2,modern:1}}]},
+    {text:"你對自然的態度是？",opts:[{icon:"🌿",text:"與自然共存，敬畏天地",scores:{ancient:2,medieval:1}},{icon:"🔭",text:"觀察自然，發現其中的規律",scores:{renaissance:2,enlighten:1}},{icon:"🏗️",text:"利用自然，建造更好的世界",scores:{industrial:2,modern:1}},{icon:"♻️",text:"修復自然，人與地球共同進化",scores:{future:2,modern:1}}]},
+    {text:"你最想擁有的技能是？",opts:[{icon:"🥋",text:"超凡的武藝或生存技能",scores:{ancient:2,medieval:1}},{icon:"✍️",text:"能寫詩作畫、精通多種藝術",scores:{renaissance:2,enlighten:1}},{icon:"⚙️",text:"設計機器、掌握工業技術",scores:{industrial:2,modern:1}},{icon:"💻",text:"掌握未來科技、AI或星際旅行",scores:{future:2,modern:1}}]},
+    {text:"你對「規則」的看法是？",opts:[{icon:"⚖️",text:"規則即道德，必須遵守",scores:{ancient:1,medieval:2}},{icon:"📖",text:"規則應該服從於理性與真理",scores:{enlighten:2,renaissance:1}},{icon:"🏛️",text:"規則是效率的基礎，需要優化",scores:{industrial:2,modern:1}},{icon:"🔓",text:"規則是用來被打破和重建的",scores:{future:2,modern:1}}]},
+    {text:"你的溝通風格是？",opts:[{icon:"🏹",text:"簡潔有力，言出必行",scores:{ancient:2,medieval:1}},{icon:"🗣️",text:"辯才無礙，喜歡辯論和討論",scores:{renaissance:1,enlighten:2}},{icon:"📰",text:"邏輯清晰，注重事實與效率",scores:{industrial:2,modern:1}},{icon:"🌐",text:"跨文化、多媒體、全球視野",scores:{future:2,modern:1}}]},
+    {text:"你夢想中的住所是？",opts:[{icon:"🏯",text:"雄偉的城堡或山中的道場",scores:{ancient:2,medieval:1}},{icon:"🏛️",text:"義大利文藝復興風格的宮殿庭院",scores:{renaissance:2,enlighten:1}},{icon:"🏭",text:"工業風閣樓，充滿機械與設計感",scores:{industrial:2,modern:1}},{icon:"🛸",text:"懸浮在雲端的未來智慧住宅",scores:{future:2,modern:1}}]},
+    {text:"你最嚮往哪種榮耀？",opts:[{icon:"🏆",text:"戰場上的勝利與英雄傳說",scores:{ancient:2,medieval:1}},{icon:"🎨",text:"留下千古傳頌的偉大作品",scores:{renaissance:2,enlighten:1}},{icon:"🏭",text:"建立改變世界的企業或發明",scores:{industrial:2,modern:1}},{icon:"🚀",text:"第一個踏上新星球或發現新文明",scores:{future:2,modern:1}}]},
+    {text:"如果你能回到過去或前往未來，你會選擇？",opts:[{icon:"🗡️",text:"古代：成為傳奇武士或國王",scores:{ancient:2,medieval:1}},{icon:"🎭",text:"文藝復興：與達文西共事",scores:{renaissance:2,enlighten:1}},{icon:"🔧",text:"工業革命：改變人類文明進程",scores:{industrial:2,modern:1}},{icon:"🌌",text:"未來：探索宇宙的盡頭",scores:{future:2,modern:1}}]}
+  ],
+  ja:[
+    {text:"最も憧れるライフスタイルは？",opts:[{icon:"⚔️",text:"力で大切な人を守る",scores:{ancient:2,medieval:1}},{icon:"🎨",text:"芸術と知識を探求し偉大な作品を残す",scores:{renaissance:2,enlighten:1}},{icon:"🏭",text:"技術で世界を変え新しいものを作る",scores:{industrial:2,modern:1}},{icon:"🚀",text:"限界を超えて未知の領域を探索する",scores:{future:2,modern:1}}]},
+    {text:"意思決定の方法は？",opts:[{icon:"🧭",text:"直感と経験で果断に動く",scores:{ancient:2,medieval:1}},{icon:"📚",text:"広く研究して理性的に判断する",scores:{renaissance:2,enlighten:1}},{icon:"📊",text:"データと効率で評価する",scores:{industrial:2,modern:1}},{icon:"🧪",text:"大胆に仮説を立て慎重に検証する",scores:{future:2,enlighten:1}}]},
+    {text:"理想のヒーロー像は？",opts:[{icon:"🗡️",text:"武芸に秀でた義理堅い侠客",scores:{ancient:2,medieval:1}},{icon:"🧑‍🎨",text:"才能あふれる先進的な芸術家",scores:{renaissance:2,enlighten:1}},{icon:"🔧",text:"時代を変えた発明家や起業家",scores:{industrial:2,modern:1}},{icon:"🌌",text:"星間を旅する宇宙探検家",scores:{future:2,modern:1}}]},
+    {text:"衝突が起きたとき、どう解決する？",opts:[{icon:"⚔️",text:"正面から向き合い力で解決",scores:{ancient:2,medieval:1}},{icon:"💬",text:"知恵と弁舌で相手を説得",scores:{renaissance:1,enlighten:2}},{icon:"📋",text:"ルールを作り手順通りに",scores:{industrial:2,modern:1}},{icon:"🤝",text:"革新的な合意を探し共に進化",scores:{future:2,modern:1}}]},
+    {text:"最も大切にしているものは？",opts:[{icon:"🏯",text:"名誉・忠誠・伝統",scores:{ancient:2,medieval:1}},{icon:"🎭",text:"美・真理・人文精神",scores:{renaissance:2,enlighten:1}},{icon:"💰",text:"効率・進歩・実際の成果",scores:{industrial:2,modern:1}},{icon:"🌐",text:"繋がり・自由・無限の可能性",scores:{future:2,modern:1}}]},
+    {text:"自然への姿勢は？",opts:[{icon:"🌿",text:"自然と共存し天地を敬う",scores:{ancient:2,medieval:1}},{icon:"🔭",text:"自然を観察しその法則を発見する",scores:{renaissance:2,enlighten:1}},{icon:"🏗️",text:"自然を活用しより良い世界を作る",scores:{industrial:2,modern:1}},{icon:"♻️",text:"自然を修復し人と地球が共進化",scores:{future:2,modern:1}}]},
+    {text:"最も持ちたいスキルは？",opts:[{icon:"🥋",text:"卓越した武術や生存技能",scores:{ancient:2,medieval:1}},{icon:"✍️",text:"詩や絵など多芸多才",scores:{renaissance:2,enlighten:1}},{icon:"⚙️",text:"機械設計や工業技術",scores:{industrial:2,modern:1}},{icon:"💻",text:"未来技術・AIや宇宙旅行",scores:{future:2,modern:1}}]},
+    {text:"「ルール」についての考えは？",opts:[{icon:"⚖️",text:"ルールは道徳、必ず守るべき",scores:{ancient:1,medieval:2}},{icon:"📖",text:"ルールは理性と真理に従うべき",scores:{enlighten:2,renaissance:1}},{icon:"🏛️",text:"ルールは効率の基盤、最適化が必要",scores:{industrial:2,modern:1}},{icon:"🔓",text:"ルールは破られ再構築されるもの",scores:{future:2,modern:1}}]},
+    {text:"コミュニケーションスタイルは？",opts:[{icon:"🏹",text:"簡潔で力強く、言葉に責任を持つ",scores:{ancient:2,medieval:1}},{icon:"🗣️",text:"弁舌爽やか、議論と討論が好き",scores:{renaissance:1,enlighten:2}},{icon:"📰",text:"論理的で事実と効率を重視",scores:{industrial:2,modern:1}},{icon:"🌐",text:"クロスカルチャー・マルチメディア",scores:{future:2,modern:1}}]},
+    {text:"夢の住まいは？",opts:[{icon:"🏯",text:"壮大な城や山中の道場",scores:{ancient:2,medieval:1}},{icon:"🏛️",text:"イタリアのルネサンス様式の宮殿",scores:{renaissance:2,enlighten:1}},{icon:"🏭",text:"機械とデザインに満ちた工業系ロフト",scores:{industrial:2,modern:1}},{icon:"🛸",text:"雲の上に浮かぶ未来型スマートハウス",scores:{future:2,modern:1}}]},
+    {text:"最も憧れる栄誉は？",opts:[{icon:"🏆",text:"戦場での勝利と英雄譚",scores:{ancient:2,medieval:1}},{icon:"🎨",text:"後世に語り継がれる偉大な作品",scores:{renaissance:2,enlighten:1}},{icon:"🏭",text:"世界を変えた企業や発明の設立",scores:{industrial:2,modern:1}},{icon:"🚀",text:"新星や新文明を最初に発見",scores:{future:2,modern:1}}]},
+    {text:"過去に戻るか未来へ行くか選べるなら？",opts:[{icon:"🗡️",text:"古代：伝説の武士や王になる",scores:{ancient:2,medieval:1}},{icon:"🎭",text:"ルネサンス：ダ・ヴィンチと共に",scores:{renaissance:2,enlighten:1}},{icon:"🔧",text:"産業革命：人類文明を変える",scores:{industrial:2,modern:1}},{icon:"🌌",text:"未来：宇宙の果てを探索",scores:{future:2,modern:1}}]}
+  ],
+  en:[
+    {text:"What lifestyle appeals to you most?",opts:[{icon:"⚔️",text:"Protecting those I love through strength and courage",scores:{ancient:2,medieval:1}},{icon:"🎨",text:"Exploring art and knowledge, leaving a great legacy",scores:{renaissance:2,enlighten:1}},{icon:"🏭",text:"Using technology to change the world",scores:{industrial:2,modern:1}},{icon:"🚀",text:"Breaking limits and exploring the unknown",scores:{future:2,modern:1}}]},
+    {text:"How do you make decisions?",opts:[{icon:"🧭",text:"Gut feeling and experience — act decisively",scores:{ancient:2,medieval:1}},{icon:"📚",text:"Research widely, then reason carefully",scores:{renaissance:2,enlighten:1}},{icon:"📊",text:"Evaluate with data and efficiency",scores:{industrial:2,modern:1}},{icon:"🧪",text:"Bold hypotheses, careful testing",scores:{future:2,enlighten:1}}]},
+    {text:"Your ideal hero figure is…",opts:[{icon:"🗡️",text:"A loyal warrior of unmatched skill",scores:{ancient:2,medieval:1}},{icon:"🧑‍🎨",text:"A brilliant, ahead-of-their-time artist",scores:{renaissance:2,enlighten:1}},{icon:"🔧",text:"An inventor or entrepreneur who changed civilization",scores:{industrial:2,modern:1}},{icon:"🌌",text:"An interstellar explorer of the cosmos",scores:{future:2,modern:1}}]},
+    {text:"When conflict arises, you…",opts:[{icon:"⚔️",text:"Face it head-on, strength meets strength",scores:{ancient:2,medieval:1}},{icon:"💬",text:"Use wit and eloquence to persuade",scores:{renaissance:1,enlighten:2}},{icon:"📋",text:"Set rules and follow procedure",scores:{industrial:2,modern:1}},{icon:"🤝",text:"Find an innovative consensus, evolve together",scores:{future:2,modern:1}}]},
+    {text:"What do you value most?",opts:[{icon:"🏯",text:"Honor, loyalty, and legacy",scores:{ancient:2,medieval:1}},{icon:"🎭",text:"Beauty, truth, and the human spirit",scores:{renaissance:2,enlighten:1}},{icon:"💰",text:"Efficiency, progress, and tangible results",scores:{industrial:2,modern:1}},{icon:"🌐",text:"Connection, freedom, and infinite possibility",scores:{future:2,modern:1}}]},
+    {text:"Your relationship with nature is…",opts:[{icon:"🌿",text:"Coexist with nature, reverence for the earth",scores:{ancient:2,medieval:1}},{icon:"🔭",text:"Observe nature and discover its laws",scores:{renaissance:2,enlighten:1}},{icon:"🏗️",text:"Harness nature to build a better world",scores:{industrial:2,modern:1}},{icon:"♻️",text:"Restore nature — humans and earth co-evolve",scores:{future:2,modern:1}}]},
+    {text:"Your most desired skill would be…",opts:[{icon:"🥋",text:"Extraordinary combat or survival skills",scores:{ancient:2,medieval:1}},{icon:"✍️",text:"Mastery of poetry, painting, and many arts",scores:{renaissance:2,enlighten:1}},{icon:"⚙️",text:"Mechanical design and industrial engineering",scores:{industrial:2,modern:1}},{icon:"💻",text:"Future tech — AI, space travel, or beyond",scores:{future:2,modern:1}}]},
+    {text:"Your view of rules is…",opts:[{icon:"⚖️",text:"Rules are morality — they must be followed",scores:{ancient:1,medieval:2}},{icon:"📖",text:"Rules should serve reason and truth",scores:{enlighten:2,renaissance:1}},{icon:"🏛️",text:"Rules are the foundation of efficiency — optimize them",scores:{industrial:2,modern:1}},{icon:"🔓",text:"Rules are made to be broken and rebuilt",scores:{future:2,modern:1}}]},
+    {text:"Your communication style is…",opts:[{icon:"🏹",text:"Short, powerful — words backed by action",scores:{ancient:2,medieval:1}},{icon:"🗣️",text:"Eloquent — love debate and discussion",scores:{renaissance:1,enlighten:2}},{icon:"📰",text:"Logical, fact-based, efficiency-focused",scores:{industrial:2,modern:1}},{icon:"🌐",text:"Cross-cultural, multimedia, global perspective",scores:{future:2,modern:1}}]},
+    {text:"Your dream home is…",opts:[{icon:"🏯",text:"A magnificent castle or mountain dojo",scores:{ancient:2,medieval:1}},{icon:"🏛️",text:"An Italian Renaissance palace courtyard",scores:{renaissance:2,enlighten:1}},{icon:"🏭",text:"An industrial loft full of machines and design",scores:{industrial:2,modern:1}},{icon:"🛸",text:"A floating smart home above the clouds",scores:{future:2,modern:1}}]},
+    {text:"The glory you crave most is…",opts:[{icon:"🏆",text:"Victory in battle and becoming a legend",scores:{ancient:2,medieval:1}},{icon:"🎨",text:"Creating a work that echoes through centuries",scores:{renaissance:2,enlighten:1}},{icon:"🏭",text:"Building a company or invention that changed humanity",scores:{industrial:2,modern:1}},{icon:"🚀",text:"Being the first to step on a new planet",scores:{future:2,modern:1}}]},
+    {text:"If you could travel to the past or future, you'd choose…",opts:[{icon:"🗡️",text:"Ancient era: become a legendary warrior or king",scores:{ancient:2,medieval:1}},{icon:"🎭",text:"Renaissance: work alongside da Vinci",scores:{renaissance:2,enlighten:1}},{icon:"🔧",text:"Industrial revolution: reshape human civilization",scores:{industrial:2,modern:1}},{icon:"🌌",text:"The future: explore the edge of the universe",scores:{future:2,modern:1}}]}
+  ]
+};
+const results={
+  zh:{
+    ancient:{emoji:"⚔️",title:"上古武者",subtitle:"力量 · 榮譽 · 原始本能",desc:"你的靈魂屬於那個靠力量與榮譽說話的年代。你相信一諾千金，相信用行動而非言語證明自己。你在現代社會可能常常覺得格格不入，因為你心中有一套古老的道義準則，不是每個人都能理解的那種。",traits:["重情重義","行動力強","不善拐彎","極度忠誠","身體力行"]},
+    medieval:{emoji:"🏰",title:"中世紀騎士",subtitle:"忠誠 · 信仰 · 守護",desc:"你有著騎士般的精神——為你在乎的人捨身赴義，對信念絕不妥協。你有強烈的是非觀，也有溫柔的保護欲。在這個時代，你可能是那種寧可站在少數正確的一方，也不願隨波逐流的人。",traits:["強烈的正義感","守護者本能","忠於信念","不妥協","有時顯得過於理想化"]},
+    renaissance:{emoji:"🎨",title:"文藝復興靈魂",subtitle:"創造 · 多才 · 人文主義",desc:"你的靈魂屬於那個思想大爆炸的年代。你對幾乎所有事物都感到好奇，你相信人的潛力是無限的。你可能同時是個藝術家、思想家和實踐者。對你來說，人生最大的遺憾就是沒有時間把所有的興趣都探索透徹。",traits:["博學多才","極度好奇","創造力強","人文關懷","追求完美"]},
+    enlighten:{emoji:"📖",title:"啟蒙時代智者",subtitle:"理性 · 自由 · 真理",desc:"你相信理性是人類最強大的工具。你不接受沒有邏輯支撐的權威，你相信自由思考是每個人的天賦權利。你在現代很可能是個喜歡打破偏見、追求真相的人。",traits:["崇尚理性","懷疑主義","追求真理","重視自由","喜歡辯論"]},
+    industrial:{emoji:"⚙️",title:"工業革命先驅",subtitle:"效率 · 創新 · 改變世界",desc:"你相信人類可以用智慧和工具創造更好的未來。你有強烈的實踐欲望，你不只是空想，你要把想法變成現實。你在現代可能是個創業者、工程師，或者任何把想法付諸行動的人。",traits:["行動導向","問題解決高手","效率優先","實用主義","改變現狀的動力"]},
+    modern:{emoji:"🌆",title:"現代開拓者",subtitle:"多元 · 連結 · 進化中",desc:"你就是屬於這個時代的人——你擁抱多元，你享受資訊爆炸帶來的可能性。你可能同時有很多面向，很難被一個標籤定義。你在當代如魚得水，因為這個時代的複雜性正好符合你的靈魂。",traits:["適應力強","多元認同","資訊敏感","自我探索中","擁抱變化"]},
+    future:{emoji:"🚀",title:"未來探索者",subtitle:"突破 · 無限 · 超越時代",desc:"你的靈魂已經活在未來了。你對現狀永遠不滿足，你總是在想「如果這樣會怎樣？」。你對科技、宇宙或人類的未來有著強烈的好奇與使命感。你的心早已超越了這個時代的框架。",traits:["超前思維","科技敏感","永遠在想下一步","對未知充滿渴望","改變規則的人"]}
+  },
+  ja:{
+    ancient:{emoji:"⚔️",title:"古代の武者",subtitle:"力・名誉・原始本能",desc:"あなたの魂は力と名誉で語られた時代のもの。言葉より行動で自分を証明する。現代社会では時に馴染めないと感じるかもしれない。心に古い義の掟があり、誰もが理解できるものではないから。",traits:["義理を重んじる","行動力が強い","回りくどくない","極めて忠実","実践を信じる"]},
+    medieval:{emoji:"🏰",title:"中世の騎士",subtitle:"忠誠・信仰・守護",desc:"騎士道の精神を持つあなた——大切な人のために身を投じ、信念を曲げない。強い正義感と優しい保護欲を持っている。少数の正しい側に立つことを選ぶ人。",traits:["強い正義感","守護者本能","信念に忠実","妥協しない","理想主義的"]},
+    renaissance:{emoji:"🎨",title:"ルネサンスの魂",subtitle:"創造・多才・人文主義",desc:"思想の爆発した時代の魂。ほぼ全てに好奇心を持ち、人の潜在力は無限だと信じる。芸術家・思想家・実践者を同時に生きる。全ての興味を探り尽くす時間がないことが最大の後悔。",traits:["博学多才","強い好奇心","創造力豊か","人文的関心","完璧を追求"]},
+    enlighten:{emoji:"📖",title:"啓蒙時代の賢者",subtitle:"理性・自由・真理",desc:"理性が人類最強のツールだと信じる。論理の裏付けない権威を受け入れず、自由思考を天賦の権利と思う。偏見を壊し真実を追い求める。",traits:["理性を崇拝","懐疑主義","真理の追求","自由を重視","議論が好き"]},
+    industrial:{emoji:"⚙️",title:"産業革命の先駆者",subtitle:"効率・革新・世界を変える",desc:"知恵と道具でより良い未来を作れると信じる。強い実践欲、アイデアを現実に変えたい。現代では起業家やエンジニア、あるいは想いを行動に変える人。",traits:["行動指向","問題解決の達人","効率優先","実用主義","現状を変える推進力"]},
+    modern:{emoji:"🌆",title:"現代の開拓者",subtitle:"多様・繋がり・進化中",desc:"まさにこの時代の人。多様性を受け入れ、情報爆発がもたらす可能性を楽しむ。一つのラベルで定義されにくい多面性を持つ。この時代の複雑さがあなたの魂にちょうど合っている。",traits:["適応力が高い","多様なアイデンティティ","情報感度が高い","自己探求中","変化を受け入れる"]},
+    future:{emoji:"🚀",title:"未来の探求者",subtitle:"突破・無限・時代を超える",desc:"あなたの魂はすでに未来を生きている。現状に決して満足せず、常に「こうしたらどうなる？」と考える。テクノロジーや宇宙、人類の未来への強い好奇と使命感。心はすでにこの時代の枠を超えている。",traits:["先進的な思考","テクノロジー感度","常に次を考える","未知への渇望","ルールを変える人"]}
+  },
+  en:{
+    ancient:{emoji:"⚔️",title:"Ancient Warrior Soul",subtitle:"Strength · Honor · Raw instinct",desc:"Your soul belongs to the age when strength and honor did the talking. You believe in keeping your word and proving yourself through action, not words. In modern life you may often feel out of place — you carry an ancient code of honor that not everyone understands.",traits:["Deep sense of loyalty","Strong action drive","No-nonsense communicator","Fiercely devoted","Lead by example"]},
+    medieval:{emoji:"🏰",title:"Medieval Knight",subtitle:"Loyalty · Faith · Protector",desc:"You carry the spirit of a knight — willing to sacrifice for those you love, unwilling to compromise your beliefs. You have a strong sense of right and wrong, and a protective instinct. You'd rather stand with the righteous minority than follow the crowd.",traits:["Strong sense of justice","Protector instinct","True to your beliefs","Uncompromising","Can seem overly idealistic"]},
+    renaissance:{emoji:"🎨",title:"Renaissance Soul",subtitle:"Creation · Versatility · Humanism",desc:"Your soul belongs to the age of the great intellectual explosion. You're curious about almost everything and believe human potential is limitless. You're part artist, part thinker, part doer. Your greatest regret is never having enough time to explore all your interests.",traits:["Multi-talented","Extremely curious","Powerfully creative","Humanistic values","Pursuit of perfection"]},
+    enlighten:{emoji:"📖",title:"Enlightenment Thinker",subtitle:"Reason · Freedom · Truth",desc:"You believe reason is humanity's most powerful tool. You don't accept authority without logic, and you believe free thinking is every person's birthright. You're likely someone who loves challenging assumptions and pursuing truth in the modern world.",traits:["Worships reason","Healthy skepticism","Truth-seeker","Values freedom","Loves a good debate"]},
+    industrial:{emoji:"⚙️",title:"Industrial Age Pioneer",subtitle:"Efficiency · Innovation · World-changer",desc:"You believe humanity can use intelligence and tools to build a better future. You have a strong urge to make things — not just imagine them. You might be an entrepreneur, engineer, or simply someone who turns ideas into reality.",traits:["Action-oriented","Master problem-solver","Efficiency first","Pragmatist","Driven to change the status quo"]},
+    modern:{emoji:"🌆",title:"Modern Explorer",subtitle:"Diversity · Connection · Evolving",desc:"You are this era — you embrace multiplicity, enjoy the possibilities of the information age, and resist being defined by a single label. The complexity of the modern world fits your soul perfectly.",traits:["Highly adaptable","Multi-faceted identity","Information-sensitive","Self-exploring","Embraces change"]},
+    future:{emoji:"🚀",title:"Future Seeker",subtitle:"Breakthrough · Boundless · Beyond time",desc:"Your soul already lives in the future. You're never satisfied with the status quo — always asking 'what if this were different?' You feel a deep curiosity and sense of mission about technology, space, or the future of humanity. Your heart has already left this era behind.",traits:["Forward-thinking","Tech-intuitive","Always planning the next step","Craves the unknown","A rule-breaker and rebuilder"]}
+  }
+};
+let lang='zh',current=0,answers=[],selected=null,started=false;
+function detectLang(){const n=navigator.language||'zh';return n.startsWith('ja')?'ja':n.startsWith('en')?'en':'zh';}
+function setLang(l){lang=l;document.body.classList.toggle('lang-ja',l==='ja');document.querySelectorAll('.lang-btn').forEach((b,i)=>b.classList.toggle('active',['zh','ja','en'][i]===l));updateStatic();if(started)renderQ();}
+function updateStatic(){const t=i18n[lang];document.getElementById('hero-title').textContent=t.title;document.getElementById('hero-sub').textContent=t.sub;document.getElementById('btn-start-label').textContent=t.start;document.getElementById('notice-label').textContent=t.notice;document.getElementById('home-link-label').textContent=t.home;if(started){document.getElementById('share-label').textContent=t.shareLabel;document.getElementById('btn-copy-label').textContent=t.copy;document.getElementById('btn-retry-label').textContent=t.retry;}}
+function startQuiz(){started=true;document.getElementById('start-screen').style.display='none';document.getElementById('progress-wrap').style.display='block';document.getElementById('quiz-card').style.display='block';renderQ();}
+function renderQ(){const qs=questions[lang],q=qs[current],t=i18n[lang];document.getElementById('q-num').textContent=t.qLabel(current+1,qs.length);document.getElementById('q-text').textContent=q.text;const opts=document.getElementById('options');opts.innerHTML='';q.opts.forEach((o,i)=>{const b=document.createElement('button');b.className='opt'+(answers[current]===i?' selected':'');b.innerHTML=`<span class="opt-icon">${o.icon}</span><span>${o.text}</span>`;b.onclick=()=>selectOpt(i,b);opts.appendChild(b);});selected=answers[current]!==undefined?answers[current]:null;document.getElementById('btn-next').textContent=current===qs.length-1?t.finish:t.next;updateBtn();updateProg();}
+function selectOpt(i,b){document.querySelectorAll('.opt').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');selected=i;answers[current]=i;updateBtn();}
+function updateBtn(){document.getElementById('btn-next').classList.toggle('active',selected!==null);}
+function updateProg(){const total=questions[lang].length;document.getElementById('progress-fill').style.width=(current/total*100)+'%';document.getElementById('progress-label').textContent=i18n[lang].pLabel(current,total);}
+function nextQ(){if(selected===null)return;if(current<questions[lang].length-1){current++;selected=answers[current]!==undefined?answers[current]:null;renderQ();}else showResult();}
+function calcWinner(){const s={ancient:0,medieval:0,renaissance:0,enlighten:0,industrial:0,modern:0,future:0};answers.forEach((ai,qi)=>{const sc=questions[lang][qi].opts[ai].scores;for(const k in sc)s[k]=(s[k]||0)+sc[k];});return Object.entries(s).sort((a,b)=>b[1]-a[1])[0][0];}
+function showResult(){document.getElementById('quiz-card').style.display='none';const w=calcWinner(),r=results[lang][w],t=i18n[lang];document.getElementById('r-emoji').textContent=r.emoji;document.getElementById('r-title').textContent=r.title;document.getElementById('r-subtitle').textContent=r.subtitle;document.getElementById('r-desc').textContent=r.desc;document.getElementById('r-traits').innerHTML=r.traits.map(tr=>`<span class="trait">${tr}</span>`).join('');document.getElementById('share-label').textContent=t.shareLabel;document.getElementById('btn-copy-label').textContent=t.copy;document.getElementById('btn-retry-label').textContent=t.retry;document.getElementById('result-card').style.display='block';document.getElementById('progress-fill').style.width='100%';document.getElementById('progress-label').textContent=t.pLabel(questions[lang].length,questions[lang].length);document.getElementById('progress-wrap').style.display='block';}
+function getShare(){const w=calcWinner(),r=results[lang][w];return{text:i18n[lang].shareText(r.emoji,r.title,r.subtitle),url:window.location.href};}
+function shareTwitter(){const{text,url}=getShare();window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,'_blank');}
+function shareLine(){const{text,url}=getShare();window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`,'_blank');}
+function shareFacebook(){const{url}=getShare();window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,'_blank');}
+function copyResult(){const{text,url}=getShare();navigator.clipboard.writeText(text+'\n'+url).then(()=>showToast(i18n[lang].copied));}
+function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+function retry(){current=0;answers=[];selected=null;document.getElementById('result-card').style.display='none';document.getElementById('quiz-card').style.display='block';renderQ();}
+lang=detectLang();document.body.classList.toggle('lang-ja',lang==='ja');document.querySelectorAll('.lang-btn').forEach((b,i)=>b.classList.toggle('active',['zh','ja','en'][i]===lang));updateStatic();
+</script>
+</body>
+</html>

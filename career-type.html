@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>你適合哪種職業類型？</title>
+<meta name="description" content="12題測出你最適合的職業方向！創作者、分析師、領導者還是探險家？">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+  :root{--bg:#1a0e2e;--bg2:#22123a;--card:#2d1a4a;--accent:#c084fc;--accent2:#f0abfc;--gold:#f5c842;--text:#f5e8ff;--muted:#9a78c0;--radius:16px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 60px;}
+  body.lang-ja{font-family:'Noto Sans JP',sans-serif;}
+  .lang-bar{position:fixed;top:12px;right:16px;display:flex;gap:6px;z-index:999;}
+  .lang-btn{background:var(--card);border:1px solid rgba(192,132,252,0.25);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:13px;cursor:pointer;transition:all .18s;font-family:inherit;}
+  .lang-btn.active{background:rgba(192,132,252,0.18);border-color:var(--accent);color:var(--accent);}
+  .hero{text-align:center;padding:56px 16px 32px;max-width:600px;}
+  .hero-emoji{font-size:56px;display:block;margin-bottom:16px;animation:float 3s ease-in-out infinite;}
+  @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+  .hero h1{font-size:clamp(20px,5vw,30px);font-weight:700;line-height:1.3;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px;}
+  .hero p{color:var(--muted);font-size:15px;line-height:1.7;}
+  .progress-wrap{width:100%;max-width:560px;margin:24px auto 0;}
+  .progress-bar{height:4px;background:var(--card);border-radius:99px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width .4s ease;width:0%;}
+  .progress-label{font-size:12px;color:var(--muted);margin-top:6px;text-align:right;}
+  .quiz-card{background:var(--card);border:1px solid rgba(192,132,252,0.15);border-radius:var(--radius);padding:32px 28px;max-width:560px;width:100%;margin-top:28px;}
+  .q-num{font-size:12px;color:var(--accent);font-weight:500;letter-spacing:.08em;margin-bottom:8px;}
+  .q-text{font-size:18px;font-weight:600;line-height:1.5;margin-bottom:24px;}
+  .options{display:flex;flex-direction:column;gap:10px;}
+  .opt{background:var(--bg2);border:1.5px solid rgba(192,132,252,0.1);border-radius:12px;padding:14px 18px;cursor:pointer;font-size:15px;line-height:1.5;transition:all .18s;text-align:left;color:var(--text);display:flex;align-items:center;gap:12px;font-family:inherit;}
+  .opt:hover{border-color:var(--accent);background:rgba(192,132,252,0.08);transform:translateX(4px);}
+  .opt.selected{border-color:var(--accent);background:rgba(192,132,252,0.15);transform:translateX(4px);}
+  .opt-icon{font-size:20px;flex-shrink:0;}
+  .btn-next{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a0e2e;border:none;border-radius:12px;padding:15px 36px;font-size:16px;font-weight:700;cursor:pointer;margin-top:24px;width:100%;transition:opacity .2s,transform .2s;font-family:inherit;opacity:.4;pointer-events:none;}
+  .btn-next.active{opacity:1;pointer-events:all;}
+  .btn-next.active:hover{transform:translateY(-2px);}
+  .result-card{background:var(--card);border:1px solid rgba(192,132,252,0.2);border-radius:var(--radius);padding:40px 28px;max-width:560px;width:100%;margin-top:28px;text-align:center;display:none;}
+  .result-emoji{font-size:80px;display:block;margin-bottom:16px;}
+  .result-title{font-size:28px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;}
+  .result-subtitle{color:var(--gold);font-size:14px;font-weight:500;margin-bottom:20px;}
+  .result-desc{color:var(--muted);font-size:15px;line-height:1.75;margin-bottom:24px;text-align:left;}
+  .trait-wrap{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:28px;}
+  .trait{background:rgba(192,132,252,0.12);border:1px solid rgba(192,132,252,0.25);color:var(--accent);font-size:13px;padding:5px 14px;border-radius:99px;font-weight:500;}
+  .career-list{background:var(--bg2);border-radius:12px;padding:16px 20px;margin-bottom:24px;text-align:left;}
+  .career-list-title{font-size:13px;color:var(--accent);font-weight:600;margin-bottom:10px;}
+  .career-item{font-size:14px;color:var(--muted);padding:4px 0;display:flex;align-items:center;gap:8px;}
+  .share-title{font-size:13px;color:var(--muted);margin-bottom:12px;}
+  .share-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
+  .share-btn{border:none;border-radius:12px;padding:12px 10px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .2s,transform .2s;font-family:inherit;}
+  .share-btn:hover{opacity:.85;transform:translateY(-2px);}
+  .btn-twitter{background:#000;color:#fff;}
+  .btn-line{background:#06C755;color:#fff;}
+  .btn-fb{background:#1877F2;color:#fff;}
+  .btn-copy{background:var(--bg2);color:var(--text);border:1.5px solid rgba(192,132,252,0.3);}
+  .btn-retry{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a0e2e;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;transition:opacity .2s;}
+  #start-screen{max-width:560px;width:100%;margin-top:28px;text-align:center;}
+  .btn-start{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a0e2e;border:none;border-radius:14px;padding:18px 48px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;transition:transform .2s;box-shadow:0 8px 32px rgba(192,132,252,.25);}
+  .btn-start:hover{transform:translateY(-3px);}
+  .notice{color:var(--muted);font-size:13px;margin-top:14px;}
+  .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--accent);color:#1a0e2e;padding:10px 24px;border-radius:99px;font-size:14px;font-weight:600;opacity:0;transition:all .3s;pointer-events:none;z-index:9999;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .home-link{margin-top:24px;text-align:center;}
+  .home-link a{color:var(--muted);font-size:13px;text-decoration:none;border-bottom:1px solid rgba(154,120,192,0.3);padding-bottom:2px;}
+</style>
+</head>
+<body>
+<div class="lang-bar">
+  <button class="lang-btn active" onclick="setLang('zh')">中文</button>
+  <button class="lang-btn" onclick="setLang('ja')">日本語</button>
+  <button class="lang-btn" onclick="setLang('en')">EN</button>
+</div>
+<div class="hero">
+  <span class="hero-emoji">🧭</span>
+  <h1 id="hero-title"></h1>
+  <p id="hero-sub"></p>
+</div>
+<div id="start-screen">
+  <button class="btn-start" onclick="startQuiz()" id="btn-start-label"></button>
+  <p class="notice" id="notice-label"></p>
+</div>
+<div class="progress-wrap" id="progress-wrap" style="display:none">
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  <div class="progress-label" id="progress-label"></div>
+</div>
+<div class="quiz-card" id="quiz-card" style="display:none">
+  <div class="q-num" id="q-num"></div>
+  <div class="q-text" id="q-text"></div>
+  <div class="options" id="options"></div>
+  <button class="btn-next" id="btn-next" onclick="nextQ()"></button>
+</div>
+<div class="result-card" id="result-card">
+  <span class="result-emoji" id="r-emoji"></span>
+  <div class="result-title" id="r-title"></div>
+  <div class="result-subtitle" id="r-subtitle"></div>
+  <div class="result-desc" id="r-desc"></div>
+  <div class="career-list"><div class="career-list-title" id="career-list-title"></div><div id="r-careers"></div></div>
+  <div class="trait-wrap" id="r-traits"></div>
+  <p class="share-title" id="share-label"></p>
+  <div class="share-grid">
+    <button class="share-btn btn-twitter" onclick="shareTwitter()">𝕏 Twitter / X</button>
+    <button class="share-btn btn-line" onclick="shareLine()">💬 LINE</button>
+    <button class="share-btn btn-fb" onclick="shareFacebook()">📘 Facebook</button>
+    <button class="share-btn btn-copy" onclick="copyResult()" id="btn-copy-label"></button>
+  </div>
+  <button class="btn-retry" onclick="retry()" id="btn-retry-label"></button>
+  <div class="home-link"><a href="index.html" id="home-link-label"></a></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const i18n={
+  zh:{title:"你適合哪種職業類型？",sub:"12題找出你天生適合的工作方向\n創作者、分析師、領導者，還是探險家？",start:"開始測驗 →",notice:"共 12 題 · 約 3 分鐘",qLabel:(c,t)=>`問題 ${c} / ${t}`,next:"下一題 →",finish:"查看結果 ✨",shareLabel:"分享你的職業類型",copy:"📋 複製",copied:"已複製！",retry:"再測一次",home:"← 回首頁",pLabel:(c,t)=>`${c} / ${t}`,careerListTitle:"✨ 適合你的職業方向",shareText:(e,ti,su)=>`🧭 我的職業類型是「${e} ${ti}」(${su})\n快來測測你適合什麼工作！`},
+  ja:{title:"あなたに向いている職業タイプは？",sub:"12の質問で天職の方向性を診断\nクリエイター・分析家・リーダー・探求者？",start:"テストを始める →",notice:"全12問 · 約3分",qLabel:(c,t)=>`質問 ${c} / ${t}`,next:"次へ →",finish:"結果を見る ✨",shareLabel:"職業タイプをシェア",copy:"📋 コピー",copied:"コピーしました！",retry:"もう一度",home:"← ホームへ",pLabel:(c,t)=>`${c} / ${t}`,careerListTitle:"✨ あなたに向いている職業",shareText:(e,ti,su)=>`🧭 私の職業タイプは「${e} ${ti}」(${su})\nあなたも試してみて！`},
+  en:{title:"What Career Type Suits You?",sub:"12 questions to find your natural work direction\nCreator, Analyst, Leader, or Explorer?",start:"Start Quiz →",notice:"12 questions · About 3 min",qLabel:(c,t)=>`Question ${c} / ${t}`,next:"Next →",finish:"See Result ✨",shareLabel:"Share your career type",copy:"📋 Copy",copied:"Copied!",retry:"Try Again",home:"← Back to Home",pLabel:(c,t)=>`${c} / ${t}`,careerListTitle:"✨ Career paths that suit you",shareText:(e,ti,su)=>`🧭 My career type is "${e} ${ti}" (${su})\nFind out yours!`}
+};
+const questions={
+  zh:[
+    {text:"你最享受的工作狀態是？",opts:[{icon:"🎨",text:"自由創作，做出讓人驚豔的作品",scores:{creator:2,explorer:1}},{icon:"🔬",text:"深度鑽研問題，找出隱藏的規律",scores:{analyst:2,creator:1}},{icon:"👥",text:"帶領團隊，看到大家成長",scores:{leader:2,helper:1}},{icon:"🌍",text:"去不同地方解決各種挑戰",scores:{explorer:2,leader:1}}]},
+    {text:"你做事情最大的動力是？",opts:[{icon:"💡",text:"創造出前所未有的東西",scores:{creator:2,explorer:1}},{icon:"✅",text:"把事情做到最正確、最精準",scores:{analyst:2,creator:1}},{icon:"❤️",text:"讓別人因為我而變得更好",scores:{helper:2,leader:1}},{icon:"🏆",text:"達成具體目標，看見成果",scores:{leader:2,analyst:1}}]},
+    {text:"在工作中你最討厭什麼？",opts:[{icon:"📋",text:"重複性的例行工作",scores:{creator:2,explorer:1}},{icon:"🌀",text:"沒有邏輯、沒有規則的混亂",scores:{analyst:2,leader:1}},{icon:"🏝️",text:"完全一個人工作，沒有人互動",scores:{helper:2,leader:1}},{icon:"🔒",text:"被規定死，沒有自主空間",scores:{explorer:2,creator:1}}]},
+    {text:"你夢想的辦公室是？",opts:[{icon:"🎨",text:"充滿創意的工作室或咖啡廳",scores:{creator:2,explorer:1}},{icon:"🔬",text:"安靜的研究室，數據和白板",scores:{analyst:2,creator:1}},{icon:"🏢",text:"有活力的開放式辦公室",scores:{leader:2,helper:1}},{icon:"🌏",text:"到處都是辦公室，沒有固定地點",scores:{explorer:2,leader:1}}]},
+    {text:"你的強項是？",opts:[{icon:"✍️",text:"表達和創作，把想法變成作品",scores:{creator:2,helper:1}},{icon:"🧮",text:"邏輯和分析，找出問題核心",scores:{analyst:2,leader:1}},{icon:"🗣️",text:"溝通和影響，帶動人心",scores:{leader:2,helper:1}},{icon:"🧭",text:"靈活應變，在未知中找方向",scores:{explorer:2,analyst:1}}]},
+    {text:"你對「成功」的定義是？",opts:[{icon:"🎭",text:"做出被後人記得的偉大作品",scores:{creator:2,explorer:1}},{icon:"🔍",text:"解開了沒人能解的難題",scores:{analyst:2,creator:1}},{icon:"👐",text:"幫助了很多人過得更好",scores:{helper:2,leader:1}},{icon:"📈",text:"帶領組織達到更高的目標",scores:{leader:2,analyst:1}}]},
+    {text:"你更喜歡哪種工作方式？",opts:[{icon:"🎯",text:"一個人深度專注，不被打擾",scores:{creator:2,analyst:1}},{icon:"📊",text:"有系統有數據，按邏輯推進",scores:{analyst:2,leader:1}},{icon:"🤝",text:"和各種人合作，集思廣益",scores:{helper:2,leader:1}},{icon:"🌊",text:"邊做邊調整，靈活應對變化",scores:{explorer:2,creator:1}}]},
+    {text:"遇到一個全新的問題，你第一步是？",opts:[{icon:"💭",text:"天馬行空想出各種可能性",scores:{creator:2,explorer:1}},{icon:"📚",text:"蒐集資料，系統性分析",scores:{analyst:2,creator:1}},{icon:"👥",text:"找相關的人討論",scores:{helper:2,leader:1}},{icon:"🚀",text:"直接試試看，實驗優先",scores:{explorer:2,analyst:1}}]},
+    {text:"你最喜歡的工作成就感來自？",opts:[{icon:"🎨",text:"創作出讓自己也感動的作品",scores:{creator:2,helper:1}},{icon:"💡",text:"發現了一個重要的洞察或規律",scores:{analyst:2,explorer:1}},{icon:"😊",text:"看到別人因為我的幫助而改變",scores:{helper:2,leader:1}},{icon:"🏅",text:"帶著團隊完成了看似不可能的任務",scores:{leader:2,explorer:1}}]},
+    {text:"如果你可以只做一件事一整年，你會選？",opts:[{icon:"✍️",text:"寫一本書或創作一個系列作品",scores:{creator:2,analyst:1}},{icon:"🔬",text:"深入研究一個你最好奇的問題",scores:{analyst:2,explorer:1}},{icon:"🌱",text:"輔導和培育一群有潛力的人",scores:{helper:2,leader:1}},{icon:"🌍",text:"周遊各地，解決不同地方的問題",scores:{explorer:2,leader:1}}]},
+    {text:"你最不能接受的工作文化是？",opts:[{icon:"📏",text:"所有事情都要按規定走，沒有彈性",scores:{creator:2,explorer:1}},{icon:"🌀",text:"什麼都可以，沒有標準和流程",scores:{analyst:2,leader:1}},{icon:"🏝️",text:"各自為政，沒有團隊精神",scores:{helper:2,leader:1}},{icon:"🔄",text:"一成不變，從不嘗試新方法",scores:{explorer:2,creator:1}}]},
+    {text:"你最嚮往的職業狀態是？",opts:[{icon:"🎨",text:"自由工作者，按自己的節奏創作",scores:{creator:2,explorer:1}},{icon:"🔬",text:"專業研究員或顧問，被人請教",scores:{analyst:2,leader:1}},{icon:"🌱",text:"導師或教練，看著學生成長",scores:{helper:2,leader:1}},{icon:"🚀",text:"創業家，把想法變成改變世界的事業",scores:{explorer:2,leader:1}}]}
+  ],
+  ja:[
+    {text:"最も楽しい仕事のスタイルは？",opts:[{icon:"🎨",text:"自由に創作し、人を驚かせる作品を作る",scores:{creator:2,explorer:1}},{icon:"🔬",text:"問題を深掘りして隠れたパターンを見つける",scores:{analyst:2,creator:1}},{icon:"👥",text:"チームを率いて成長を見守る",scores:{leader:2,helper:1}},{icon:"🌍",text:"各地を回って様々な課題を解決する",scores:{explorer:2,leader:1}}]},
+    {text:"仕事の最大のモチベーションは？",opts:[{icon:"💡",text:"前例のないものを創り出すこと",scores:{creator:2,explorer:1}},{icon:"✅",text:"最も正確・精密に仕上げること",scores:{analyst:2,creator:1}},{icon:"❤️",text:"自分のおかげで誰かが良くなること",scores:{helper:2,leader:1}},{icon:"🏆",text:"具体的な目標を達成して成果を見ること",scores:{leader:2,analyst:1}}]},
+    {text:"仕事で一番嫌なことは？",opts:[{icon:"📋",text:"繰り返しのルーティン作業",scores:{creator:2,explorer:1}},{icon:"🌀",text:"論理もルールもないカオス",scores:{analyst:2,leader:1}},{icon:"🏝️",text:"完全に一人で誰とも関わらない仕事",scores:{helper:2,leader:1}},{icon:"🔒",text:"決められすぎて自主性がない",scores:{explorer:2,creator:1}}]},
+    {text:"理想のオフィスは？",opts:[{icon:"🎨",text:"クリエイティブなスタジオやカフェ",scores:{creator:2,explorer:1}},{icon:"🔬",text:"静かな研究室、データとホワイトボード",scores:{analyst:2,creator:1}},{icon:"🏢",text:"活気あるオープンオフィス",scores:{leader:2,helper:1}},{icon:"🌏",text:"どこでもオフィス、場所にとらわれない",scores:{explorer:2,leader:1}}]},
+    {text:"あなたの強みは？",opts:[{icon:"✍️",text:"表現と創作、アイデアを作品に",scores:{creator:2,helper:1}},{icon:"🧮",text:"論理と分析、問題の核心を見抜く",scores:{analyst:2,leader:1}},{icon:"🗣️",text:"コミュニケーションと影響力",scores:{leader:2,helper:1}},{icon:"🧭",text:"柔軟な対応、未知の中で方向を見つける",scores:{explorer:2,analyst:1}}]},
+    {text:"「成功」の定義は？",opts:[{icon:"🎭",text:"後世に残る偉大な作品を作ること",scores:{creator:2,explorer:1}},{icon:"🔍",text:"誰も解けなかった難問を解くこと",scores:{analyst:2,creator:1}},{icon:"👐",text:"多くの人をより良い状態にすること",scores:{helper:2,leader:1}},{icon:"📈",text:"組織をより高い目標へ導くこと",scores:{leader:2,analyst:1}}]},
+    {text:"好きな仕事スタイルは？",opts:[{icon:"🎯",text:"一人で深く集中、邪魔されない",scores:{creator:2,analyst:1}},{icon:"📊",text:"体系的・データに基づいて論理的に進める",scores:{analyst:2,leader:1}},{icon:"🤝",text:"様々な人と協力しアイデアを出し合う",scores:{helper:2,leader:1}},{icon:"🌊",text:"やりながら調整、変化に柔軟に",scores:{explorer:2,creator:1}}]},
+    {text:"全く新しい問題に直面したとき、最初にすることは？",opts:[{icon:"💭",text:"自由に可能性を想像する",scores:{creator:2,explorer:1}},{icon:"📚",text:"情報収集して体系的に分析",scores:{analyst:2,creator:1}},{icon:"👥",text:"関係者に声をかけて議論",scores:{helper:2,leader:1}},{icon:"🚀",text:"とりあえず試してみる、実験優先",scores:{explorer:2,analyst:1}}]},
+    {text:"最も好きな達成感は？",opts:[{icon:"🎨",text:"自分も感動する作品を作ること",scores:{creator:2,helper:1}},{icon:"💡",text:"重要な洞察やパターンを発見すること",scores:{analyst:2,explorer:1}},{icon:"😊",text:"自分のサポートで誰かが変わること",scores:{helper:2,leader:1}},{icon:"🏅",text:"チームで不可能に見えたことを成し遂げること",scores:{leader:2,explorer:1}}]},
+    {text:"一年間一つのことだけできるとしたら？",opts:[{icon:"✍️",text:"本を書くかシリーズ作品を作る",scores:{creator:2,analyst:1}},{icon:"🔬",text:"最も気になる問題を深く研究する",scores:{analyst:2,explorer:1}},{icon:"🌱",text:"可能性のある人たちをコーチングする",scores:{helper:2,leader:1}},{icon:"🌍",text:"各地を旅しながら問題を解決する",scores:{explorer:2,leader:1}}]},
+    {text:"最も受け入れられない職場文化は？",opts:[{icon:"📏",text:"全てルール通り、柔軟性ゼロ",scores:{creator:2,explorer:1}},{icon:"🌀",text:"何でもあり、基準もプロセスもない",scores:{analyst:2,leader:1}},{icon:"🏝️",text:"各自バラバラ、チームスピリットなし",scores:{helper:2,leader:1}},{icon:"🔄",text:"変わらない、新しい方法を試さない",scores:{explorer:2,creator:1}}]},
+    {text:"最も憧れる働き方は？",opts:[{icon:"🎨",text:"フリーランス、自分のペースで創作",scores:{creator:2,explorer:1}},{icon:"🔬",text:"専門の研究者やコンサルタント",scores:{analyst:2,leader:1}},{icon:"🌱",text:"メンターやコーチ、成長を見守る",scores:{helper:2,leader:1}},{icon:"🚀",text:"起業家、アイデアで世界を変える",scores:{explorer:2,leader:1}}]}
+  ],
+  en:[
+    {text:"The work you enjoy most is…",opts:[{icon:"🎨",text:"Creating freely and producing something that amazes people",scores:{creator:2,explorer:1}},{icon:"🔬",text:"Digging deep into problems and finding hidden patterns",scores:{analyst:2,creator:1}},{icon:"👥",text:"Leading a team and watching everyone grow",scores:{leader:2,helper:1}},{icon:"🌍",text:"Traveling to different places and solving various challenges",scores:{explorer:2,leader:1}}]},
+    {text:"Your biggest work motivation is…",opts:[{icon:"💡",text:"Creating something that's never existed before",scores:{creator:2,explorer:1}},{icon:"✅",text:"Getting things exactly right and precise",scores:{analyst:2,creator:1}},{icon:"❤️",text:"Helping others become better because of you",scores:{helper:2,leader:1}},{icon:"🏆",text:"Hitting concrete goals and seeing results",scores:{leader:2,analyst:1}}]},
+    {text:"What you hate most at work is…",opts:[{icon:"📋",text:"Repetitive routine tasks",scores:{creator:2,explorer:1}},{icon:"🌀",text:"Chaos with no logic or rules",scores:{analyst:2,leader:1}},{icon:"🏝️",text:"Working completely alone with no human interaction",scores:{helper:2,leader:1}},{icon:"🔒",text:"Being over-regulated with no room for autonomy",scores:{explorer:2,creator:1}}]},
+    {text:"Your dream workspace is…",opts:[{icon:"🎨",text:"A creative studio or café",scores:{creator:2,explorer:1}},{icon:"🔬",text:"A quiet lab, data and whiteboards",scores:{analyst:2,creator:1}},{icon:"🏢",text:"A vibrant open-plan office",scores:{leader:2,helper:1}},{icon:"🌏",text:"Everywhere — no fixed location",scores:{explorer:2,leader:1}}]},
+    {text:"Your greatest strength is…",opts:[{icon:"✍️",text:"Expression and creation — turning ideas into works",scores:{creator:2,helper:1}},{icon:"🧮",text:"Logic and analysis — finding the core of a problem",scores:{analyst:2,leader:1}},{icon:"🗣️",text:"Communication and influence — moving people",scores:{leader:2,helper:1}},{icon:"🧭",text:"Adaptability — finding direction in the unknown",scores:{explorer:2,analyst:1}}]},
+    {text:"Your definition of success is…",opts:[{icon:"🎭",text:"Creating a great work remembered by future generations",scores:{creator:2,explorer:1}},{icon:"🔍",text:"Solving a problem no one else could crack",scores:{analyst:2,creator:1}},{icon:"👐",text:"Helping many people live better lives",scores:{helper:2,leader:1}},{icon:"📈",text:"Leading an organization to higher achievements",scores:{leader:2,analyst:1}}]},
+    {text:"Your preferred work style is…",opts:[{icon:"🎯",text:"Deep focus alone, undisturbed",scores:{creator:2,analyst:1}},{icon:"📊",text:"Systematic and data-driven, logic-forward",scores:{analyst:2,leader:1}},{icon:"🤝",text:"Collaborating with diverse people, brainstorming together",scores:{helper:2,leader:1}},{icon:"🌊",text:"Adjust as you go, flexible to change",scores:{explorer:2,creator:1}}]},
+    {text:"Faced with a brand new problem, your first step is…",opts:[{icon:"💭",text:"Brainstorm freely, imagine all possibilities",scores:{creator:2,explorer:1}},{icon:"📚",text:"Gather information and analyze systematically",scores:{analyst:2,creator:1}},{icon:"👥",text:"Talk to the relevant people",scores:{helper:2,leader:1}},{icon:"🚀",text:"Try it directly — experiment first",scores:{explorer:2,analyst:1}}]},
+    {text:"The work achievement you love most is…",opts:[{icon:"🎨",text:"Creating something that even moves yourself",scores:{creator:2,helper:1}},{icon:"💡",text:"Discovering an important insight or pattern",scores:{analyst:2,explorer:1}},{icon:"😊",text:"Seeing someone change because of your help",scores:{helper:2,leader:1}},{icon:"🏅",text:"Completing an 'impossible' mission with your team",scores:{leader:2,explorer:1}}]},
+    {text:"If you could do only one thing for a full year…",opts:[{icon:"✍️",text:"Write a book or create a series of works",scores:{creator:2,analyst:1}},{icon:"🔬",text:"Deep-dive into the question you're most curious about",scores:{analyst:2,explorer:1}},{icon:"🌱",text:"Mentor and develop a group of talented people",scores:{helper:2,leader:1}},{icon:"🌍",text:"Travel the world solving different problems",scores:{explorer:2,leader:1}}]},
+    {text:"The workplace culture you can't stand is…",opts:[{icon:"📏",text:"Everything must follow the rules, zero flexibility",scores:{creator:2,explorer:1}},{icon:"🌀",text:"Anything goes, no standards or process",scores:{analyst:2,leader:1}},{icon:"🏝️",text:"Everyone for themselves, no team spirit",scores:{helper:2,leader:1}},{icon:"🔄",text:"Never changes, never tries new approaches",scores:{explorer:2,creator:1}}]},
+    {text:"Your most ideal working state is…",opts:[{icon:"🎨",text:"Freelancer, creating at your own pace",scores:{creator:2,explorer:1}},{icon:"🔬",text:"Specialist consultant, the person people come to",scores:{analyst:2,leader:1}},{icon:"🌱",text:"Mentor or coach, watching students grow",scores:{helper:2,leader:1}},{icon:"🚀",text:"Entrepreneur, turning ideas into world-changing ventures",scores:{explorer:2,leader:1}}]}
+  ]
+};
+const results={
+  zh:{
+    creator:{emoji:"🎨",title:"創作者",subtitle:"表達 · 美感 · 原創力",desc:"你天生就是用作品說話的人。你有強烈的表達欲，對美有直覺，對「做出前所未有的東西」有執著。你在有創作自由的環境裡如魚得水，限制太多會讓你窒息。你的最大資產是你的獨特視角。",careers:["設計師","作家/編劇","音樂創作","藝術家","UX設計","影片創作者","品牌創意總監"],traits:["原創性強","美感直覺","需要創作自由","深度表達欲","對平庸過敏"]},
+    analyst:{emoji:"🔬",title:"分析師",subtitle:"邏輯 · 精確 · 洞察",desc:"你是那種能在混亂中找到規律的人。你對精確有執著，對不嚴謹感到不舒服。你最擅長把複雜的問題拆解成可以分析的部分，然後找出最優解。你的價值在於你看得比別人深。",careers:["資料科學家","研究員","財務分析師","產品策略師","顧問","法律/政策分析","心理學家"],traits:["邏輯思維強","重視精確","喜歡深度鑽研","批判性思考","對細節敏感"]},
+    leader:{emoji:"👑",title:"領導者",subtitle:"影響力 · 決策 · 帶動人",desc:"你的天賦是讓人往同一個方向走。你有清楚的目標感，能做決定，能說服人，能在壓力下保持冷靜。你最有成就感的時刻是看到你帶領的團隊達成了別人覺得不可能的事。",careers:["管理職/CEO","創業家","政治人物","教育領導者","專案經理","公關/行銷主管","非營利組織負責人"],traits:["天生決策力","強烈目標感","說服力高","壓力下穩定","責任感重"]},
+    helper:{emoji:"🌱",title:"助人者",subtitle:"同理心 · 培育 · 改變人生",desc:"你的使命感來自於看到別人因為你而變好。你有超強的同理心，能感受到別人的狀態，知道如何回應。你最適合需要人際溫度的職業，在那裡你能把自己的天賦發揮到極致。",careers:["心理諮詢師","教師/教練","社工","醫療照護","人資","輔導員","非營利工作"],traits:["超強同理心","天生傾聽者","以人為本","有耐心","找到意義才有動力"]},
+    explorer:{emoji:"🧭",title:"探險家",subtitle:"冒險 · 適應 · 開拓新疆域",desc:"你不能待在同一個地方太久——不管是實際位置還是思維框架。你對未知充滿好奇，你在「沒有地圖的地方」最能發揮。你最適合充滿變數、需要不斷適應的工作，你的武器是靈活和膽量。",careers:["創業家","記者/紀錄片","旅行/探索相關","新創公司","國際業務","危機處理","研發/創新部門"],traits:["對未知充滿渴望","適應力極強","討厭一成不變","膽子大","跨領域思考"]}
+  },
+  ja:{
+    creator:{emoji:"🎨",title:"クリエイター",subtitle:"表現・美的センス・独創性",desc:"作品で語る人。強い表現欲と美への直感、前例のないものへの執着がある。創作の自由がある環境で最も輝き、制約が多いと息苦しくなる。最大の資産は独自の視点。",careers:["デザイナー","作家/脚本家","音楽クリエイター","アーティスト","UXデザイン","動画クリエイター","ブランドクリエイティブディレクター"],traits:["独創性が高い","美的直感","創作の自由が必要","深い表現欲","平凡に敏感"]},
+    analyst:{emoji:"🔬",title:"アナリスト",subtitle:"論理・精確・洞察",desc:"混沌の中にパターンを見つけられる人。精確さへの執着があり、不正確なものに不快感を覚える。複雑な問題を分析可能な部分に分解し、最適解を見つけるのが得意。他より深く見える。",careers:["データサイエンティスト","研究員","財務アナリスト","プロダクト戦略","コンサルタント","法律/政策分析","心理学者"],traits:["論理的思考が強い","精確さを重視","深掘りが好き","批判的思考","細部に敏感"]},
+    leader:{emoji:"👑",title:"リーダー",subtitle:"影響力・意思決定・人を動かす",desc:"人を同じ方向に向かわせる天賦の才。明確な目標感、決断力、説得力、プレッシャー下での冷静さ。率いたチームが不可能を可能にした瞬間が最も達成感を感じる時。",careers:["マネージャー/CEO","起業家","政治家","教育リーダー","プロジェクトマネージャー","PR/マーケティング責任者","NPOリーダー"],traits:["天生の決断力","強い目標意識","高い説得力","プレッシャー下で安定","強い責任感"]},
+    helper:{emoji:"🌱",title:"サポーター",subtitle:"共感力・育成・人生を変える",desc:"使命感は人が自分のおかげで良くなることから来る。強い共感力で相手の状態を感じ取り、適切に応えることができる。人間的な温かさが必要な職業で天賦の才を最大限に発揮できる。",careers:["心理カウンセラー","教師/コーチ","社会福祉士","医療ケア","人事","カウンセラー","NGO/NPO"],traits:["強い共感力","生まれながらの聴き手","人中心","忍耐強い","意味を見出すことが原動力"]},
+    explorer:{emoji:"🧭",title:"エクスプローラー",subtitle:"冒険・適応・新境地を開く",desc:"同じ場所に長く留まれない——実際の場所も思考の枠も。未知への好奇心旺盛で、地図のない場所で最も輝く。変化が多く絶えず適応が必要な仕事が最適。武器は柔軟性と勇気。",careers:["起業家","ジャーナリスト/ドキュメンタリー","旅行/探索関連","スタートアップ","国際ビジネス","危機管理","R&D/イノベーション部門"],traits:["未知への渇望","高い適応力","変化のなさが苦手","大胆","クロスフィールドな思考"]}
+  },
+  en:{
+    creator:{emoji:"🎨",title:"The Creator",subtitle:"Expression · Aesthetic · Originality",desc:"You were born to speak through your work. You have a strong urge to express, a natural aesthetic sense, and an obsession with making something that's never existed. You thrive in environments with creative freedom — too many restrictions suffocate you. Your greatest asset is your unique perspective.",careers:["Designer","Writer / Screenwriter","Music Creator","Artist","UX Design","Video Creator","Creative Director"],traits:["Highly original","Aesthetic intuition","Needs creative freedom","Deep expressive drive","Allergic to mediocrity"]},
+    analyst:{emoji:"🔬",title:"The Analyst",subtitle:"Logic · Precision · Insight",desc:"You're the person who finds patterns in chaos. You're obsessed with accuracy and uncomfortable with imprecision. You excel at breaking complex problems into analyzable parts and finding optimal solutions. Your value is that you see deeper than others.",careers:["Data Scientist","Researcher","Financial Analyst","Product Strategist","Consultant","Legal / Policy Analyst","Psychologist"],traits:["Strong logical thinker","Values precision","Loves deep dives","Critical thinker","Sensitive to detail"]},
+    leader:{emoji:"👑",title:"The Leader",subtitle:"Influence · Decision · Mobilizing people",desc:"Your gift is moving people in the same direction. You have a clear sense of purpose, can make decisions, persuade others, and stay calm under pressure. Your greatest satisfaction is watching a team you led achieve something everyone said was impossible.",careers:["Manager / CEO","Entrepreneur","Politician","Education Leader","Project Manager","PR / Marketing Director","Non-profit Director"],traits:["Natural decision-maker","Strong goal orientation","High persuasion ability","Stable under pressure","Deep sense of responsibility"]},
+    helper:{emoji:"🌱",title:"The Helper",subtitle:"Empathy · Nurturing · Changing lives",desc:"Your sense of purpose comes from seeing others become better because of you. You have exceptional empathy, naturally tune into people's states, and know exactly how to respond. You thrive in human-centered roles where your natural gifts are fully expressed.",careers:["Psychologist / Counselor","Teacher / Coach","Social Worker","Healthcare","HR","Advisor","NGO / Non-profit Work"],traits:["Exceptional empathy","Natural listener","People-first mindset","Patient","Needs meaning to stay motivated"]},
+    explorer:{emoji:"🧭",title:"The Explorer",subtitle:"Adventure · Adaptability · Frontier",desc:"You can't stay in the same place too long — whether physically or mentally. You're fascinated by the unknown and perform best where there's no map. You're made for work full of variables that demands constant adaptation. Your weapons are flexibility and courage.",careers:["Entrepreneur","Journalist / Documentary","Travel / Exploration","Startup","International Business","Crisis Management","R&D / Innovation"],traits:["Craves the unknown","Highly adaptable","Can't stand stagnation","Bold","Cross-domain thinker"]}
+  }
+};
+let lang='zh',current=0,answers=[],selected=null,started=false;
+function detectLang(){const n=navigator.language||'zh';return n.startsWith('ja')?'ja':n.startsWith('en')?'en':'zh';}
+function setLang(l){lang=l;document.body.classList.toggle('lang-ja',l==='ja');document.querySelectorAll('.lang-btn').forEach((b,i)=>b.classList.toggle('active',['zh','ja','en'][i]===l));updateStatic();if(started)renderQ();}
+function updateStatic(){const t=i18n[lang];document.getElementById('hero-title').textContent=t.title;document.getElementById('hero-sub').textContent=t.sub;document.getElementById('btn-start-label').textContent=t.start;document.getElementById('notice-label').textContent=t.notice;document.getElementById('home-link-label').textContent=t.home;if(started){document.getElementById('career-list-title').textContent=t.careerListTitle;document.getElementById('share-label').textContent=t.shareLabel;document.getElementById('btn-copy-label').textContent=t.copy;document.getElementById('btn-retry-label').textContent=t.retry;}}
+function startQuiz(){started=true;document.getElementById('start-screen').style.display='none';document.getElementById('progress-wrap').style.display='block';document.getElementById('quiz-card').style.display='block';renderQ();}
+function renderQ(){const qs=questions[lang],q=qs[current],t=i18n[lang];document.getElementById('q-num').textContent=t.qLabel(current+1,qs.length);document.getElementById('q-text').textContent=q.text;const opts=document.getElementById('options');opts.innerHTML='';q.opts.forEach((o,i)=>{const b=document.createElement('button');b.className='opt'+(answers[current]===i?' selected':'');b.innerHTML=`<span class="opt-icon">${o.icon}</span><span>${o.text}</span>`;b.onclick=()=>selectOpt(i,b);opts.appendChild(b);});selected=answers[current]!==undefined?answers[current]:null;document.getElementById('btn-next').textContent=current===qs.length-1?t.finish:t.next;updateBtn();updateProg();}
+function selectOpt(i,b){document.querySelectorAll('.opt').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');selected=i;answers[current]=i;updateBtn();}
+function updateBtn(){document.getElementById('btn-next').classList.toggle('active',selected!==null);}
+function updateProg(){const total=questions[lang].length;document.getElementById('progress-fill').style.width=(current/total*100)+'%';document.getElementById('progress-label').textContent=i18n[lang].pLabel(current,total);}
+function nextQ(){if(selected===null)return;if(current<questions[lang].length-1){current++;selected=answers[current]!==undefined?answers[current]:null;renderQ();}else showResult();}
+function calcWinner(){const s={creator:0,analyst:0,leader:0,helper:0,explorer:0};answers.forEach((ai,qi)=>{const sc=questions[lang][qi].opts[ai].scores;for(const k in sc)s[k]=(s[k]||0)+sc[k];});return Object.entries(s).sort((a,b)=>b[1]-a[1])[0][0];}
+function showResult(){document.getElementById('quiz-card').style.display='none';const w=calcWinner(),r=results[lang][w],t=i18n[lang];document.getElementById('r-emoji').textContent=r.emoji;document.getElementById('r-title').textContent=r.title;document.getElementById('r-subtitle').textContent=r.subtitle;document.getElementById('r-desc').textContent=r.desc;document.getElementById('career-list-title').textContent=t.careerListTitle;document.getElementById('r-careers').innerHTML=r.careers.map(c=>`<div class="career-item">✦ ${c}</div>`).join('');document.getElementById('r-traits').innerHTML=r.traits.map(tr=>`<span class="trait">${tr}</span>`).join('');document.getElementById('share-label').textContent=t.shareLabel;document.getElementById('btn-copy-label').textContent=t.copy;document.getElementById('btn-retry-label').textContent=t.retry;document.getElementById('result-card').style.display='block';document.getElementById('progress-fill').style.width='100%';document.getElementById('progress-label').textContent=t.pLabel(questions[lang].length,questions[lang].length);document.getElementById('progress-wrap').style.display='block';}
+function getShare(){const w=calcWinner(),r=results[lang][w];return{text:i18n[lang].shareText(r.emoji,r.title,r.subtitle),url:window.location.href};}
+function shareTwitter(){const{text,url}=getShare();window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,'_blank');}
+function shareLine(){const{text,url}=getShare();window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`,'_blank');}
+function shareFacebook(){const{url}=getShare();window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,'_blank');}
+function copyResult(){const{text,url}=getShare();navigator.clipboard.writeText(text+'\n'+url).then(()=>showToast(i18n[lang].copied));}
+function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+function retry(){current=0;answers=[];selected=null;document.getElementById('result-card').style.display='none';document.getElementById('quiz-card').style.display='block';renderQ();}
+lang=detectLang();document.body.classList.toggle('lang-ja',lang==='ja');document.querySelectorAll('.lang-btn').forEach((b,i)=>b.classList.toggle('active',['zh','ja','en'][i]===lang));updateStatic();
+</script>
+</body>
+</html>

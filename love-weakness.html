@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>你的戀愛死穴是什麼？</title>
+<meta name="description" content="12題揭開你在感情中最致命的弱點！你是太黏人、太冷漠，還是太完美主義？">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+  :root{--bg:#0e0c1a;--bg2:#17142a;--card:#1e1a35;--accent:#ff6db0;--accent2:#ff9a3c;--gold:#f5c842;--text:#e8e4ff;--muted:#8a82b0;--radius:16px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 60px;}
+  body.lang-ja{font-family:'Noto Sans JP',sans-serif;}
+  .lang-bar{position:fixed;top:12px;right:16px;display:flex;gap:6px;z-index:999;}
+  .lang-btn{background:var(--card);border:1px solid rgba(255,109,176,0.25);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:13px;cursor:pointer;transition:all .18s;font-family:inherit;}
+  .lang-btn.active{background:rgba(255,109,176,0.18);border-color:var(--accent);color:var(--accent);}
+  .hero{text-align:center;padding:56px 16px 32px;max-width:600px;}
+  .hero-emoji{font-size:56px;display:block;margin-bottom:16px;animation:float 3s ease-in-out infinite;}
+  @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+  .hero h1{font-size:clamp(20px,5vw,30px);font-weight:700;line-height:1.3;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px;}
+  .hero p{color:var(--muted);font-size:15px;line-height:1.7;}
+  .progress-wrap{width:100%;max-width:560px;margin:24px auto 0;}
+  .progress-bar{height:4px;background:var(--card);border-radius:99px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width .4s ease;width:0%;}
+  .progress-label{font-size:12px;color:var(--muted);margin-top:6px;text-align:right;}
+  .quiz-card{background:var(--card);border:1px solid rgba(255,109,176,0.15);border-radius:var(--radius);padding:32px 28px;max-width:560px;width:100%;margin-top:28px;}
+  .q-num{font-size:12px;color:var(--accent);font-weight:500;letter-spacing:.08em;margin-bottom:8px;}
+  .q-text{font-size:18px;font-weight:600;line-height:1.5;margin-bottom:24px;}
+  .options{display:flex;flex-direction:column;gap:10px;}
+  .opt{background:var(--bg2);border:1.5px solid rgba(255,109,176,0.1);border-radius:12px;padding:14px 18px;cursor:pointer;font-size:15px;line-height:1.5;transition:all .18s;text-align:left;color:var(--text);display:flex;align-items:center;gap:12px;font-family:inherit;}
+  .opt:hover{border-color:var(--accent);background:rgba(255,109,176,0.08);transform:translateX(4px);}
+  .opt.selected{border-color:var(--accent);background:rgba(255,109,176,0.15);transform:translateX(4px);}
+  .opt-icon{font-size:20px;flex-shrink:0;}
+  .btn-next{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:12px;padding:15px 36px;font-size:16px;font-weight:600;cursor:pointer;margin-top:24px;width:100%;transition:opacity .2s,transform .2s;font-family:inherit;opacity:.4;pointer-events:none;}
+  .btn-next.active{opacity:1;pointer-events:all;}
+  .btn-next.active:hover{transform:translateY(-2px);}
+  .result-card{background:var(--card);border:1px solid rgba(255,109,176,0.2);border-radius:var(--radius);padding:40px 28px;max-width:560px;width:100%;margin-top:28px;text-align:center;display:none;}
+  .result-emoji{font-size:80px;display:block;margin-bottom:16px;}
+  .result-title{font-size:28px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;}
+  .result-subtitle{color:var(--gold);font-size:14px;font-weight:500;margin-bottom:20px;}
+  .result-desc{color:var(--muted);font-size:15px;line-height:1.75;margin-bottom:24px;text-align:left;}
+  .trait-wrap{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:28px;}
+  .trait{background:rgba(255,109,176,0.12);border:1px solid rgba(255,109,176,0.25);color:var(--accent);font-size:13px;padding:5px 14px;border-radius:99px;font-weight:500;}
+  .share-title{font-size:13px;color:var(--muted);margin-bottom:12px;}
+  .share-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
+  .share-btn{border:none;border-radius:12px;padding:12px 10px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .2s,transform .2s;font-family:inherit;}
+  .share-btn:hover{opacity:.85;transform:translateY(-2px);}
+  .btn-twitter{background:#000;color:#fff;}
+  .btn-line{background:#06C755;color:#fff;}
+  .btn-fb{background:#1877F2;color:#fff;}
+  .btn-copy{background:var(--bg2);color:var(--text);border:1.5px solid rgba(255,109,176,0.3);}
+  .btn-retry{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:12px;padding:13px;font-size:15px;cursor:pointer;font-family:inherit;width:100%;transition:opacity .2s;}
+  #start-screen{max-width:560px;width:100%;margin-top:28px;text-align:center;}
+  .btn-start{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:14px;padding:18px 48px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;transition:transform .2s;box-shadow:0 8px 32px rgba(255,109,176,.25);}
+  .btn-start:hover{transform:translateY(-3px);}
+  .notice{color:var(--muted);font-size:13px;margin-top:14px;}
+  .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--accent);color:#fff;padding:10px 24px;border-radius:99px;font-size:14px;opacity:0;transition:all .3s;pointer-events:none;z-index:9999;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .home-link{margin-top:24px;text-align:center;}
+  .home-link a{color:var(--muted);font-size:13px;text-decoration:none;border-bottom:1px solid rgba(138,130,176,0.3);padding-bottom:2px;}
+</style>
+</head>
+<body>
+<div class="lang-bar">
+  <button class="lang-btn active" onclick="setLang('zh')">中文</button>
+  <button class="lang-btn" onclick="setLang('ja')">日本語</button>
+  <button class="lang-btn" onclick="setLang('en')">EN</button>
+</div>
+<div class="hero">
+  <span class="hero-emoji">💔</span>
+  <h1 id="hero-title"></h1>
+  <p id="hero-sub"></p>
+</div>
+<div id="start-screen">
+  <button class="btn-start" onclick="startQuiz()" id="btn-start-label"></button>
+  <p class="notice" id="notice-label"></p>
+</div>
+<div class="progress-wrap" id="progress-wrap" style="display:none">
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  <div class="progress-label" id="progress-label"></div>
+</div>
+<div class="quiz-card" id="quiz-card" style="display:none">
+  <div class="q-num" id="q-num"></div>
+  <div class="q-text" id="q-text"></div>
+  <div class="options" id="options"></div>
+  <button class="btn-next" id="btn-next" onclick="nextQ()"></button>
+</div>
+<div class="result-card" id="result-card">
+  <span class="result-emoji" id="r-emoji"></span>
+  <div class="result-title" id="r-title"></div>
+  <div class="result-subtitle" id="r-subtitle"></div>
+  <div class="result-desc" id="r-desc"></div>
+  <div class="trait-wrap" id="r-traits"></div>
+  <p class="share-title" id="share-label"></p>
+  <div class="share-grid">
+    <button class="share-btn btn-twitter" onclick="shareTwitter()">𝕏 Twitter / X</button>
+    <button class="share-btn btn-line" onclick="shareLine()">💬 LINE</button>
+    <button class="share-btn btn-fb" onclick="shareFacebook()">📘 Facebook</button>
+    <button class="share-btn btn-copy" onclick="copyResult()" id="btn-copy-label"></button>
+  </div>
+  <button class="btn-retry" onclick="retry()" id="btn-retry-label"></button>
+  <div class="home-link"><a href="index.html" id="home-link-label"></a></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const i18n={
+  zh:{title:"你的戀愛死穴是什麼？",sub:"12題揭開你在感情中最致命的弱點\n你是太黏人、太冷漠，還是完美主義？",start:"開始測驗 →",notice:"共 12 題 · 約 3 分鐘",qLabel:(c,t)=>`問題 ${c} / ${t}`,next:"下一題 →",finish:"查看結果 ✨",shareLabel:"分享你的結果",copy:"📋 複製",copied:"已複製！",retry:"再測一次",home:"← 回首頁",pLabel:(c,t)=>`${c} / ${t}`,shareText:(e,ti,su)=>`💔 我的戀愛死穴是「${e} ${ti}」(${su})\n\n快來測測你的戀愛弱點！`},
+  ja:{title:"あなたの恋愛の弱点は？",sub:"12の質問で恋愛の致命的な弱点を明かします\n依存しすぎ？冷たすぎ？完璧主義？",start:"テストを始める →",notice:"全12問 · 約3分",qLabel:(c,t)=>`質問 ${c} / ${t}`,next:"次へ →",finish:"結果を見る ✨",shareLabel:"結果をシェア",copy:"📋 コピー",copied:"コピーしました！",retry:"もう一度",home:"← ホームへ",pLabel:(c,t)=>`${c} / ${t}`,shareText:(e,ti,su)=>`💔 私の恋愛の弱点は「${e} ${ti}」(${su})\nあなたも試してみて！`},
+  en:{title:"What's Your Love Fatal Flaw?",sub:"12 questions to reveal your biggest weakness in love\nToo clingy? Too cold? Too perfect?",start:"Start Quiz →",notice:"12 questions · About 3 min",qLabel:(c,t)=>`Question ${c} / ${t}`,next:"Next →",finish:"See Result ✨",shareLabel:"Share your result",copy:"📋 Copy",copied:"Copied!",retry:"Try Again",home:"← Back to Home",pLabel:(c,t)=>`${c} / ${t}`,shareText:(e,ti,su)=>`💔 My love fatal flaw is "${e} ${ti}" (${su})\nFind out yours!`}
+};
+const questions={
+  zh:[
+    {text:"伴侶沒有秒回你的訊息，你會……",opts:[{icon:"😰",text:"開始焦慮，反覆看已讀",scores:{clingy:2,anxious:1}},{icon:"😒",text:"有點不爽，但忍住不說",scores:{cold:1,perfectionist:1}},{icon:"😴",text:"沒差，等他回就好",scores:{cold:2,avoidant:1}},{icon:"🔍",text:"開始想是不是做錯了什麼",scores:{anxious:2,perfectionist:1}}]},
+    {text:"你心目中完美約會是？",opts:[{icon:"🕯️",text:"精心安排的驚喜，每個細節都完美",scores:{perfectionist:2,clingy:1}},{icon:"🛋️",text:"窩在家裡什麼都不做也很好",scores:{avoidant:2,cold:1}},{icon:"🎲",text:"隨興，去哪都無所謂只要在一起",scores:{clingy:2,anxious:1}},{icon:"🗓️",text:"提前計劃好，我不喜歡臨時",scores:{perfectionist:2,cold:1}}]},
+    {text:"吵架時你通常……",opts:[{icon:"🧊",text:"冷靜到像陌生人，讓對方覺得你不在乎",scores:{cold:2,avoidant:1}},{icon:"💥",text:"情緒爆發，說了很多事後後悔的話",scores:{anxious:2,clingy:1}},{icon:"🚪",text:"直接走開，需要空間冷靜",scores:{avoidant:2,cold:1}},{icon:"📝",text:"要求把每個問題都講清楚才能結束",scores:{perfectionist:2,anxious:1}}]},
+    {text:"伴侶跟異性朋友出去，你的反應？",opts:[{icon:"😤",text:"很不舒服，但說了怕被說不信任他",scores:{anxious:2,clingy:1}},{icon:"🤷",text:"完全沒問題，我很信任他",scores:{avoidant:2,cold:1}},{icon:"📱",text:"傳訊息問他在哪、幾點回",scores:{clingy:2,anxious:1}},{icon:"🎯",text:"不喜歡但壓著，暗中觀察",scores:{perfectionist:1,anxious:2}}]},
+    {text:"你對感情最大的恐懼是？",opts:[{icon:"😔",text:"被拋棄，不被愛",scores:{anxious:2,clingy:1}},{icon:"🔒",text:"失去自我，太依賴對方",scores:{avoidant:2,cold:1}},{icon:"💔",text:"付出了卻得不到同等回應",scores:{clingy:2,perfectionist:1}},{icon:"❌",text:"對方達不到我的標準",scores:{perfectionist:2,cold:1}}]},
+    {text:"交往後，你的朋友說……",opts:[{icon:"👻",text:"「你消失了，都不出來了」",scores:{clingy:2,anxious:1}},{icon:"❄️",text:"「你談戀愛了？看不出來」",scores:{cold:2,avoidant:1}},{icon:"😩",text:"「你又在說他了」",scores:{clingy:2,perfectionist:1}},{icon:"🧐",text:"「你對他要求也太高了吧」",scores:{perfectionist:2,cold:1}}]},
+    {text:"你覺得感情需要……",opts:[{icon:"🌡️",text:"每天確認愛意，不然會沒安全感",scores:{clingy:2,anxious:1}},{icon:"🏝️",text:"各自保有空間，才能長久",scores:{avoidant:2,cold:1}},{icon:"📊",text:"明確的進度，交往多久該到哪一步",scores:{perfectionist:2,anxious:1}},{icon:"🌊",text:"順其自然，感覺對就好",scores:{cold:1,avoidant:2}}]},
+    {text:"分手後你會……",opts:[{icon:"😭",text:"很久走不出來，反覆回想",scores:{anxious:2,clingy:1}},{icon:"😶",text:"很快裝沒事，但其實壓著",scores:{cold:2,avoidant:1}},{icon:"📞",text:"忍不住想聯絡，看他過得好不好",scores:{clingy:2,anxious:1}},{icon:"🔍",text:"分析哪裡出了問題，下次改進",scores:{perfectionist:2,cold:1}}]},
+    {text:"對方做了讓你不爽的事，你會……",opts:[{icon:"😶",text:"算了，不說，自己消化",scores:{cold:2,avoidant:1}},{icon:"💬",text:"直接說，我要他知道我的感受",scores:{anxious:2,clingy:1}},{icon:"😤",text:"冷戰，等他自己察覺",scores:{avoidant:1,cold:2}},{icon:"📋",text:"列出來，找時間好好溝通",scores:{perfectionist:2,anxious:1}}]},
+    {text:"你最常在感情裡說的話是？",opts:[{icon:"❓",text:"「你還愛我嗎？」",scores:{anxious:2,clingy:1}},{icon:"🙅",text:"「我需要一點空間」",scores:{avoidant:2,cold:1}},{icon:"😞",text:"「你怎麼都不懂我」",scores:{clingy:1,perfectionist:2}},{icon:"📏",text:"「這樣不對，應該要……」",scores:{perfectionist:2,cold:1}}]},
+    {text:"理想中的伴侶關係是？",opts:[{icon:"🧲",text:"24小時黏在一起，形影不離",scores:{clingy:2,anxious:1}},{icon:"🌐",text:"有自己的生活，偶爾相聚",scores:{avoidant:2,cold:1}},{icon:"🏆",text:"兩個人都要很優秀，互相成長",scores:{perfectionist:2,cold:1}},{icon:"🎭",text:"他懂我，我懂他，不需要解釋",scores:{anxious:1,avoidant:1}}]},
+    {text:"你傳了訊息對方三小時沒回，你……",opts:[{icon:"📱",text:"再傳一則，萬一他沒看到",scores:{clingy:2,anxious:1}},{icon:"😤",text:"生氣，但忍著不說",scores:{perfectionist:1,anxious:2}},{icon:"😴",text:"沒差，他忙吧",scores:{cold:2,avoidant:1}},{icon:"😰",text:"開始想是不是出事了或不想理我",scores:{anxious:2,clingy:1}}]}
+  ],
+  ja:[
+    {text:"パートナーがすぐに返信しないとき、あなたは……",opts:[{icon:"😰",text:"不安になって何度もチェックする",scores:{clingy:2,anxious:1}},{icon:"😒",text:"少しイライラするが我慢する",scores:{cold:1,perfectionist:1}},{icon:"😴",text:"気にしない、返ってくれば良い",scores:{cold:2,avoidant:1}},{icon:"🔍",text:"何かしたかなと考え始める",scores:{anxious:2,perfectionist:1}}]},
+    {text:"理想のデートは？",opts:[{icon:"🕯️",text:"サプライズで全て完璧に計画されたもの",scores:{perfectionist:2,clingy:1}},{icon:"🛋️",text:"家でまったり、何もしなくていい",scores:{avoidant:2,cold:1}},{icon:"🎲",text:"行き当たりばったり、一緒ならどこでも",scores:{clingy:2,anxious:1}},{icon:"🗓️",text:"前もってしっかり計画を立てたい",scores:{perfectionist:2,cold:1}}]},
+    {text:"喧嘩のとき、あなたは……",opts:[{icon:"🧊",text:"冷静すぎて相手が怖いと思うほど",scores:{cold:2,avoidant:1}},{icon:"💥",text:"感情が爆発して後悔することを言ってしまう",scores:{anxious:2,clingy:1}},{icon:"🚪",text:"その場を離れて冷静になりたい",scores:{avoidant:2,cold:1}},{icon:"📝",text:"全部話し合って解決するまで終われない",scores:{perfectionist:2,anxious:1}}]},
+    {text:"パートナーが異性の友人と出かけるとき？",opts:[{icon:"😤",text:"気になるが信頼していないと思われたくない",scores:{anxious:2,clingy:1}},{icon:"🤷",text:"全く問題ない、信頼しているから",scores:{avoidant:2,cold:1}},{icon:"📱",text:"どこにいるか、何時に帰るか聞く",scores:{clingy:2,anxious:1}},{icon:"🎯",text:"嫌だが抑えて、こっそり様子を見る",scores:{perfectionist:1,anxious:2}}]},
+    {text:"恋愛で一番怖いことは？",opts:[{icon:"😔",text:"捨てられること、愛されないこと",scores:{anxious:2,clingy:1}},{icon:"🔒",text:"自分を失うこと、依存しすぎること",scores:{avoidant:2,cold:1}},{icon:"💔",text:"与えた分だけ返ってこないこと",scores:{clingy:2,perfectionist:1}},{icon:"❌",text:"相手が自分の基準に達しないこと",scores:{perfectionist:2,cold:1}}]},
+    {text:"付き合い始めると友達に言われること……",opts:[{icon:"👻",text:"「最近全然会えない」",scores:{clingy:2,anxious:1}},{icon:"❄️",text:"「彼氏/彼女いるの？全然わからない」",scores:{cold:2,avoidant:1}},{icon:"😩",text:"「また彼/彼女の話してる」",scores:{clingy:2,perfectionist:1}},{icon:"🧐",text:"「要求高すぎじゃない？」",scores:{perfectionist:2,cold:1}}]},
+    {text:"恋愛には何が必要だと思う？",opts:[{icon:"🌡️",text:"毎日愛情確認、ないと不安",scores:{clingy:2,anxious:1}},{icon:"🏝️",text:"お互いの空間が大事",scores:{avoidant:2,cold:1}},{icon:"📊",text:"明確な関係の進み方",scores:{perfectionist:2,anxious:1}},{icon:"🌊",text:"自然な流れが一番",scores:{cold:1,avoidant:2}}]},
+    {text:"別れた後あなたは……",opts:[{icon:"😭",text:"長い間引きずって何度も振り返る",scores:{anxious:2,clingy:1}},{icon:"😶",text:"すぐ普通を装うが実は抑えている",scores:{cold:2,avoidant:1}},{icon:"📞",text:"連絡したくなる",scores:{clingy:2,anxious:1}},{icon:"🔍",text:"原因を分析して次に活かす",scores:{perfectionist:2,cold:1}}]},
+    {text:"相手が嫌なことをしたとき……",opts:[{icon:"😶",text:"言わずに自分の中で消化する",scores:{cold:2,avoidant:1}},{icon:"💬",text:"すぐ伝える",scores:{anxious:2,clingy:1}},{icon:"😤",text:"冷戦して気づいてもらうのを待つ",scores:{avoidant:1,cold:2}},{icon:"📋",text:"リストアップして後で話し合う",scores:{perfectionist:2,anxious:1}}]},
+    {text:"恋愛でよく言う言葉は？",opts:[{icon:"❓",text:"「まだ好き？」",scores:{anxious:2,clingy:1}},{icon:"🙅",text:"「少し一人の時間が必要」",scores:{avoidant:2,cold:1}},{icon:"😞",text:"「なんで分かってくれないの」",scores:{clingy:1,perfectionist:2}},{icon:"📏",text:"「それは違う、こうすべきでしょ」",scores:{perfectionist:2,cold:1}}]},
+    {text:"理想のカップルの形は？",opts:[{icon:"🧲",text:"24時間一緒にいたい",scores:{clingy:2,anxious:1}},{icon:"🌐",text:"それぞれの生活を持ちながらたまに会う",scores:{avoidant:2,cold:1}},{icon:"🏆",text:"お互い高め合える関係",scores:{perfectionist:2,cold:1}},{icon:"🎭",text:"説明しなくても分かり合える",scores:{anxious:1,avoidant:1}}]},
+    {text:"3時間返信がなかったら……",opts:[{icon:"📱",text:"もう一度送る（見てないかもしれないから）",scores:{clingy:2,anxious:1}},{icon:"😤",text:"怒るけど言わない",scores:{perfectionist:1,anxious:2}},{icon:"😴",text:"気にしない",scores:{cold:2,avoidant:1}},{icon:"😰",text:"何かあったか、無視されてるか不安になる",scores:{anxious:2,clingy:1}}]}
+  ],
+  en:[
+    {text:"Your partner hasn't replied in a while. You…",opts:[{icon:"😰",text:"Get anxious and keep checking the chat",scores:{clingy:2,anxious:1}},{icon:"😒",text:"Feel annoyed but hold it in",scores:{cold:1,perfectionist:1}},{icon:"😴",text:"Don't mind — they'll reply eventually",scores:{cold:2,avoidant:1}},{icon:"🔍",text:"Start wondering if you did something wrong",scores:{anxious:2,perfectionist:1}}]},
+    {text:"Your ideal date looks like…",opts:[{icon:"🕯️",text:"A perfectly planned surprise with every detail thought through",scores:{perfectionist:2,clingy:1}},{icon:"🛋️",text:"Staying home doing nothing — just being together",scores:{avoidant:2,cold:1}},{icon:"🎲",text:"Spontaneous — anywhere is fine as long as we're together",scores:{clingy:2,anxious:1}},{icon:"🗓️",text:"Planned in advance — I don't like last minute",scores:{perfectionist:2,cold:1}}]},
+    {text:"During an argument, you tend to…",opts:[{icon:"🧊",text:"Go so calm it scares them",scores:{cold:2,avoidant:1}},{icon:"💥",text:"Explode emotionally and say things you regret",scores:{anxious:2,clingy:1}},{icon:"🚪",text:"Walk away to cool down",scores:{avoidant:2,cold:1}},{icon:"📝",text:"Demand every issue gets resolved before moving on",scores:{perfectionist:2,anxious:1}}]},
+    {text:"Your partner goes out with an opposite-sex friend. You…",opts:[{icon:"😤",text:"Feel uncomfortable but won't say it — don't want to seem untrusting",scores:{anxious:2,clingy:1}},{icon:"🤷",text:"Totally fine — you trust them completely",scores:{avoidant:2,cold:1}},{icon:"📱",text:"Text to check where they are and when they'll be back",scores:{clingy:2,anxious:1}},{icon:"🎯",text:"Don't like it but suppress it, keep a quiet eye out",scores:{perfectionist:1,anxious:2}}]},
+    {text:"Your biggest fear in relationships is…",opts:[{icon:"😔",text:"Being abandoned or not being loved",scores:{anxious:2,clingy:1}},{icon:"🔒",text:"Losing yourself by being too dependent",scores:{avoidant:2,cold:1}},{icon:"💔",text:"Giving more than you receive",scores:{clingy:2,perfectionist:1}},{icon:"❌",text:"Your partner not meeting your standards",scores:{perfectionist:2,cold:1}}]},
+    {text:"Since you started dating, your friends say…",opts:[{icon:"👻",text:"'You've disappeared — we never see you'",scores:{clingy:2,anxious:1}},{icon:"❄️",text:"'Wait, you're dating someone? Can't tell at all'",scores:{cold:2,avoidant:1}},{icon:"😩",text:"'You're talking about them again'",scores:{clingy:2,perfectionist:1}},{icon:"🧐",text:"'Your standards are way too high'",scores:{perfectionist:2,cold:1}}]},
+    {text:"You think a relationship needs…",opts:[{icon:"🌡️",text:"Daily reassurance — otherwise you feel insecure",scores:{clingy:2,anxious:1}},{icon:"🏝️",text:"Personal space for each other to thrive",scores:{avoidant:2,cold:1}},{icon:"📊",text:"Clear milestones — where are we headed?",scores:{perfectionist:2,anxious:1}},{icon:"🌊",text:"To just flow naturally",scores:{cold:1,avoidant:2}}]},
+    {text:"After a breakup, you…",opts:[{icon:"😭",text:"Take a long time to recover, keep replaying memories",scores:{anxious:2,clingy:1}},{icon:"😶",text:"Pretend to be fine quickly, but suppress it inside",scores:{cold:2,avoidant:1}},{icon:"📞",text:"Can't help checking how they're doing",scores:{clingy:2,anxious:1}},{icon:"🔍",text:"Analyze what went wrong and improve for next time",scores:{perfectionist:2,cold:1}}]},
+    {text:"When your partner does something that bothers you…",opts:[{icon:"😶",text:"Let it go and deal with it internally",scores:{cold:2,avoidant:1}},{icon:"💬",text:"Say it directly — I want them to know",scores:{anxious:2,clingy:1}},{icon:"😤",text:"Go cold and wait for them to notice",scores:{avoidant:1,cold:2}},{icon:"📋",text:"Note it and find a good time to talk it through",scores:{perfectionist:2,anxious:1}}]},
+    {text:"A phrase you often say in relationships…",opts:[{icon:"❓",text:"'Do you still love me?'",scores:{anxious:2,clingy:1}},{icon:"🙅",text:"'I just need some space'",scores:{avoidant:2,cold:1}},{icon:"😞",text:"'Why don't you ever understand me?'",scores:{clingy:1,perfectionist:2}},{icon:"📏",text:"'That's wrong — it should be done this way'",scores:{perfectionist:2,cold:1}}]},
+    {text:"Your ideal relationship dynamic is…",opts:[{icon:"🧲",text:"Together 24/7 — inseparable",scores:{clingy:2,anxious:1}},{icon:"🌐",text:"Independent lives with quality time together",scores:{avoidant:2,cold:1}},{icon:"🏆",text:"Both ambitious — pushing each other to grow",scores:{perfectionist:2,cold:1}},{icon:"🎭",text:"Understanding each other without needing to explain",scores:{anxious:1,avoidant:1}}]},
+    {text:"They haven't replied in 3 hours. You…",opts:[{icon:"📱",text:"Send another message — just in case they missed it",scores:{clingy:2,anxious:1}},{icon:"😤",text:"Feel angry but say nothing",scores:{perfectionist:1,anxious:2}},{icon:"😴",text:"Not bothered — they're probably busy",scores:{cold:2,avoidant:1}},{icon:"😰",text:"Worry that something's wrong or they're ignoring you",scores:{anxious:2,clingy:1}}]}
+  ]
+};
+const results={
+  zh:{
+    clingy:{emoji:"🔗",title:"黏人型",subtitle:"安全感焦慮 · 付出型 · 容易受傷",desc:"你在感情裡付出非常多，但也需要非常多的回應來確認自己被愛。你的愛很真實，但有時候密集的關注會讓對方喘不過氣。你最大的功課是學會：你的價值不取決於對方有沒有秒回你。",traits:["需要頻繁確認愛意","容易因小事焦慮","付出度極高","害怕被拋棄","一旦在乎就全力投入"]},
+    anxious:{emoji:"😰",title:"焦慮型",subtitle:"思慮過多 · 敏感 · 愛得很深",desc:"你的腦子在感情裡永遠停不下來。一個沒回的訊息能讓你想一整天。你不是不信任對方，而是太害怕失去了。你愛得非常深，但這份深愛同時也成了你最大的壓力來源。",traits:["思考過度","對細節極度敏感","感情投入度高","需要言語reassurance","害怕失去"]},
+    cold:{emoji:"🧊",title:"冷漠型",subtitle:"情感壓抑 · 獨立 · 難以靠近",desc:"你在感情裡看起來總是很淡定，其實是因為你很早就學會把感情藏起來。你害怕脆弱，所以用冷漠當盔甲。對方很難知道你真正的感受，而這往往讓關係慢慢變冷。",traits:["情感不易表達","獨立性強","不習慣撒嬌","保護自己的方式是冷漠","其實感情很深只是不說"]},
+    avoidant:{emoji:"🚪",title:"逃避型",subtitle:"需要空間 · 害怕親密 · 自由優先",desc:"你想要愛，但每當關係太近，你就會本能地想退後。你不是不愛，而是親密感讓你感到窒息。你最好的狀態是有自己的空間，但這往往讓另一半覺得被推開。",traits:["需要個人空間","越親密越想逃","獨立性極強","不擅長依賴別人","害怕失去自我"]},
+    perfectionist:{emoji:"📏",title:"完美主義型",subtitle:"高標準 · 控制欲 · 理性至上",desc:"你對感情有很高的期待，也對自己和伴侶有很高的要求。你不是故意苛刻，只是你相信感情應該要是某個樣子。問題是，沒有人能一直達到完美，包括你自己。",traits:["標準很高","細節控","容易因不符預期而失望","不容易放鬆","對自己也很嚴格"]}
+  },
+  ja:{
+    clingy:{emoji:"🔗",title:"依存型",subtitle:"安心感不足 · 献身的 · 傷つきやすい",desc:"恋愛にとても多くを捧げますが、愛されている確認も強く求めます。あなたの愛は本物ですが、密な関心が相手を息苦しくさせることも。大切なのは：あなたの価値は返信速度で決まらないということ。",traits:["愛情確認が必要","些細なことで不安になる","献身度が高い","捨てられるのが怖い","好きになったら全力"]},
+    anxious:{emoji:"😰",title:"不安型",subtitle:"考えすぎ · 繊細 · 深く愛する",desc:"恋愛中、頭が常にフル回転。未読スルーで一日中考え込む。信頼していないのではなく、失うのが怖すぎるのです。深く愛するからこそ、それが最大のストレスにもなっています。",traits:["考えすぎる","細かいことに敏感","感情移入度が高い","言葉での安心感が必要","失うことへの恐れ"]},
+    cold:{emoji:"🧊",title:"無関心型",subtitle:"感情抑圧 · 独立 · 近づきにくい",desc:"冷静に見えるのは、早くから感情を隠す術を身につけたから。傷つくのが怖くて冷淡さを鎧にしている。相手にはあなたの本音が伝わりにくく、それが関係を冷やすことも。",traits:["感情を表現しにくい","独立心が強い","甘えるのが苦手","冷淡さで自分を守る","実は感情が深い"]},
+    avoidant:{emoji:"🚪",title:"回避型",subtitle:"空間が必要 · 親密さへの恐れ · 自由優先",desc:"愛したいけど、関係が近づくと本能的に引きたくなる。愛していないのではなく、親密さが窒息感を与える。自分の空間があるとき最も輝くが、相手は拒絶されたと感じることも。",traits:["個人の空間が必要","近づくほど逃げたくなる","独立性が強い","依存が苦手","自己喪失への恐れ"]},
+    perfectionist:{emoji:"📏",title:"完璧主義型",subtitle:"高い基準 · コントロール志向 · 理性重視",desc:"恋愛への期待が高く、自分にも相手にも要求が多い。厳しくしたいわけではなく、恋愛はこうあるべきという信念がある。でも誰も常に完璧ではいられない、自分自身も含めて。",traits:["基準が高い","細部にこだわる","期待外れで落胆しやすい","リラックスしにくい","自分にも厳しい"]}
+  },
+  en:{
+    clingy:{emoji:"🔗",title:"The Clinger",subtitle:"Needs reassurance · Devoted · Easily hurt",desc:"You give everything in love — but you also need a lot back to feel secure. Your love is genuine, but the intensity can sometimes overwhelm your partner. The lesson: your worth doesn't depend on how fast they reply.",traits:["Needs frequent reassurance","Anxious over small things","Extremely devoted","Fear of abandonment","All-in when you care"]},
+    anxious:{emoji:"😰",title:"The Overthinker",subtitle:"Hyper-aware · Sensitive · Loves deeply",desc:"Your mind never stops in a relationship. One unanswered message can consume your whole day. It's not distrust — it's a terror of losing what you love. You love deeply, but that depth is also your biggest source of stress.",traits:["Overthinks constantly","Highly sensitive to cues","Deep emotional investment","Needs verbal reassurance","Fear of loss"]},
+    cold:{emoji:"🧊",title:"The Ice Wall",subtitle:"Emotionally guarded · Independent · Hard to reach",desc:"You appear calm and unbothered — because you learned early to hide your feelings. You use coldness as armor against vulnerability. Your partner rarely knows how you truly feel, and that slowly cools relationships over time.",traits:["Hard to read emotionally","Strongly independent","Doesn't easily show affection","Uses detachment as protection","Deep feelings, rarely expressed"]},
+    avoidant:{emoji:"🚪",title:"The Escape Artist",subtitle:"Needs space · Fears intimacy · Values freedom",desc:"You want love — but the closer things get, the more you instinctively pull back. It's not that you don't care; closeness just feels suffocating. You thrive with space, but your partner often feels pushed away.",traits:["Needs personal space","Pulls back as things get closer","Fiercely independent","Struggles to rely on others","Fears losing self in a relationship"]},
+    perfectionist:{emoji:"📏",title:"The Perfectionist",subtitle:"High standards · Control-oriented · Logic-first",desc:"You have a clear picture of what love should look like — and you hold both yourself and your partner to that vision. You're not trying to be harsh; you just believe relationships should be a certain way. The problem: no one can be perfect all the time, including you.",traits:["Very high standards","Detail-obsessed","Easily disappointed by unmet expectations","Hard to relax","Equally strict with yourself"]}
+  }
+};
+let lang='zh',current=0,answers=[],selected=null,started=false;
+function detectLang(){const n=navigator.language||'zh';return n.startsWith('ja')?'ja':n.startsWith('en')?'en':'zh';}
+function setLang(l){lang=l;document.body.classList.toggle('lang-ja',l==='ja');document.querySelectorAll('.lang-btn').forEach((b,i)=>b.classList.toggle('active',['zh','ja','en'][i]===l));updateStatic();if(started)renderQ();}
+function updateStatic(){const t=i18n[lang];document.getElementById('hero-title').textContent=t.title;document.getElementById('hero-sub').textContent=t.sub;document.getElementById('btn-start-label').textContent=t.start;document.getElementById('notice-label').textContent=t.notice;document.getElementById('home-link-label').textContent=t.home;if(started){document.getElementById('share-label').textContent=t.shareLabel;document.getElementById('btn-copy-label').textContent=t.copy;document.getElementById('btn-retry-label').textContent=t.retry;}}
+function startQuiz(){started=true;document.getElementById('start-screen').style.display='none';document.getElementById('progress-wrap').style.display='block';document.getElementById('quiz-card').style.display='block';renderQ();}
+function renderQ(){const qs=questions[lang],q=qs[current],t=i18n[lang];document.getElementById('q-num').textContent=t.qLabel(current+1,qs.length);document.getElementById('q-text').textContent=q.text;const opts=document.getElementById('options');opts.innerHTML='';q.opts.forEach((o,i)=>{const b=document.createElement('button');b.className='opt'+(answers[current]===i?' selected':'');b.innerHTML=`<span class="opt-icon">${o.icon}</span><span>${o.text}</span>`;b.onclick=()=>selectOpt(i,b);opts.appendChild(b);});selected=answers[current]!==undefined?answers[current]:null;document.getElementById('btn-next').textContent=current===qs.length-1?t.finish:t.next;updateBtn();updateProg();}
+function selectOpt(i,b){document.querySelectorAll('.opt').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');selected=i;answers[current]=i;updateBtn();}
+function updateBtn(){document.getElementById('btn-next').classList.toggle('active',selected!==null);}
+function updateProg(){const total=questions[lang].length;document.getElementById('progress-fill').style.width=(current/total*100)+'%';document.getElementById('progress-label').textContent=i18n[lang].pLabel(current,total);}
+function nextQ(){if(selected===null)return;if(current<questions[lang].length-1){current++;selected=answers[current]!==undefined?answers[current]:null;renderQ();}else showResult();}
+function calcWinner(){const s={clingy:0,anxious:0,cold:0,avoidant:0,perfectionist:0};answers.forEach((ai,qi)=>{const sc=questions[lang][qi].opts[ai].scores;for(const k in sc)s[k]=(s[k]||0)+sc[k];});return Object.entries(s).sort((a,b)=>b[1]-a[1])[0][0];}
+function showResult(){document.getElementById('quiz-card').style.display='none';const w=calcWinner(),r=results[lang][w],t=i18n[lang];document.getElementById('r-emoji').textContent=r.emoji;document.getElementById('r-title').textContent=r.title;document.getElementById('r-subtitle').textContent=r.subtitle;document.getElementById('r-desc').textContent=r.desc;document.getElementById('r-traits').innerHTML=r.traits.map(tr=>`<span class="trait">${tr}</span>`).join('');document.getElementById('share-label').textContent=t.shareLabel;document.getElementById('btn-copy-label').textContent=t.copy;document.getElementById('btn-retry-label').textContent=t.retry;document.getElementById('result-card').style.display='block';document.getElementById('progress-fill').style.width='100%';document.getElementById('progress-label').textContent=t.pLabel(questions[lang].length,questions[lang].length);document.getElementById('progress-wrap').style.display='block';}
+function getShare(){const w=calcWinner(),r=results[lang][w];return{text:i18n[lang].shareText(r.emoji,r.title,r.subtitle),url:window.location.href};}
+function shareTwitter(){const{text,url}=getShare();window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,'_blank');}
+function shareLine(){const{text,url}=getShare();window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`,'_blank');}
+function shareFacebook(){const{url}=getShare();window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,'_blank');}
+function copyResult(){const{text,url}=getShare();navigator.clipboard.writeText(text+'\n'+url).then(()=>showToast(i18n[lang].copied));}
+function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+function retry(){current=0;answers=[];selected=null;document.getElementById('result-card').style.display='none';document.getElementById('quiz-card').style.display='block';renderQ();}
+lang=detectLang();document.body.classList.toggle('lang-ja',lang==='ja');document.querySelectorAll('.lang-btn').forEach((b,i)=>b.classList.toggle('active',['zh','ja','en'][i]===lang));updateStatic();
+</script>
+</body>
+</html>
