@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>【現代隱居邊緣人】你的「社交疲勞與精神退化」綜合診斷 - QuizDrop</title>
-<meta name="description" content="10題情境題，精準診斷你的社交能量與精神狀態，看看你是哪種邊緣人。">
+<title>【靈魂老化度】測試你在高壓現代社會的「精神退化/老化指數」 - QuizDrop</title>
+<meta name="description" content="10題深度檢測，看看你的靈魂究竟幾歲了。">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
   :root {
-    --bg:#120d1a; --bg2:#1b1426; --card:#221a30;
-    --accent:#7c4dff; --accent2:#b388ff; --gold:#f5c842;
-    --text:#ece5ff; --muted:#9486b8; --radius:18px;
+    --bg:#0d1f17; --bg2:#122a1e; --card:#173527;
+    --accent:#00bfa5; --accent2:#64ffda; --gold:#f5c842;
+    --text:#f5f0ff; --muted:#9486b8; --radius:18px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans TC', sans-serif; }
   body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 24px 16px 60px; }
@@ -123,9 +123,9 @@
 </div>
 
 <div class="hero">
-  <div class="hero-emoji-wrap"><span class="hero-emoji" style="font-size:52px;">🫥</span></div>
-  <h1 id="hero-title">【現代隱居邊緣人】<br>你的「社交疲勞與精神退化」綜合診斷</h1>
-  <p id="hero-sub">10題情境題，精準診斷你的社交能量與精神狀態</p>
+  <div class="hero-emoji-wrap"><span class="hero-emoji" style="font-size:52px;">⏳</span></div>
+  <h1 id="hero-title">【靈魂老化度】測試你在高壓現代社會的「精神退化/老化指數」</h1>
+  <p id="hero-sub">10題深度檢測，看看你的靈魂究竟幾歲了</p>
 </div>
 
 <div id="loading" class="loading-state">載入測驗中...</div>
@@ -181,8 +181,8 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 const i18n = {
   zh: {
     backLink: '← 回 QuizDrop 首頁',
-    heroTitle: '【現代隱居邊緣人】<br>你的「社交疲勞與精神退化」綜合診斷',
-    heroSub: '10題情境題，精準診斷你的社交能量與精神狀態',
+    heroTitle: '【靈魂老化度】測試你在高壓現代社會的「精神退化/老化指數」',
+    heroSub: '10題深度檢測，看看你的靈魂究竟幾歲了',
     startBtn: '開始診斷 →',
     notice: '共 10 題 · 約 3 分鐘 · 結果絕對精準（不負責任）',
     qLabel: (c, t) => `問題 ${c} / ${t}`,
@@ -213,7 +213,7 @@ function setLang(l) {
   }
 }
 
-const QUIZ_ID = '00000000-0000-0000-0000-000000000001'; // 對應 SQL 裡插入的官方測驗 ID
+const QUIZ_ID = '00000000-0000-0000-0000-000000000004'; // 對應 SQL 裡插入的官方測驗 ID
 
 let quizData = null;   // { questions, results }
 let quizTitle = '';

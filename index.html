@@ -401,6 +401,8 @@ const i18n = {
     email: "Email", password: "密碼（至少6位數）",
     noAccount: "還沒有帳號？", haveAccount: "已經有帳號？",
     toSignup: "立即註冊", toLogin: "直接登入",
+    authErrorGeneric: "信箱或密碼不正確，請重新確認",
+    authErrorNetwork: "連線發生問題，請再試一次",
   },
   ja: {
     tagline: "今日のあなたの答えを見つけよう — 1分間の心理テスト",
@@ -412,6 +414,8 @@ const i18n = {
     email: "メール", password: "パスワード（6文字以上）",
     noAccount: "アカウントがない？", haveAccount: "アカウントをお持ち？",
     toSignup: "今すぐ登録", toLogin: "ログインする",
+    authErrorGeneric: "メールアドレスまたはパスワードが正しくありません",
+    authErrorNetwork: "接続エラーが発生しました。もう一度お試しください",
   },
   en: {
     tagline: "Find today's answer — 1-minute personality quizzes",
@@ -423,6 +427,8 @@ const i18n = {
     email: "Email", password: "Password (6+ characters)",
     noAccount: "No account yet?", haveAccount: "Already have an account?",
     toSignup: "Sign up now", toLogin: "Log in instead",
+    authErrorGeneric: "Incorrect email or password. Please try again",
+    authErrorNetwork: "A connection error occurred. Please try again",
   }
 };
 let currentLang = 'zh';
@@ -452,12 +458,11 @@ function toggleSidebar() {
 /*  Quiz Cards (demo data — replace with Supabase fetch later)   */
 /* ============================================================ */
 const quizzes = [
-  { id: 'edge-1', cat: 'edge', badge: 'badge-edge', icon: '🏝️', title: '【現代隱居邊緣人】社交疲勞與精神退化診斷', desc: '10題情境題，精準診斷你的社交能量與精神狀態', plays: '12.4k', url: 'edge-quiz.html' },
-  { id: 'love-1', cat: 'love', badge: 'badge-love', icon: '💔', title: '你的戀愛死穴是什麼？', desc: '12題揭開你在感情中最致命的弱點', plays: '8.9k', url: 'love-weakness.html' },
-  { id: 'soul-1', cat: 'soul', badge: 'badge-soul', icon: '⏳', title: '你是哪個時代的靈魂？', desc: '12題測出你靈魂真正屬於的年代', plays: '6.2k', url: 'soul-era.html' },
-  { id: 'edge-2', cat: 'edge', badge: 'badge-edge', icon: '🤝', title: '你的人際關係模式是什麼？', desc: '12題揭開你在人群中的真實樣貌', plays: '5.1k', url: 'relationship-style.html' },
-  { id: 'work-1', cat: 'work', badge: 'badge-work', icon: '🧭', title: '你適合哪種職業類型？', desc: '12題找出你天生適合的工作方向', plays: '4.7k', url: 'career-type.html' },
-  { id: 'soul-2', cat: 'soul', badge: 'badge-soul', icon: '🔮', title: '你的靈魂深處住著哪種動物？', desc: '12個問題，揭開你內心隱藏的動物靈魂', plays: '15.3k', url: 'index-spirit-animal.html' },
+  { id: 'edge-1', cat: 'edge', badge: 'badge-edge', icon: '🫥', title: '【現代隱居邊緣人】社交疲勞與精神退化診斷', desc: '10題情境題，精準診斷你的社交能量與精神狀態', plays: '12.4k', url: 'edge-quiz.html' },
+  { id: 'love-2', cat: 'love', badge: 'badge-love', icon: '💘', title: '【戀愛重症診斷】自毀傾向與暈船腦容量體檢', desc: '10題實戰情境，診斷你的暈船指數與吸渣體質', plays: '18.7k', url: 'love-quiz-v2.html' },
+  { id: 'work-2', cat: 'work', badge: 'badge-work', icon: '🧭', title: '【職場生存戰】高功能瘋子定位測驗', desc: '10題職場實戰情境，找出你的辦公室人格分類', plays: '14.2k', url: 'work-quiz-v2.html' },
+  { id: 'soul-3', cat: 'soul', badge: 'badge-soul', icon: '⏳', title: '【靈魂老化度】精神退化/老化指數檢測', desc: '10題深度檢測，看看你的靈魂究竟幾歲了', plays: '9.8k', url: 'soul-aging-quiz.html' },
+  { id: 'edge-2', cat: 'edge', badge: 'badge-edge', icon: '🌌', title: '【全網瘋傳盲盒】平行宇宙反骨瘋狂指數', desc: '10題荒誕情境題，測出你深藏的瘋狂人格', plays: '21.3k', url: 'wild-quiz.html' },
 ];
 
 const catLabels = {
@@ -623,7 +628,12 @@ async function handleAuthSubmit() {
       updateUIForLoggedInUser(data.user);
     }
   } catch (err) {
-    showFormMsg(err.message || '發生錯誤，請再試一次', 'error');
+    console.error('Auth error:', err); // 保留原始錯誤供除錯，但不顯示給使用者
+    const t = i18n[currentLang];
+    const msg = (err.message && err.message.toLowerCase().includes('fetch'))
+      ? t.authErrorNetwork
+      : t.authErrorGeneric;
+    showFormMsg(msg, 'error');
   } finally {
     btn.disabled = false;
   }

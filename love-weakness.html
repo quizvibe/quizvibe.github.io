@@ -58,9 +58,12 @@
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
   .home-link{margin-top:24px;text-align:center;}
   .home-link a{color:var(--muted);font-size:13px;text-decoration:none;border-bottom:1px solid rgba(138,130,176,0.3);padding-bottom:2px;}
+  .top-link{position:fixed;top:14px;left:16px;z-index:999;}
+  .top-link a{color:var(--muted);font-size:13px;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
 </style>
 </head>
 <body>
+<div class="top-link"><a href="index.html">← 回首頁</a></div>
 <div class="lang-bar">
   <button class="lang-btn active" onclick="setLang('zh')">中文</button>
   <button class="lang-btn" onclick="setLang('ja')">日本語</button>
