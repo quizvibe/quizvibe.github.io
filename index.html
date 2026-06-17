@@ -300,7 +300,7 @@
   <div class="cta-banner">
     <div>
       <h3>🚀 想創作自己的測驗嗎？</h3>
-      <p>免費打造你的專屬心理測驗，最多 10 題、4 種結果，分享給朋友玩！</p>
+      <p>看 2 段廣告，解鎖 2 小時無限出題權限，最多 10 題、4 種結果！</p>
     </div>
     <button class="cta-btn" onclick="openCustomQuiz()">立即創作 →</button>
   </div>
@@ -536,7 +536,7 @@ function renderQuizCards() {
 renderQuizCards();
 
 function openCustomQuiz() {
-  alert('客製化測驗創作功能即將推出！敬請期待 🚀');
+  window.location.href = 'create.html';
 }
 
 /* ============================================================ */
@@ -734,11 +734,6 @@ function openFeedbackModal() {
   document.getElementById('feedback-form-wrap').classList.remove('hidden');
   document.getElementById('feedback-success-wrap').classList.add('hidden');
   document.getElementById('feedback-msg').style.display = 'none';
-
-  // 如果已登入，自動帶入 email
-  if (currentUser) {
-    document.getElementById('feedback-email').value = currentUser.email;
-  }
 }
 
 function closeFeedbackModal() {
@@ -777,7 +772,7 @@ async function submitFeedback() {
     document.getElementById('feedback-form-wrap').classList.add('hidden');
     document.getElementById('feedback-success-wrap').classList.remove('hidden');
   } catch (err) {
-    console.error('Feedback submit error:', err);
+    console.error('Feedback submit error:', err.message, err);
     msgEl.textContent = '送出失敗，請再試一次';
     msgEl.className = 'form-msg error';
   } finally {
