@@ -482,13 +482,7 @@ function setLang(l) {
   }
 }
 
-// 頁面載入時，套用之前儲存的語言偏好
-(function initLangFromStorage() {
-  const saved = localStorage.getItem('quizdrop_lang');
-  if (saved && i18n[saved]) {
-    setLang(saved);
-  }
-})();
+// 頁面載入時套用之前儲存的語言偏好 — 實際呼叫移到檔案最末端，確保所有依賴變數已宣告
 
 /* ============================================================ */
 /*  Sidebar                                                        */
@@ -807,6 +801,14 @@ document.getElementById('search-input').addEventListener('input', (e) => {  cons
     </div>
   `).join('') || '<p class="text-gray-400 text-sm col-span-full text-center py-10">沒有找到符合的測驗 🥲</p>';
 });
+
+/* 套用之前儲存的語言偏好 — 放在檔案最末端執行，確保所有變數與函式都已宣告完畢 */
+(function initLangFromStorage() {
+  const saved = localStorage.getItem('quizdrop_lang');
+  if (saved && i18n[saved]) {
+    setLang(saved);
+  }
+})();
 </script>
 </body>
 </html>
