@@ -360,10 +360,10 @@
 const SUPABASE_URL = 'https://xsflpzozgdgbtrtdzdlj.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzZmxwem96Z2RnYnRydGR6ZGxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTMyMzUsImV4cCI6MjA5NzE4OTIzNX0.Uyi5dYa73h0JJ9KwT2bP0C79wV_H-PoYneiR5xsbT6I';
 
-let supabase = null;
+let supabaseClient = null;
 try {
   if (SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   }
 } catch(e) { console.warn('Supabase 尚未設定', e); }
 
@@ -539,7 +539,7 @@ async function handleAuthSubmit() {
     showFormMsg('密碼至少需要 6 個字元', 'error');
     return;
   }
-  if (!supabase) {
+  if (!supabaseClient) {
     showFormMsg('⚠️ Supabase 尚未連接，請先設定 SUPABASE_URL', 'error');
     return;
   }
@@ -549,13 +549,13 @@ async function handleAuthSubmit() {
 
   try {
     if (authMode === 'signup') {
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabaseClient.auth.signUp({ email, password });
       if (error) throw error;
       // 顯示確認信提示
       document.getElementById('auth-form-wrap').classList.add('hidden');
       document.getElementById('confirm-msg-wrap').classList.remove('hidden');
     } else {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
       if (error) throw error;
       closeAuthModal();
       updateUIForLoggedInUser(data.user);
@@ -568,11 +568,11 @@ async function handleAuthSubmit() {
 }
 
 async function handleOAuth(provider) {
-  if (!supabase) {
+  if (!supabaseClient) {
     alert('⚠️ Supabase 尚未連接');
     return;
   }
-  const { error } = await supabase.auth.signInWithOAuth({ provider });
+  const { error } = await supabaseClient.auth.signInWithOAuth({ provider });
   if (error) alert('登入失敗：' + error.message);
 }
 
@@ -585,7 +585,7 @@ function updateUIForLoggedInUser(user) {
 
 function toggleUserMenu() {
   if (confirm('要登出嗎？')) {
-    supabase.auth.signOut().then(() => {
+    supabaseClient.auth.signOut().then(() => {
       document.getElementById('auth-buttons').classList.remove('hidden');
       document.getElementById('user-chip-wrap').classList.add('hidden');
     });
@@ -593,8 +593,8 @@ function toggleUserMenu() {
 }
 
 /* 檢查既有登入狀態 */
-if (supabase) {
-  supabase.auth.getSession().then(({ data: { session } }) => {
+if (supabaseClient) {
+  supabaseClient.auth.getSession().then(({ data: { session } }) => {
     if (session) updateUIForLoggedInUser(session.user);
   });
 }
