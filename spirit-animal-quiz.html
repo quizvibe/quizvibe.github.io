@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>你的靈魂深處住著哪種動物？</title>
+<meta name="description" content="12題揭開你內心深處的動物靈魂！科學性格測驗，測完可分享結果。">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+
+  :root {
+    --bg: #0e0c1a;
+    --bg2: #17142a;
+    --card: #1e1a35;
+    --accent: #9b6dff;
+    --accent2: #ff6db0;
+    --gold: #f5c842;
+    --text: #e8e4ff;
+    --muted: #8a82b0;
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans TC', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 60px;
+  }
+
+  .hero {
+    text-align: center;
+    padding: 48px 16px 32px;
+    max-width: 600px;
+  }
+
+  .hero-emoji {
+    font-size: 56px;
+    display: block;
+    margin-bottom: 16px;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .hero h1 {
+    font-size: clamp(22px, 5vw, 32px);
+    font-weight: 700;
+    line-height: 1.3;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+  }
+
+  .hero p {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .progress-wrap {
+    width: 100%;
+    max-width: 560px;
+    margin: 24px auto 0;
+  }
+
+  .progress-bar {
+    height: 4px;
+    background: var(--card);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 99px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  .progress-label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+    text-align: right;
+  }
+
+  .quiz-card {
+    background: var(--card);
+    border: 1px solid rgba(155, 109, 255, 0.15);
+    border-radius: var(--radius);
+    padding: 32px 28px;
+    max-width: 560px;
+    width: 100%;
+    margin-top: 28px;
+  }
+
+  .q-num {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .q-text {
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.5;
+    margin-bottom: 24px;
+  }
+
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .opt {
+    background: var(--bg2);
+    border: 1.5px solid rgba(155, 109, 255, 0.1);
+    border-radius: 12px;
+    padding: 14px 18px;
+    cursor: pointer;
+    font-size: 15px;
+    line-height: 1.5;
+    transition: all 0.18s ease;
+    text-align: left;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .opt:hover {
+    border-color: var(--accent);
+    background: rgba(155, 109, 255, 0.08);
+    transform: translateX(4px);
+  }
+
+  .opt.selected {
+    border-color: var(--accent);
+    background: rgba(155, 109, 255, 0.15);
+    transform: translateX(4px);
+  }
+
+  .opt-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .btn-next {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 15px 36px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 24px;
+    width: 100%;
+    transition: opacity 0.2s, transform 0.2s;
+    font-family: inherit;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .btn-next.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .btn-next.active:hover {
+    transform: translateY(-2px);
+    opacity: 0.92;
+  }
+
+  /* Result */
+  .result-card {
+    background: var(--card);
+    border: 1px solid rgba(155, 109, 255, 0.2);
+    border-radius: var(--radius);
+    padding: 40px 28px;
+    max-width: 560px;
+    width: 100%;
+    margin-top: 28px;
+    text-align: center;
+    display: none;
+  }
+
+  .result-emoji {
+    font-size: 80px;
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  .result-title {
+    font-size: 28px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+
+  .result-subtitle {
+    color: var(--gold);
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 20px;
+    letter-spacing: 0.05em;
+  }
+
+  .result-desc {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.75;
+    margin-bottom: 24px;
+    text-align: left;
+  }
+
+  .trait-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 28px;
+  }
+
+  .trait {
+    background: rgba(155, 109, 255, 0.12);
+    border: 1px solid rgba(155, 109, 255, 0.25);
+    color: var(--accent);
+    font-size: 13px;
+    padding: 5px 14px;
+    border-radius: 99px;
+    font-weight: 500;
+  }
+
+  .btn-share {
+    background: var(--bg2);
+    border: 1.5px solid rgba(155, 109, 255, 0.3);
+    color: var(--text);
+    border-radius: 12px;
+    padding: 13px 28px;
+    font-size: 15px;
+    cursor: pointer;
+    margin-right: 10px;
+    font-family: inherit;
+    transition: border-color 0.2s;
+  }
+
+  .btn-share:hover { border-color: var(--accent); }
+
+  .btn-retry {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    color: #fff;
+    border-radius: 12px;
+    padding: 13px 28px;
+    font-size: 15px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity 0.2s;
+  }
+
+  .btn-retry:hover { opacity: 0.85; }
+
+  .share-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  #start-screen {
+    max-width: 560px;
+    width: 100%;
+    margin-top: 28px;
+    text-align: center;
+  }
+
+  .btn-start {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 18px 48px;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: transform 0.2s, opacity 0.2s;
+    box-shadow: 0 8px 32px rgba(155,109,255,0.25);
+  }
+
+  .btn-start:hover { transform: translateY(-3px); opacity: 0.9; }
+
+  .notice {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 14px;
+  }
+
+  .ad-placeholder {
+    max-width: 560px;
+    width: 100%;
+    margin-top: 28px;
+    background: var(--bg2);
+    border: 1px dashed rgba(155,109,255,0.2);
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <span class="hero-emoji">🔮</span>
+  <h1>你的靈魂深處住著哪種動物？</h1>
+  <p>12個問題，揭開你內心隱藏的動物靈魂<br>你是孤獨的狼、自由的鷹，還是智慧的貓頭鷹？</p>
+</div>
+
+<!-- Start Screen -->
+<div id="start-screen">
+  <button class="btn-start" onclick="startQuiz()">開始測驗 →</button>
+  <p class="notice">共 12 題 · 約 3 分鐘完成</p>
+</div>
+
+<!-- Ad placeholder (replace with AdSense code) -->
+<div class="ad-placeholder" id="ad-top" style="display:none">
+  廣告區域（申請 AdSense 後放置廣告代碼）
+</div>
+
+<!-- Quiz Area -->
+<div class="progress-wrap" id="progress-wrap" style="display:none">
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  <div class="progress-label" id="progress-label">0 / 12</div>
+</div>
+
+<div class="quiz-card" id="quiz-card" style="display:none">
+  <div class="q-num" id="q-num">問題 1 / 12</div>
+  <div class="q-text" id="q-text"></div>
+  <div class="options" id="options"></div>
+  <button class="btn-next" id="btn-next" onclick="nextQ()">下一題 →</button>
+</div>
+
+<!-- Result -->
+<div class="result-card" id="result-card">
+  <span class="result-emoji" id="r-emoji"></span>
+  <div class="result-title" id="r-title"></div>
+  <div class="result-subtitle" id="r-subtitle"></div>
+  <div class="result-desc" id="r-desc"></div>
+  <div class="trait-wrap" id="r-traits"></div>
+  <div class="share-row">
+    <button class="btn-share" onclick="copyResult()">📋 複製結果分享</button>
+    <button class="btn-retry" onclick="retry()">再測一次</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {
+    text: "週末難得有空，你最想做什麼？",
+    opts: [
+      { icon:"🏔️", text:"一個人去爬山或健行", scores:{wolf:2,eagle:1} },
+      { icon:"🎉", text:"約一大群朋友出去玩", scores:{dolphin:2,lion:1} },
+      { icon:"📚", text:"窩在家裡讀書看電影", scores:{owl:2,cat:1} },
+      { icon:"🌅", text:"漫無目的地四處閒晃", scores:{fox:2,eagle:1} },
+    ]
+  },
+  {
+    text: "朋友突然跟你說了一個大秘密，你會……",
+    opts: [
+      { icon:"🤐", text:"絕對保密，這是信任的基礎", scores:{wolf:2,owl:1} },
+      { icon:"💬", text:"只告訴最信任的那一個人", scores:{dolphin:1,cat:1} },
+      { icon:"🔍", text:"默默幫他分析狀況，給出建議", scores:{fox:2,owl:1} },
+      { icon:"😂", text:"假裝沒聽見，這跟我沒關係", scores:{cat:2,lion:1} },
+    ]
+  },
+  {
+    text: "遇到陌生人，你第一個反應是什麼？",
+    opts: [
+      { icon:"😊", text:"主動打招呼，交朋友很有趣", scores:{dolphin:2,lion:1} },
+      { icon:"🧐", text:"觀察一下再決定要不要靠近", scores:{cat:2,fox:1} },
+      { icon:"😶", text:"保持距離，等對方先說話", scores:{wolf:2,owl:1} },
+      { icon:"📊", text:"評估這個人對我有沒有用", scores:{eagle:2,lion:1} },
+    ]
+  },
+  {
+    text: "你心目中最理想的工作狀態是？",
+    opts: [
+      { icon:"🏢", text:"帶領團隊，有清楚的目標和成就感", scores:{lion:2,eagle:1} },
+      { icon:"🌐", text:"自由接案，我說了算", scores:{eagle:2,fox:1} },
+      { icon:"👥", text:"和一群志同道合的人一起", scores:{dolphin:2,wolf:1} },
+      { icon:"🔬", text:"深入鑽研某個領域，成為專家", scores:{owl:2,cat:1} },
+    ]
+  },
+  {
+    text: "你吵架後的典型模式是？",
+    opts: [
+      { icon:"🤝", text:"馬上去道歉，不想讓關係僵著", scores:{dolphin:2,wolf:1} },
+      { icon:"🧊", text:"沉默幾天，等自己冷靜後再談", scores:{cat:2,wolf:1} },
+      { icon:"💥", text:"直接說清楚，當下解決", scores:{lion:2,eagle:1} },
+      { icon:"🗂️", text:"把事情分析清楚再溝通", scores:{owl:2,fox:1} },
+    ]
+  },
+  {
+    text: "如果可以住在任何地方，你會選哪裡？",
+    opts: [
+      { icon:"🏡", text:"有庭院的郊外小屋", scores:{wolf:2,cat:1} },
+      { icon:"🌆", text:"城市核心，什麼都方便", scores:{lion:2,dolphin:1} },
+      { icon:"🏔️", text:"高山上能看星星的地方", scores:{eagle:2,owl:1} },
+      { icon:"🌊", text:"海邊，每天看浪就夠了", scores:{dolphin:2,fox:1} },
+    ]
+  },
+  {
+    text: "別人形容你最多的一句話是？",
+    opts: [
+      { icon:"💡", text:"「你超聰明，腦子轉得很快」", scores:{fox:2,owl:1} },
+      { icon:"🛡️", text:"「你很可靠，有你我就放心」", scores:{wolf:2,lion:1} },
+      { icon:"☀️", text:"「你超開朗，和你在一起很快樂」", scores:{dolphin:2,lion:1} },
+      { icon:"🔮", text:"「你很神秘，不知道你在想什麼」", scores:{cat:2,owl:1} },
+    ]
+  },
+  {
+    text: "遇到困難時，你第一步會怎麼做？",
+    opts: [
+      { icon:"🧠", text:"先自己分析，想出幾個方案", scores:{owl:2,fox:1} },
+      { icon:"👥", text:"找人商量，集思廣益", scores:{dolphin:2,wolf:1} },
+      { icon:"⚡", text:"直接行動，邊做邊調整", scores:{eagle:2,lion:1} },
+      { icon:"🌀", text:"先讓自己靜下來，順其自然", scores:{cat:2,wolf:1} },
+    ]
+  },
+  {
+    text: "朋友需要幫忙，但那天你真的很累……",
+    opts: [
+      { icon:"💪", text:"二話不說，朋友有難就去", scores:{wolf:2,dolphin:1} },
+      { icon:"🤔", text:"先問清楚狀況，能幫就幫", scores:{fox:2,owl:1} },
+      { icon:"😴", text:"老實說今天狀態不好，改天", scores:{cat:2,eagle:1} },
+      { icon:"🙏", text:"硬撐去，但內心有點崩潰", scores:{dolphin:2,lion:1} },
+    ]
+  },
+  {
+    text: "你最害怕的事情是？",
+    opts: [
+      { icon:"😶‍🌫️", text:"被別人忽視，不被重視", scores:{lion:2,dolphin:1} },
+      { icon:"🔒", text:"失去自由，被規則束縛", scores:{eagle:2,cat:1} },
+      { icon:"😔", text:"背叛朋友或被朋友背叛", scores:{wolf:2,dolphin:1} },
+      { icon:"😰", text:"做了錯誤決定，事後懊悔", scores:{owl:2,fox:1} },
+    ]
+  },
+  {
+    text: "選一個最吸引你的場景？",
+    opts: [
+      { icon:"🌌", text:"深夜，一個人在星空下", scores:{wolf:2,owl:1} },
+      { icon:"🎭", text:"派對上，站在人群中心", scores:{lion:2,dolphin:1} },
+      { icon:"🌫️", text:"清晨霧中，獨自在山頂", scores:{eagle:2,cat:1} },
+      { icon:"🏖️", text:"和好朋友在海邊嬉鬧", scores:{dolphin:2,fox:1} },
+    ]
+  },
+  {
+    text: "你對「成功」的定義最接近哪個？",
+    opts: [
+      { icon:"👑", text:"被大家認可，有影響力", scores:{lion:2,eagle:1} },
+      { icon:"🧘", text:"內心平靜，不被外物左右", scores:{wolf:2,cat:1} },
+      { icon:"❤️", text:"身邊有愛我的人，彼此珍惜", scores:{dolphin:2,wolf:1} },
+      { icon:"🔑", text:"找到自己真正想要的，並去做到", scores:{fox:2,owl:1} },
+    ]
+  }
+];
+
+const results = {
+  wolf: {
+    emoji: "🐺",
+    title: "孤獨的狼",
+    subtitle: "忠誠 · 獨立 · 深情",
+    desc: "你表面看起來獨立冷酷，卻有著旁人難以想像的深情。對認定的人，你會無條件守護；對不在乎的人，你則雲淡風輕。你不需要一大群朋友，但你的圈子永遠緊密如鐵。有時候你寧願一個人扛，也不願讓人看見軟弱的自己。但其實，你偶爾也渴望有人真正懂你。",
+    traits: ["忠誠度極高","需要個人空間","感情深藏不露","自我保護意識強","選擇性社交"]
+  },
+  eagle: {
+    emoji: "🦅",
+    title: "自由的鷹",
+    subtitle: "野心 · 自由 · 遠見",
+    desc: "你天生有種往高處看的眼界。你渴望自由，不喜歡被任何框架束縛，總是在為下一個目標做準備。別人還在猶豫時，你已經在行動了。你不是不在意關係，但你相信，只有先讓自己飛得夠高，才能帶著你在乎的人一起翱翔。有時候你的速度讓人跟不上，但那正是你的魅力。",
+    traits: ["野心勃勃","行動力強","不受框架限制","目標導向","天生領袖氣質"]
+  },
+  owl: {
+    emoji: "🦉",
+    title: "智慧的貓頭鷹",
+    subtitle: "洞察 · 沉穩 · 理性",
+    desc: "你是周遭的人裡面，說話最少、想的最多的那一個。你不輕易表態，但每次開口都一針見血。你很少衝動，凡事習慣先想清楚再行動。人們喜歡找你問意見，因為你總是能看見別人忽略的角度。你的直覺強大，有時甚至讓自己都感到驚訝。夜晚是你思緒最清晰的時刻。",
+    traits: ["觀察力敏銳","不輕易表態","分析能力極強","決策謹慎","意見值得信賴"]
+  },
+  dolphin: {
+    emoji: "🐬",
+    title: "溫暖的海豚",
+    subtitle: "熱情 · 同理心 · 活力",
+    desc: "你是人群中的太陽。你的能量是感染性的，身邊的人很難在你旁邊悶悶不樂。你天生善解人意，能感受到別人沒說出口的情緒，並且知道如何回應。你享受連結，享受愛與被愛。偶爾你會因為太在意別人的感受而忽略自己的需求，記得，照顧好自己，才能繼續照顧別人。",
+    traits: ["超強同理心","社交能量爆棚","溫柔體貼","情感豐富","人際關係是力量來源"]
+  },
+  lion: {
+    emoji: "🦁",
+    title: "霸氣的獅子",
+    subtitle: "自信 · 領導力 · 存在感",
+    desc: "你走進一個房間，氣場就先到了。你天生就是領導者，不是因為你強迫別人聽你的，而是因為你的自信和決斷力讓人自然而然跟著你走。你不怕衝突，你的直接讓有些人不習慣，但那些懂你的人知道，那是一種尊重。你對自己在意的事情超級認真，輸了才會讓你睡不著。",
+    traits: ["自信強大","領袖魅力","直接不拐彎","競爭意識強","保護自己在乎的人"]
+  },
+  fox: {
+    emoji: "🦊",
+    title: "機靈的狐狸",
+    subtitle: "聰明 · 靈活 · 魅力",
+    desc: "你的大腦就像個不斷轉動的齒輪，你享受解決問題，享受找到別人沒想到的捷徑。你天生有種魅力，讓人忍不住想靠近，但你同時也保持著剛好的距離感。你適應力極強，在任何環境都能找到自己的位置。你也許有些神秘，但那正是讓人著迷的地方。",
+    traits: ["反應超快","靈活應變","解決問題的高手","有神秘感","魅力難以抗拒"]
+  },
+  cat: {
+    emoji: "🐱",
+    title: "神秘的貓",
+    subtitle: "獨立 · 直覺 · 任性自在",
+    desc: "你活在自己的節奏裡，不太在乎外界的標準和眼光。你有強烈的個性和品味，但你不會費心去解釋自己。你選擇關係非常謹慎，一旦接受一個人，你會以自己的方式給予深厚的情感。你的直覺異常準確，常常在說不出原因的情況下就感覺到了什麼。你的存在本身就是一種風格。",
+    traits: ["高度獨立","直覺靈敏","選擇性信任","有自己的美學","不需要解釋自己"]
+  }
+};
+
+let current = 0;
+let answers = [];
+let selected = null;
+
+function startQuiz() {
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('ad-top').style.display = 'block';
+  document.getElementById('progress-wrap').style.display = 'block';
+  document.getElementById('quiz-card').style.display = 'block';
+  renderQ();
+}
+
+function renderQ() {
+  const q = questions[current];
+  document.getElementById('q-num').textContent = `問題 ${current + 1} / ${questions.length}`;
+  document.getElementById('q-text').textContent = q.text;
+
+  const opts = document.getElementById('options');
+  opts.innerHTML = '';
+  q.opts.forEach((o, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt' + (answers[current] === i ? ' selected' : '');
+    btn.innerHTML = `<span class="opt-icon">${o.icon}</span><span>${o.text}</span>`;
+    btn.onclick = () => selectOpt(i, btn);
+    opts.appendChild(btn);
+  });
+
+  selected = answers[current] !== undefined ? answers[current] : null;
+  updateNextBtn();
+  updateProgress();
+
+  const nextBtn = document.getElementById('btn-next');
+  nextBtn.textContent = current === questions.length - 1 ? '查看結果 ✨' : '下一題 →';
+}
+
+function selectOpt(i, btn) {
+  document.querySelectorAll('.opt').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selected = i;
+  answers[current] = i;
+  updateNextBtn();
+}
+
+function updateNextBtn() {
+  const btn = document.getElementById('btn-next');
+  btn.classList.toggle('active', selected !== null);
+}
+
+function updateProgress() {
+  const pct = (current / questions.length) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `${current} / ${questions.length}`;
+}
+
+function nextQ() {
+  if (selected === null) return;
+  if (current < questions.length - 1) {
+    current++;
+    selected = answers[current] !== undefined ? answers[current] : null;
+    renderQ();
+  } else {
+    showResult();
+  }
+}
+
+function showResult() {
+  document.getElementById('quiz-card').style.display = 'none';
+  document.getElementById('progress-wrap').style.display = 'none';
+
+  const scores = { wolf:0, eagle:0, owl:0, dolphin:0, lion:0, fox:0, cat:0 };
+  answers.forEach((ai, qi) => {
+    const s = questions[qi].opts[ai].scores;
+    for (const k in s) scores[k] = (scores[k] || 0) + s[k];
+  });
+
+  const winner = Object.entries(scores).sort((a,b) => b[1]-a[1])[0][0];
+  const r = results[winner];
+
+  document.getElementById('r-emoji').textContent = r.emoji;
+  document.getElementById('r-title').textContent = r.title;
+  document.getElementById('r-subtitle').textContent = r.subtitle;
+  document.getElementById('r-desc').textContent = r.desc;
+  const traits = document.getElementById('r-traits');
+  traits.innerHTML = r.traits.map(t => `<span class="trait">${t}</span>`).join('');
+
+  const rc = document.getElementById('result-card');
+  rc.style.display = 'block';
+
+  document.getElementById('progress-fill').style.width = '100%';
+  document.getElementById('progress-label').textContent = `${questions.length} / ${questions.length}`;
+  document.getElementById('progress-wrap').style.display = 'block';
+}
+
+function copyResult() {
+  const title = document.getElementById('r-title').textContent;
+  const subtitle = document.getElementById('r-subtitle').textContent;
+  const text = `✨ 我的靈魂動物是「${title}」(${subtitle})\n\n快來測測你是哪種動物靈魂！`;
+  navigator.clipboard.writeText(text).then(() => {
+    alert('已複製！快去貼給朋友看 😄');
+  });
+}
+
+function retry() {
+  current = 0;
+  answers = [];
+  selected = null;
+  document.getElementById('result-card').style.display = 'none';
+  document.getElementById('quiz-card').style.display = 'block';
+  document.getElementById('progress-wrap').style.display = 'block';
+  renderQ();
+}
+</script>
+</body>
+</html>
