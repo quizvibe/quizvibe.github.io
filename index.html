@@ -444,6 +444,11 @@ function setLang(l) {
   document.querySelector('.btn-login').textContent = t.login;
   document.querySelector('.btn-signup').textContent = t.signup;
   renderQuizCards();
+
+  // 如果登入 Modal 正開著，同步更新裡面的文字
+  if (document.getElementById('auth-modal').classList.contains('show')) {
+    updateAuthModalUI();
+  }
 }
 
 /* ============================================================ */
@@ -520,6 +525,12 @@ function closeAuthModal() {
   document.getElementById('form-msg').style.display = 'none';
   document.getElementById('auth-email').value = '';
   document.getElementById('auth-password').value = '';
+  document.getElementById('auth-password-confirm').value = '';
+  document.getElementById('auth-nickname').value = '';
+
+  // 重置密碼顯示狀態，避免下次打開時殘留「顯示中」的狀態
+  document.querySelectorAll('.pw-field-wrap input').forEach(input => { input.type = 'password'; });
+  document.querySelectorAll('.pw-eye').forEach(btn => { btn.textContent = '👁️'; btn.classList.remove('showing'); });
 }
 
 function toggleAuthMode() {

@@ -59,7 +59,7 @@
     background: #fff; border: 1px solid #f0f0f0; border-radius: 16px; padding: 18px 20px;
     display: flex; align-items: center; gap: 14px; margin-bottom: 10px; transition: all .2s;
   }
-  .history-item:hover { box-shadow: 0 6px 16px -6px rgba(0,0,0,0.08); }
+  .history-item:hover { box-shadow: 0 6px 16px -6px rgba(0,0,0,0.08); transform: translateX(2px); }
   .history-emoji { font-size: 28px; flex-shrink: 0; }
   .history-info { flex: 1; }
   .history-title { font-weight: 700; font-size: 14.5px; }
@@ -194,6 +194,15 @@ async function saveProfile() {
   }
 }
 
+// 測驗 ID 對應到實際的測驗頁面檔名，用於「重溫結果」的連結
+const QUIZ_URL_MAP = {
+  '00000000-0000-0000-0000-000000000001': 'edge-quiz.html',
+  '00000000-0000-0000-0000-000000000002': 'love-quiz-v2.html',
+  '00000000-0000-0000-0000-000000000003': 'work-quiz-v2.html',
+  '00000000-0000-0000-0000-000000000004': 'soul-aging-quiz.html',
+  '00000000-0000-0000-0000-000000000005': 'wild-quiz.html',
+};
+
 async function loadHistory() {
   const listEl = document.getElementById('history-list');
 
@@ -216,14 +225,18 @@ async function loadHistory() {
   listEl.innerHTML = data.map(item => {
     const date = new Date(item.played_at).toLocaleDateString('zh-TW', { year:'numeric', month:'long', day:'numeric' });
     const quizTitle = item.quizzes?.title || '未知測驗';
+    const quizUrl = QUIZ_URL_MAP[item.quiz_id];
+    const linkHref = quizUrl ? `${quizUrl}?result=${encodeURIComponent(item.result_label)}` : '#';
+    const clickable = quizUrl ? `onclick="window.location.href='${linkHref}'" style="cursor:pointer;"` : '';
     return `
-      <div class="history-item">
+      <div class="history-item" ${clickable}>
         <span class="history-emoji">✨</span>
         <div class="history-info">
           <div class="history-title">${escapeHtml(quizTitle)}</div>
           <div class="history-result">結果：${escapeHtml(item.result_title || item.result_label)}</div>
           <div class="history-date">${date}</div>
         </div>
+        ${quizUrl ? '<span style="color:#ccc;font-size:18px;">›</span>' : ''}
       </div>
     `;
   }).join('');

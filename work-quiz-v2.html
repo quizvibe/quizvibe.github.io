@@ -108,6 +108,23 @@
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .home-link { margin-top: 22px; text-align: center; }
   .home-link a { color: var(--muted); font-size: 13px; text-decoration: none; border-bottom: 1px solid rgba(124,77,255,0.3); padding-bottom: 2px; }
+
+  /* Persistent top bar with auth state */
+  .quiz-topbar {
+    position: fixed; top: 0; left: 0; right: 0; height: 58px;
+    background: rgba(18,13,26,0.88); backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(124,77,255,0.15); z-index: 100;
+    display: flex; align-items: center; padding: 0 16px; gap: 10px;
+  }
+  .quiz-topbar .back { color: var(--muted); font-size: 13px; text-decoration: none; display: flex; align-items: center; gap: 4px; }
+  .quiz-topbar .back:hover { color: var(--accent2); }
+  .quiz-topbar .spacer { flex: 1; }
+  .qt-btn { padding: 7px 16px; border-radius: 99px; font-weight: 700; font-size: 12.5px; cursor: pointer; border: none; transition: all .2s; }
+  .qt-login { background: transparent; color: var(--text); border: 1.5px solid rgba(124,77,255,0.3); }
+  .qt-signup { background: linear-gradient(120deg,var(--accent),var(--accent2)); color: #fff; }
+  .qt-user-chip { display: flex; align-items: center; gap: 7px; background: rgba(124,77,255,0.12); border-radius: 99px; padding: 5px 12px 5px 5px; cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--text); }
+  .qt-avatar { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(120deg,var(--accent),var(--accent2)); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 800; }
+  body { padding-top: 80px; } /* push content below fixed topbar */
 </style>
 </head>
 <body>
@@ -118,8 +135,19 @@
   <button class="lang-btn" onclick="setLang('en')" data-lang-btn="en">EN</button>
 </div>
 
-<div class="top-link">
-  <a href="index.html" id="back-link">← 回 QuizDrop 首頁</a>
+<div class="quiz-topbar">
+  <a href="index.html" class="back">← QuizDrop</a>
+  <div class="spacer"></div>
+  <div id="qt-auth-buttons" class="flex items-center gap-2" style="display:flex; gap:8px;">
+    <button class="qt-btn qt-login" onclick="window.location.href='index.html'">登入</button>
+    <button class="qt-btn qt-signup" onclick="window.location.href='index.html'">註冊</button>
+  </div>
+  <div id="qt-user-chip-wrap" class="hidden">
+    <div class="qt-user-chip" onclick="window.location.href='profile.html'">
+      <div class="qt-avatar" id="qt-avatar-initial">U</div>
+      <span id="qt-username-display">用戶</span>
+    </div>
+  </div>
 </div>
 
 <div class="hero">
@@ -230,6 +258,8 @@ async function loadQuiz() {
     const { data: { session } } = await supabaseClient.auth.getSession();
     currentUser = session?.user || null;
 
+    await updateTopbarAuthState();
+
     const { data, error } = await supabaseClient
       .from('quizzes')
       .select('title, questions, results')
@@ -242,6 +272,19 @@ async function loadQuiz() {
     quizTitle = data.title;
 
     document.getElementById('loading').classList.add('hidden');
+
+    // 檢查網址是否帶有 ?result=xxx 參數，代表是從個人頁面點過來「重溫結果」
+    const urlParams = new URLSearchParams(window.location.search);
+    const resultIdFromUrl = urlParams.get('result');
+
+    if (resultIdFromUrl) {
+      const savedResult = quizData.results.find(r => r.id === resultIdFromUrl);
+      if (savedResult) {
+        showSavedResult(savedResult);
+        return;
+      }
+    }
+
     document.getElementById('start-screen').classList.remove('hidden');
   } catch (err) {
     document.getElementById('loading').textContent = '載入測驗失敗，請重新整理頁面 (' + err.message + ')';
@@ -249,6 +292,37 @@ async function loadQuiz() {
   }
 }
 loadQuiz();
+
+// 直接顯示已存的結果（從個人頁面點「重溫結果」過來時使用），不重新計分、不重複存檔
+function showSavedResult(result) {
+  document.getElementById('r-emoji').textContent = result.emoji;
+  document.getElementById('r-title').textContent = result.label;
+  document.getElementById('r-subtitle').textContent = result.subtitle;
+  document.getElementById('r-desc').textContent = result.desc;
+  document.getElementById('r-traits').innerHTML = result.traits.map(t => `<span class="trait">${escapeText(t)}</span>`).join('');
+
+  const statusEl = document.getElementById('save-status');
+  statusEl.className = 'save-status saved';
+  statusEl.textContent = '📜 這是你重溫的舊測驗結果';
+
+  document.getElementById('result-card').style.display = 'block';
+}
+
+async function updateTopbarAuthState() {
+  if (!currentUser) return;
+
+  document.getElementById('qt-auth-buttons').classList.add('hidden');
+  document.getElementById('qt-user-chip-wrap').classList.remove('hidden');
+
+  let displayName = currentUser.email.split('@')[0];
+  try {
+    const { data } = await supabaseClient.from('users').select('display_name').eq('id', currentUser.id).single();
+    if (data?.display_name) displayName = data.display_name;
+  } catch (e) {}
+
+  document.getElementById('qt-username-display').textContent = displayName;
+  document.getElementById('qt-avatar-initial').textContent = displayName.charAt(0).toUpperCase();
+}
 
 /* ============================================================ */
 /* 2. 測驗流程                                                     */
@@ -322,6 +396,16 @@ function selectOpt(option, btn) {
   document.getElementById('unanswered-warning').classList.remove('show');
   updateNextBtn();
   renderDots();
+
+  // 自動跳下一題（除了最後一題，最後一題保留按鈕讓使用者確認送出）
+  const total = quizData.questions.length;
+  if (current < total - 1) {
+    setTimeout(() => {
+      current++;
+      selected = answers[current] || null;
+      renderQ();
+    }, 280); // 短暫延遲讓使用者看到選中的視覺反饋
+  }
 }
 
 function updateNextBtn() {
@@ -458,12 +542,12 @@ function getShareText() {
 function shareTwitter() {
   const { text, url } = getShareText();
   const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
-  window.location.href = shareUrl; // 用 location.href 取代 window.open，手機相容性更好
+  window.open(shareUrl, '_blank', 'noopener,noreferrer');
 }
 function shareLine() {
   const { text, url } = getShareText();
   const shareUrl = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
-  window.location.href = shareUrl;
+  window.open(shareUrl, '_blank', 'noopener,noreferrer');
 }
 function shareFacebook() {
   const { text, url } = getShareText();
@@ -472,9 +556,7 @@ function shareFacebook() {
   navigator.clipboard.writeText(text + '\n' + url).then(() => {
     showToast('結果已複製！貼到 Facebook 貼文裡分享吧 📋');
   });
-  setTimeout(() => {
-    window.location.href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
-  }, 600);
+  window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
 }
 function copyResult() {
   const { text, url } = getShareText();
