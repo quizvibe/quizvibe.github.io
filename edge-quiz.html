@@ -70,21 +70,60 @@
   .btn-start:hover { transform: translateY(-3px); }
   .notice { color: var(--muted); font-size: 13px; margin-top: 14px; }
 
-  .loading-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .hidden { display: none !important; }
+
+  .lang-bar { position: fixed; top: 14px; right: 16px; display: flex; gap: 6px; z-index: 999; }
+  .lang-btn { background: var(--card); border: 1px solid rgba(124,77,255,0.3); color: var(--muted); border-radius: 8px; padding: 5px 12px; font-size: 13px; cursor: pointer; transition: all .18s; font-family: inherit; }
+  .lang-btn.active { background: rgba(124,77,255,0.22); border-color: var(--accent2); color: var(--accent2); }
+
+  .hero-emoji-wrap { width: 80px; height: 80px; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center; }
+
+  .step-dots { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 6px; }
+  .step-dot {
+    width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid rgba(124,77,255,0.25);
+    background: var(--bg2); color: var(--muted); font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .2s;
+  }
+  .step-dot.answered { background: rgba(124,77,255,0.18); border-color: var(--accent); color: var(--accent2); }
+  .step-dot.current { background: linear-gradient(135deg,var(--accent),var(--accent2)); border-color: transparent; color: #fff; transform: scale(1.15); }
+  .step-dot.locked { opacity: 0.35; cursor: not-allowed; }
+  .step-dot:hover:not(.locked) { transform: scale(1.1); }
+
+  .nav-row { display: flex; gap: 10px; margin-top: 22px; }
+  .btn-prev {
+    background: var(--bg2); color: var(--muted); border: 1.5px solid rgba(124,77,255,0.2);
+    border-radius: 14px; padding: 15px 22px; font-size: 14.5px; font-weight: 600; cursor: pointer;
+    font-family: inherit; transition: all .2s; flex-shrink: 0;
+  }
+  .btn-prev:hover { color: var(--text); border-color: var(--accent); }
+  .btn-prev:disabled { opacity: 0.3; cursor: not-allowed; }
+  .nav-row .btn-next { margin-top: 0; flex: 1; }
+
+  .unanswered-warning {
+    background: rgba(245,200,66,0.12); color: var(--gold); font-size: 13px;
+    padding: 10px 14px; border-radius: 10px; margin-top: 14px; text-align: center; display: none;
+  }
+  .unanswered-warning.show { display: block; }
   .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--accent); color: #fff; padding: 10px 24px; border-radius: 99px; font-size: 14px; font-weight: 500; opacity: 0; transition: all .3s; pointer-events: none; z-index: 9999; }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
 
+<div class="lang-bar">
+  <button class="lang-btn active" onclick="setLang('zh')" data-lang-btn="zh">中</button>
+  <button class="lang-btn" onclick="setLang('ja')" data-lang-btn="ja">日</button>
+  <button class="lang-btn" onclick="setLang('en')" data-lang-btn="en">EN</button>
+</div>
+
 <div class="top-link">
-  <a href="index.html">← 回 QuizDrop 首頁</a>
+  <a href="index.html" id="back-link">← 回 QuizDrop 首頁</a>
 </div>
 
 <div class="hero">
-  <span class="hero-emoji">🫥</span>
-  <h1>【現代隱居邊緣人】<br>你的「社交疲勞與精神退化」綜合診斷</h1>
-  <p>10題情境題，精準診斷你的社交能量與精神狀態</p>
+  <div class="hero-emoji-wrap"><span class="hero-emoji" style="font-size:52px;">🫥</span></div>
+  <h1 id="hero-title">【現代隱居邊緣人】<br>你的「社交疲勞與精神退化」綜合診斷</h1>
+  <p id="hero-sub">10題情境題，精準診斷你的社交能量與精神狀態</p>
 </div>
 
 <div id="loading" class="loading-state">載入測驗中...</div>
@@ -95,15 +134,18 @@
 </div>
 
 <div class="progress-wrap hidden" id="progress-wrap">
-  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-  <div class="progress-label" id="progress-label"></div>
+  <div class="step-dots" id="step-dots"></div>
 </div>
 
 <div class="quiz-card hidden" id="quiz-card">
   <div class="q-num" id="q-num"></div>
   <div class="q-text" id="q-text"></div>
   <div class="options" id="options"></div>
-  <button class="btn-next" id="btn-next" onclick="nextQ()">下一題 →</button>
+  <div class="unanswered-warning" id="unanswered-warning">⚠️ 請先選擇一個答案才能繼續</div>
+  <div class="nav-row">
+    <button class="btn-prev" id="btn-prev" onclick="prevQ()">← 上一題</button>
+    <button class="btn-next" id="btn-next" onclick="nextQ()">下一題 →</button>
+  </div>
 </div>
 
 <div class="result-card" id="result-card">
@@ -116,7 +158,7 @@
   <div class="result-desc" id="r-desc"></div>
   <div class="trait-wrap" id="r-traits"></div>
 
-  <p class="share-title">分享你的診斷結果</p>
+  <p class="share-title" id="share-label">分享你的診斷結果</p>
   <div class="share-grid">
     <button class="share-btn btn-twitter" onclick="shareTwitter()">𝕏 Twitter / X</button>
     <button class="share-btn btn-line" onclick="shareLine()">💬 LINE</button>
@@ -132,6 +174,41 @@
 const SUPABASE_URL = 'https://xsflpzozgdgbtrtdzdlj.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzZmxwem96Z2RnYnRydGR6ZGxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTMyMzUsImV4cCI6MjA5NzE4OTIzNX0.Uyi5dYa73h0JJ9KwT2bP0C79wV_H-PoYneiR5xsbT6I';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const i18n = {
+  zh: {
+    backLink: '← 回 QuizDrop 首頁',
+    heroTitle: '【現代隱居邊緣人】<br>你的「社交疲勞與精神退化」綜合診斷',
+    heroSub: '10題情境題，精準診斷你的社交能量與精神狀態',
+    startBtn: '開始診斷 →',
+    notice: '共 10 題 · 約 3 分鐘 · 結果絕對精準（不負責任）',
+    qLabel: (c, t) => `問題 ${c} / ${t}`,
+    next: '下一題 →',
+    finish: '查看診斷結果 ✨',
+    prev: '← 上一題',
+    warning: '⚠️ 請先選擇一個答案才能繼續',
+    shareLabel: '分享你的診斷結果',
+    copy: '📋 複製',
+    copied: '已複製！',
+    retry: '再測一次',
+    loading: '載入測驗中...',
+    guestMsg: '🔓 登入後系統會自動保存你的測驗紀錄，現在是訪客模式',
+    savedMsg: '✅ 已自動保存到你的測驗紀錄',
+    failMsg: '⚠️ 結果保存失敗，但你還是可以看診斷結果',
+  }
+};
+let currentLang = 'zh';
+
+function setLang(l) {
+  // 目前題庫只有中文版本，但保留切換按鈕架構供未來擴充
+  currentLang = l;
+  document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === l));
+  if (l !== 'zh') {
+    showToast('日文/英文版本即將推出，敬請期待！');
+    currentLang = 'zh';
+    document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === 'zh'));
+  }
+}
 
 const QUIZ_ID = '00000000-0000-0000-0000-000000000001'; // 對應 SQL 裡插入的官方測驗 ID
 
@@ -177,14 +254,39 @@ function startQuiz() {
   document.getElementById('start-screen').classList.add('hidden');
   document.getElementById('progress-wrap').classList.remove('hidden');
   document.getElementById('quiz-card').classList.remove('hidden');
+  renderDots();
+  renderQ();
+}
+
+function renderDots() {
+  const qs = quizData.questions;
+  const wrap = document.getElementById('step-dots');
+  wrap.innerHTML = qs.map((q, i) => {
+    let cls = 'step-dot';
+    if (i === current) cls += ' current';
+    else if (answers[i]) cls += ' answered';
+    else if (i > current) cls += ' locked'; // 不能超前偷看未作答的題目
+    return `<button class="${cls}" data-idx="${i}" onclick="jumpTo(${i})">${i + 1}</button>`;
+  }).join('');
+}
+
+function jumpTo(idx) {
+  // 只能跳到「已經回答過的題目」或「目前這一題」，不能跳到未作答的未來題目
+  if (idx > current && !answers[idx]) return;
+  if (idx === current) return;
+  current = idx;
+  selected = answers[current] || null;
   renderQ();
 }
 
 function renderQ() {
   const qs = quizData.questions;
   const q = qs[current];
-  document.getElementById('q-num').textContent = `問題 ${current + 1} / ${qs.length}`;
+  const t = i18n[currentLang];
+
+  document.getElementById('q-num').textContent = t.qLabel(current + 1, qs.length);
   document.getElementById('q-text').textContent = q.text;
+  document.getElementById('unanswered-warning').classList.remove('show');
 
   const opts = document.getElementById('options');
   opts.innerHTML = '';
@@ -197,12 +299,12 @@ function renderQ() {
   });
 
   selected = answers[current] || null;
-  document.getElementById('btn-next').textContent = current === qs.length - 1 ? '查看診斷結果 ✨' : '下一題 →';
+  document.getElementById('btn-next').textContent = current === qs.length - 1 ? t.finish : t.next;
+  document.getElementById('btn-prev').disabled = current === 0;
   updateNextBtn();
-  updateProgress();
+  renderDots();
 }
 
-// 簡單 XSS 防護：雖然這份題庫是我們自己寫的，但若未來允許其他來源資料，這層處理仍保留
 function escapeText(str) {
   const div = document.createElement('div');
   div.textContent = str;
@@ -214,27 +316,42 @@ function selectOpt(option, btn) {
   btn.classList.add('selected');
   selected = option;
   answers[current] = option;
+  document.getElementById('unanswered-warning').classList.remove('show');
   updateNextBtn();
+  renderDots();
 }
 
 function updateNextBtn() {
   document.getElementById('btn-next').classList.toggle('active', selected !== null);
 }
 
-function updateProgress() {
-  const total = quizData.questions.length;
-  document.getElementById('progress-fill').style.width = (current / total * 100) + '%';
-  document.getElementById('progress-label').textContent = `${current} / ${total}`;
+function prevQ() {
+  if (current === 0) return;
+  current--;
+  selected = answers[current] || null;
+  renderQ();
 }
 
 function nextQ() {
-  if (selected === null) return;
+  if (selected === null) {
+    document.getElementById('unanswered-warning').classList.add('show');
+    return;
+  }
   const total = quizData.questions.length;
   if (current < total - 1) {
     current++;
     selected = answers[current] || null;
     renderQ();
   } else {
+    // 最後一題，確認所有題目都回答過才能送出
+    const unansweredIdx = quizData.questions.findIndex((_, i) => !answers[i]);
+    if (unansweredIdx !== -1) {
+      current = unansweredIdx;
+      selected = null;
+      renderQ();
+      document.getElementById('unanswered-warning').classList.add('show');
+      return;
+    }
     showResult();
   }
 }
@@ -285,6 +402,7 @@ async function showResult() {
   document.getElementById('r-traits').innerHTML = finalResult.traits.map(t => `<span class="trait">${escapeText(t)}</span>`).join('');
 
   document.getElementById('result-card').style.display = 'block';
+  document.getElementById('result-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   // 存入資料庫（只有登入者才存）
   await saveResultIfLoggedIn();
