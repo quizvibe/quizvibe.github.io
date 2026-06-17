@@ -116,36 +116,42 @@
     border-bottom: 1px solid rgba(124,77,255,0.15); z-index: 100;
     display: flex; align-items: center; padding: 0 16px; gap: 10px;
   }
-  .quiz-topbar .back { color: var(--muted); font-size: 13px; text-decoration: none; display: flex; align-items: center; gap: 4px; }
+  .quiz-topbar .back { color: var(--muted); font-size: 13px; text-decoration: none; display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
   .quiz-topbar .back:hover { color: var(--accent2); }
   .quiz-topbar .spacer { flex: 1; }
+  .qt-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .qt-lang-pill { display: flex; gap: 3px; background: rgba(124,77,255,0.1); border-radius: 99px; padding: 3px; }
+  .qt-lang-pill button { padding: 4px 9px; border-radius: 99px; font-size: 11.5px; font-weight: 600; color: var(--muted); border: none; background: none; cursor: pointer; transition: all .2s; }
+  .qt-lang-pill button.active { background: var(--card); color: var(--accent2); }
   .qt-btn { padding: 7px 16px; border-radius: 99px; font-weight: 700; font-size: 12.5px; cursor: pointer; border: none; transition: all .2s; }
   .qt-login { background: transparent; color: var(--text); border: 1.5px solid rgba(124,77,255,0.3); }
   .qt-signup { background: linear-gradient(120deg,var(--accent),var(--accent2)); color: #fff; }
-  .qt-user-chip { display: flex; align-items: center; gap: 7px; background: rgba(124,77,255,0.12); border-radius: 99px; padding: 5px 12px 5px 5px; cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--text); }
-  .qt-avatar { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(120deg,var(--accent),var(--accent2)); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 800; }
+  .qt-user-chip { display: flex; align-items: center; gap: 7px; background: rgba(124,77,255,0.12); border-radius: 99px; padding: 5px 12px 5px 5px; cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--text); transition: background .2s; }
+  .qt-user-chip:hover { background: rgba(124,77,255,0.22); }
+  .qt-avatar { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(120deg,var(--accent),var(--accent2)); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 800; flex-shrink: 0; }
   body { padding-top: 80px; } /* push content below fixed topbar */
 </style>
 </head>
 <body>
 
-<div class="lang-bar">
-  <button class="lang-btn active" onclick="setLang('zh')" data-lang-btn="zh">中</button>
-  <button class="lang-btn" onclick="setLang('ja')" data-lang-btn="ja">日</button>
-  <button class="lang-btn" onclick="setLang('en')" data-lang-btn="en">EN</button>
-</div>
-
 <div class="quiz-topbar">
   <a href="index.html" class="back">← QuizDrop</a>
   <div class="spacer"></div>
-  <div id="qt-auth-buttons" class="flex items-center gap-2" style="display:flex; gap:8px;">
-    <button class="qt-btn qt-login" onclick="window.location.href='index.html'">登入</button>
-    <button class="qt-btn qt-signup" onclick="window.location.href='index.html'">註冊</button>
-  </div>
-  <div id="qt-user-chip-wrap" class="hidden">
-    <div class="qt-user-chip" onclick="window.location.href='profile.html'">
-      <div class="qt-avatar" id="qt-avatar-initial">U</div>
-      <span id="qt-username-display">用戶</span>
+  <div class="qt-right">
+    <div class="qt-lang-pill">
+      <button class="active" onclick="setLang('zh')" data-lang-btn="zh">中</button>
+      <button onclick="setLang('ja')" data-lang-btn="ja">日</button>
+      <button onclick="setLang('en')" data-lang-btn="en">EN</button>
+    </div>
+    <div id="qt-auth-buttons" style="display:flex; gap:8px;">
+      <button class="qt-btn qt-login" onclick="window.location.href='index.html'">登入</button>
+      <button class="qt-btn qt-signup" onclick="window.location.href='index.html'">註冊</button>
+    </div>
+    <div id="qt-user-chip-wrap" class="hidden">
+      <div class="qt-user-chip" onclick="window.location.href='profile.html'">
+        <div class="qt-avatar" id="qt-avatar-initial">U</div>
+        <span id="qt-username-display">用戶</span>
+      </div>
     </div>
   </div>
 </div>
@@ -174,7 +180,7 @@
   <div class="unanswered-warning" id="unanswered-warning">⚠️ 請先選擇一個答案才能繼續</div>
   <div class="nav-row">
     <button class="btn-prev" id="btn-prev" onclick="prevQ()">← 上一題</button>
-    <button class="btn-next" id="btn-next" onclick="nextQ()">下一題 →</button>
+    <button class="btn-next hidden" id="btn-next" onclick="nextQ()">查看診斷結果 ✨</button>
   </div>
 </div>
 
@@ -212,7 +218,7 @@ const i18n = {
     heroTitle: '【靈魂老化度】測試你在高壓現代社會的「精神退化/老化指數」',
     heroSub: '10題深度檢測，看看你的靈魂究竟幾歲了',
     startBtn: '開始診斷 →',
-    notice: '共 10 題 · 約 3 分鐘 · 結果絕對精準（不負責任）',
+    notice: '共 10 題 · 約 3 分鐘 · 結果僅供娛樂參考',
     qLabel: (c, t) => `問題 ${c} / ${t}`,
     next: '下一題 →',
     finish: '查看診斷結果 ✨',
@@ -234,12 +240,23 @@ function setLang(l) {
   // 目前題庫只有中文版本，但保留切換按鈕架構供未來擴充
   currentLang = l;
   document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === l));
+  localStorage.setItem('quizdrop_lang', l); // 跨頁面記住語言選擇
   if (l !== 'zh') {
     showToast('日文/英文版本即將推出，敬請期待！');
     currentLang = 'zh';
+    localStorage.setItem('quizdrop_lang', 'zh');
     document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === 'zh'));
   }
 }
+
+// 頁面載入時，讀取之前儲存的語言偏好
+(function initLangFromStorage() {
+  const saved = localStorage.getItem('quizdrop_lang');
+  if (saved && saved !== 'zh') {
+    // 目前題庫尚未支援日/英文，先固定使用中文，但保留偏好值供之後擴充使用
+  }
+  document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === currentLang));
+})();
 
 const QUIZ_ID = '00000000-0000-0000-0000-000000000004'; // 對應 SQL 裡插入的官方測驗 ID
 
@@ -376,7 +393,16 @@ function renderQ() {
   });
 
   selected = answers[current] || null;
-  document.getElementById('btn-next').textContent = current === qs.length - 1 ? t.finish : t.next;
+
+  const isLastQuestion = current === qs.length - 1;
+  const nextBtn = document.getElementById('btn-next');
+  if (isLastQuestion) {
+    nextBtn.classList.remove('hidden');
+    nextBtn.textContent = t.finish;
+  } else {
+    nextBtn.classList.add('hidden');
+  }
+
   document.getElementById('btn-prev').disabled = current === 0;
   updateNextBtn();
   renderDots();
@@ -397,15 +423,16 @@ function selectOpt(option, btn) {
   updateNextBtn();
   renderDots();
 
-  // 自動跳下一題（除了最後一題，最後一題保留按鈕讓使用者確認送出）
   const total = quizData.questions.length;
   if (current < total - 1) {
+    // 自動跳下一題，短暫延遲讓使用者看到選中的視覺反饋
     setTimeout(() => {
       current++;
       selected = answers[current] || null;
       renderQ();
-    }, 280); // 短暫延遲讓使用者看到選中的視覺反饋
+    }, 280);
   }
+  // 最後一題不自動跳轉，使用者需要點擊「查看診斷結果」按鈕才會送出
 }
 
 function updateNextBtn() {
@@ -554,19 +581,22 @@ function shareFacebook() {
   // Facebook 分享視窗不會顯示動態結果文字（平台限制，只抓網頁固定的 meta 標籤）
   // 因此先複製完整結果文字，引導使用者貼到貼文裡
   navigator.clipboard.writeText(text + '\n' + url).then(() => {
-    showToast('結果已複製！貼到 Facebook 貼文裡分享吧 📋');
+    showToast('結果已複製！貼到 Facebook 貼文裡分享吧 📋', 4000);
+    // 延遲開啟分享視窗，讓使用者先看清楚提示
+    setTimeout(() => {
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
+    }, 1200);
   });
-  window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
 }
 function copyResult() {
   const { text, url } = getShareText();
   navigator.clipboard.writeText(text + '\n' + url).then(() => showToast('已複製！'));
 }
-function showToast(msg) {
+function showToast(msg, duration = 2500) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+  setTimeout(() => t.classList.remove('show'), duration);
 }
 
 function retry() {

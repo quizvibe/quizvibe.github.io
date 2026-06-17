@@ -17,8 +17,12 @@
     position: sticky; top: 0; z-index: 10;
   }
   .back-btn { display:flex; align-items:center; gap:6px; font-weight:700; font-size:14px; color:#444; text-decoration:none; }
-  .logo { font-weight: 900; font-size: 18px; margin-left: auto; }
+  .logo { font-weight: 900; font-size: 18px; }
   .logo .drop { color: #ff5da2; }
+  .topbar-right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+  .lang-pill { display: flex; gap: 3px; background: #f3f3f2; border-radius: 99px; padding: 3px; }
+  .lang-pill button { padding: 5px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; color: #999; border: none; background: none; cursor: pointer; transition: all .2s; }
+  .lang-pill button.active { background: #fff; color: #1f1f1f; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
 
   .wrap { max-width: 680px; margin: 0 auto; padding: 40px 20px 80px; }
 
@@ -87,7 +91,14 @@
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
     回首頁
   </a>
-  <div class="logo">Quiz<span class="drop">Drop</span></div>
+  <div class="topbar-right">
+    <div class="lang-pill">
+      <button class="active" onclick="setLang('zh')" data-lang-btn="zh">中</button>
+      <button onclick="setLang('ja')" data-lang-btn="ja">日</button>
+      <button onclick="setLang('en')" data-lang-btn="en">EN</button>
+    </div>
+    <div class="logo">Quiz<span class="drop">Drop</span></div>
+  </div>
 </div>
 
 <div class="wrap">
@@ -131,6 +142,22 @@
 const SUPABASE_URL = 'https://xsflpzozgdgbtrtdzdlj.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzZmxwem96Z2RnYnRydGR6ZGxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTMyMzUsImV4cCI6MjA5NzE4OTIzNX0.Uyi5dYa73h0JJ9KwT2bP0C79wV_H-PoYneiR5xsbT6I';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+function setLang(l) {
+  // 目前個人頁面只有中文版本，但保留切換架構供未來擴充
+  document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === l));
+  localStorage.setItem('quizdrop_lang', l);
+  if (l !== 'zh') {
+    alert('日文/英文版本即將推出，敬請期待！');
+    document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === 'zh'));
+    localStorage.setItem('quizdrop_lang', 'zh');
+  }
+}
+
+(function initLangFromStorage() {
+  const saved = localStorage.getItem('quizdrop_lang') || 'zh';
+  document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === saved));
+})();
 
 let currentUser = null;
 

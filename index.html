@@ -233,7 +233,10 @@
       <span class="icon">🚀</span><span class="label">客製化</span><span class="sub">創作你的測驗</span>
     </button>
   </nav>
-  <div class="sidebar-footer">© 2026 QuizDrop · 測驗純屬娛樂</div>
+  <div class="sidebar-footer">
+    <button onclick="openFeedbackModal()" style="background:none;border:none;color:var(--accent);font-weight:700;font-size:13px;cursor:pointer;padding:0;margin-bottom:10px;display:block;">💬 給我們回饋意見</button>
+    © 2026 QuizDrop · 測驗純屬娛樂
+  </div>
 </aside>
 
 <!-- ============================================================ -->
@@ -278,7 +281,7 @@
 <!-- ============================================================ -->
 <div class="hero">
   <div class="hero-logo">Quiz<span class="drop">Drop</span></div>
-  <p class="hero-tagline" id="hero-tagline">找到你今天的那個答案 — 一分鐘心理測驗，看看今天的你是誰</p>
+  <p class="hero-tagline" id="hero-tagline">找到你今天的那個答案 — 幾分鐘的心理測驗，看看今天的你是誰</p>
 
   <div class="category-strip">
     <div class="cat-chip" data-cat="1" onclick="filterCategory('love')">❤️ 暈船診療室</div>
@@ -372,6 +375,33 @@
   </div>
 </div>
 
+<!-- ============================================================ -->
+<!-- Feedback Modal -->
+<!-- ============================================================ -->
+<div class="modal-overlay" id="feedback-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeFeedbackModal()">✕</button>
+    <div id="feedback-form-wrap">
+      <div class="modal-title">💬 給我們回饋</div>
+      <div class="modal-sub">有任何建議、問題或想說的話，都歡迎留言給我們！</div>
+
+      <div class="form-msg" id="feedback-msg"></div>
+
+      <input type="email" class="input-field" id="feedback-email" placeholder="你的 Email（方便我們回覆，選填）" />
+      <textarea class="input-field" id="feedback-message" placeholder="想說的話..." rows="5" style="resize:vertical;font-family:inherit;"></textarea>
+
+      <button class="btn-primary-full" id="feedback-submit-btn" onclick="submitFeedback()">送出回饋</button>
+    </div>
+
+    <div id="feedback-success-wrap" class="hidden text-center py-6">
+      <div class="text-4xl mb-3">🙏</div>
+      <div class="modal-title text-lg">收到了，謝謝你！</div>
+      <p class="text-sm text-gray-500 mt-2">你的回饋對我們非常重要，我們會仔細看過。</p>
+      <button class="btn-primary-full mt-5" onclick="closeFeedbackModal()">關閉</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ============================================================ */
 /*  Supabase 初始化 — 等你電腦在手時填入這兩個值                   */
@@ -392,7 +422,7 @@ try {
 /* ============================================================ */
 const i18n = {
   zh: {
-    tagline: "找到你今天的那個答案 — 一分鐘心理測驗，看看今天的你是誰",
+    tagline: "找到你今天的那個答案 — 幾分鐘的心理測驗，看看今天的你是誰",
     sidebarTagline: "找到你今天的那個答案",
     searchPlaceholder: "搜尋測驗，例如：戀愛、職場、邊緣人...",
     login: "登入", signup: "註冊",
@@ -405,7 +435,7 @@ const i18n = {
     authErrorNetwork: "連線發生問題，請再試一次",
   },
   ja: {
-    tagline: "今日のあなたの答えを見つけよう — 1分間の心理テスト",
+    tagline: "今日のあなたの答えを見つけよう — 数分でできる心理テスト",
     sidebarTagline: "今日のあなたの答えを見つけよう",
     searchPlaceholder: "テストを検索...",
     login: "ログイン", signup: "登録",
@@ -418,7 +448,7 @@ const i18n = {
     authErrorNetwork: "接続エラーが発生しました。もう一度お試しください",
   },
   en: {
-    tagline: "Find today's answer — 1-minute personality quizzes",
+    tagline: "Find today's answer — a few minutes, a personality quiz",
     sidebarTagline: "Find today's answer",
     searchPlaceholder: "Search quizzes...",
     login: "Log in", signup: "Sign up",
@@ -435,6 +465,7 @@ let currentLang = 'zh';
 
 function setLang(l) {
   currentLang = l;
+  localStorage.setItem('quizdrop_lang', l); // 跨頁面記住語言選擇
   document.body.classList.toggle('lang-ja', l === 'ja');
   document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === l));
   const t = i18n[l];
@@ -451,6 +482,14 @@ function setLang(l) {
   }
 }
 
+// 頁面載入時，套用之前儲存的語言偏好
+(function initLangFromStorage() {
+  const saved = localStorage.getItem('quizdrop_lang');
+  if (saved && i18n[saved]) {
+    setLang(saved);
+  }
+})();
+
 /* ============================================================ */
 /*  Sidebar                                                        */
 /* ============================================================ */
@@ -463,11 +502,11 @@ function toggleSidebar() {
 /*  Quiz Cards (demo data — replace with Supabase fetch later)   */
 /* ============================================================ */
 const quizzes = [
-  { id: 'edge-1', cat: 'edge', badge: 'badge-edge', icon: '🫥', title: '【現代隱居邊緣人】社交疲勞與精神退化診斷', desc: '10題情境題，精準診斷你的社交能量與精神狀態', plays: '12.4k', url: 'edge-quiz.html' },
-  { id: 'love-2', cat: 'love', badge: 'badge-love', icon: '💘', title: '【戀愛重症診斷】自毀傾向與暈船腦容量體檢', desc: '10題實戰情境，診斷你的暈船指數與吸渣體質', plays: '18.7k', url: 'love-quiz-v2.html' },
-  { id: 'work-2', cat: 'work', badge: 'badge-work', icon: '🧭', title: '【職場生存戰】高功能瘋子定位測驗', desc: '10題職場實戰情境，找出你的辦公室人格分類', plays: '14.2k', url: 'work-quiz-v2.html' },
-  { id: 'soul-3', cat: 'soul', badge: 'badge-soul', icon: '⏳', title: '【靈魂老化度】精神退化/老化指數檢測', desc: '10題深度檢測，看看你的靈魂究竟幾歲了', plays: '9.8k', url: 'soul-aging-quiz.html' },
-  { id: 'edge-2', cat: 'edge', badge: 'badge-edge', icon: '🌌', title: '【全網瘋傳盲盒】平行宇宙反骨瘋狂指數', desc: '10題荒誕情境題，測出你深藏的瘋狂人格', plays: '21.3k', url: 'wild-quiz.html' },
+  { id: 'edge-1', cat: 'edge', badge: 'badge-edge', icon: '🙈', title: '【現代隱居邊緣人】社交疲勞與精神退化診斷', desc: '10題情境題，精準診斷你的社交能量與精神狀態', url: 'edge-quiz.html' },
+  { id: 'love-2', cat: 'love', badge: 'badge-love', icon: '💘', title: '【戀愛重症診斷】自毀傾向與暈船腦容量體檢', desc: '10題實戰情境，診斷你的暈船指數與吸渣體質', url: 'love-quiz-v2.html' },
+  { id: 'work-2', cat: 'work', badge: 'badge-work', icon: '🧭', title: '【職場生存戰】高功能瘋子定位測驗', desc: '10題職場實戰情境，找出你的辦公室人格分類', url: 'work-quiz-v2.html' },
+  { id: 'soul-3', cat: 'soul', badge: 'badge-soul', icon: '⏳', title: '【靈魂老化度】精神退化/老化指數檢測', desc: '10題深度檢測，看看你的靈魂究竟幾歲了', url: 'soul-aging-quiz.html' },
+  { id: 'edge-2', cat: 'edge', badge: 'badge-edge', icon: '🌌', title: '【全網瘋傳盲盒】平行宇宙反骨瘋狂指數', desc: '10題荒誕情境題，測出你深藏的瘋狂人格', url: 'wild-quiz.html' },
 ];
 
 const catLabels = {
@@ -497,7 +536,6 @@ function renderQuizCards() {
       <span class="qicon">${q.icon}</span>
       <h3>${q.title}</h3>
       <p>${q.desc}</p>
-      <div class="meta">👥 ${q.plays} 人測過</div>
     </div>
   `).join('');
 }
@@ -511,6 +549,7 @@ function openCustomQuiz() {
 /*  Auth Modal Logic                                              */
 /* ============================================================ */
 let authMode = 'login'; // 'login' | 'signup'
+let currentUser = null; // 全域追蹤目前登入的使用者，供回饋表單等功能使用
 
 function openAuthModal(mode) {
   authMode = mode;
@@ -660,6 +699,7 @@ async function handleOAuth(provider) {
 }
 
 async function updateUIForLoggedInUser(user) {
+  currentUser = user;
   document.getElementById('auth-buttons').classList.add('hidden');
   document.getElementById('user-chip-wrap').classList.remove('hidden');
 
@@ -678,6 +718,7 @@ async function updateUIForLoggedInUser(user) {
 function handleLogout() {
   if (confirm('要登出嗎？')) {
     supabaseClient.auth.signOut().then(() => {
+      currentUser = null;
       document.getElementById('auth-buttons').classList.remove('hidden');
       document.getElementById('user-chip-wrap').classList.add('hidden');
     });
@@ -691,9 +732,67 @@ if (supabaseClient) {
   });
 }
 
+/* ============================================================ */
+/*  Feedback Modal Logic                                          */
+/* ============================================================ */
+function openFeedbackModal() {
+  document.getElementById('feedback-modal').classList.add('show');
+  document.getElementById('feedback-form-wrap').classList.remove('hidden');
+  document.getElementById('feedback-success-wrap').classList.add('hidden');
+  document.getElementById('feedback-msg').style.display = 'none';
+
+  // 如果已登入，自動帶入 email
+  if (currentUser) {
+    document.getElementById('feedback-email').value = currentUser.email;
+  }
+}
+
+function closeFeedbackModal() {
+  document.getElementById('feedback-modal').classList.remove('show');
+  document.getElementById('feedback-email').value = '';
+  document.getElementById('feedback-message').value = '';
+}
+
+async function submitFeedback() {
+  const email = document.getElementById('feedback-email').value.trim();
+  const message = document.getElementById('feedback-message').value.trim();
+  const msgEl = document.getElementById('feedback-msg');
+
+  if (!message) {
+    msgEl.textContent = '請輸入想說的話';
+    msgEl.className = 'form-msg error';
+    return;
+  }
+  if (!supabaseClient) {
+    msgEl.textContent = '⚠️ 系統尚未連接，請稍後再試';
+    msgEl.className = 'form-msg error';
+    return;
+  }
+
+  const btn = document.getElementById('feedback-submit-btn');
+  btn.disabled = true;
+
+  try {
+    const { error } = await supabaseClient.from('feedback').insert({
+      user_id: currentUser?.id || null,
+      user_email: email || currentUser?.email || null,
+      message: message,
+    });
+    if (error) throw error;
+
+    document.getElementById('feedback-form-wrap').classList.add('hidden');
+    document.getElementById('feedback-success-wrap').classList.remove('hidden');
+  } catch (err) {
+    console.error('Feedback submit error:', err);
+    msgEl.textContent = '送出失敗，請再試一次';
+    msgEl.className = 'form-msg error';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 /* Search filter (簡單前端搜尋示範) */
-document.getElementById('search-input').addEventListener('input', (e) => {
-  const q = e.target.value.trim().toLowerCase();
+document.getElementById('search-input').addEventListener('input', (e) => {  const q = e.target.value.trim().toLowerCase();
   const grid = document.getElementById('quiz-grid');
   const filtered = quizzes.filter(qz =>
     qz.title.toLowerCase().includes(q) || qz.desc.toLowerCase().includes(q)
@@ -705,7 +804,6 @@ document.getElementById('search-input').addEventListener('input', (e) => {
       <span class="qicon">${qz.icon}</span>
       <h3>${qz.title}</h3>
       <p>${qz.desc}</p>
-      <div class="meta">👥 ${qz.plays} 人測過</div>
     </div>
   `).join('') || '<p class="text-gray-400 text-sm col-span-full text-center py-10">沒有找到符合的測驗 🥲</p>';
 });
