@@ -14,170 +14,114 @@
   .topbar { height: 58px; background: #fff; border-bottom: 1px solid #ececec; display: flex; align-items: center; padding: 0 16px; position: sticky; top: 0; z-index: 50; }
   .back { color: #888; font-size: 13px; text-decoration: none; }
   .spacer { flex: 1; }
-  .topbar-actions { display: flex; gap: 8px; }
   .tb-btn { padding: 7px 14px; border-radius: 99px; font-size: 12.5px; font-weight: 700; border: 1.5px solid #ececec; background: #fff; cursor: pointer; }
 
-  .wrap { max-width: 480px; margin: 0 auto; padding: 30px 20px; text-align: center; }
-  .game-title { font-size: 22px; font-weight: 900; margin-bottom: 6px; }
-  .game-sub { color: #999; font-size: 13.5px; margin-bottom: 28px; }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 24px 20px; text-align: center; }
+  .game-title { font-size: 21px; font-weight: 900; margin-bottom: 4px; }
+  .game-sub { color: #999; font-size: 13px; margin-bottom: 18px; line-height: 1.6; }
 
-  /* ===== 風格 1: 日式發瘋 ===== */
-  .stage-default {
-    background: #f9f6f0; border: 4px solid #000; border-radius: 24px; padding: 36px 20px;
-  }
-  .timer-display-default {
-    font-size: 64px; font-weight: 900; font-family: 'Courier New', monospace; margin: 20px 0;
-  }
-  .hand-svg { width: 90px; margin: 10px auto; display: block; }
-  .stop-btn-default {
-    width: 130px; height: 130px; border-radius: 50%; background: #ff3b3b; border: 4px solid #000;
-    color: #fff; font-size: 18px; font-weight: 900; cursor: pointer; box-shadow: 0 8px 0 #8a0000;
-    transition: all .1s; margin-top: 20px;
-  }
-  .stop-btn-default:active { transform: translateY(6px); box-shadow: 0 2px 0 #8a0000; }
-  .stop-btn-default:disabled { opacity: .4; cursor: not-allowed; }
+  .mode-row { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
+  .mode-chip { padding: 8px 22px; border-radius: 99px; font-size: 13px; font-weight: 800; cursor: pointer; border: 2px solid #2d2d2d; background: #fff; color: #2d2d2d; }
+  .mode-chip.active { background: #2d2d2d; color: #fff; }
 
-  /* ===== 風格 2: 線條無色（漫畫風） ===== */
-  .stage-manga {
-    background: #fff; border: 3px solid #000; border-radius: 4px; padding: 36px 20px; position: relative; overflow: hidden;
-    filter: grayscale(1);
-  }
-  .timer-display-manga {
-    font-size: 64px; font-weight: 900; font-family: 'Courier New', monospace; margin: 20px 0; position: relative; z-index: 2;
-  }
-  .speed-lines {
-    position: absolute; inset: 0; opacity: 0; pointer-events: none; z-index: 1;
-    background: repeating-conic-gradient(from 0deg, #000 0deg 4deg, transparent 4deg 16deg);
-    transition: opacity .15s;
-  }
-  .speed-lines.active { opacity: 0.12; }
-  .stop-btn-manga {
-    width: 130px; height: 130px; border-radius: 50%; background: #fff; border: 3px solid #000;
-    color: #000; font-size: 18px; font-weight: 900; cursor: pointer; margin-top: 20px; position: relative; z-index: 2;
-  }
-  .stop-btn-manga:active { background: #ddd; }
-  .stop-btn-manga:disabled { opacity: .4; cursor: not-allowed; }
+  .board-frame { background: #fff; border: 4px solid #1a1a1a; border-radius: 16px; padding: 14px; margin-bottom: 22px; }
+  .board-screen { background: #2b2b2b; border-radius: 8px; padding: 28px 10px; display: flex; align-items: center; justify-content: center; gap: 4px; }
+  .board-digit { width: 52px; height: 78px; background: #1a1a1a; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: 'Courier New', monospace; font-size: 44px; font-weight: 900; color: #ffffff; border: 2px solid #444; transition: color .1s, background .1s; }
+  .board-digit.flash { color: #ff3b3b; background: #3a1818; }
+  .board-colon { font-size: 40px; font-weight: 900; color: #fff; margin: 0 2px; }
 
-  /* ===== 風格 3: 蠟筆塗鴉 ===== */
-  .stage-crayon {
-    background: #fffbe8; border-radius: 24px; padding: 36px 20px; position: relative;
-    border: 3px solid #c9a227;
-  }
-  .timer-display-crayon {
-    font-size: 60px; font-weight: 900; margin: 20px 0; color: #d4453a;
-    filter: url(#crayon-filter);
-  }
-  .stop-btn-crayon {
-    width: 130px; height: 130px; border-radius: 46% 54% 52% 48% / 50% 48% 52% 50%;
-    background: #ff6b6b; border: 3px solid #8b3a3a; color: #fff; font-size: 17px; font-weight: 900;
-    cursor: pointer; margin-top: 20px; filter: url(#crayon-filter);
-  }
-  .stop-btn-crayon:disabled { opacity: .4; cursor: not-allowed; }
+  .target-bubble-wrap { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 24px; }
+  .think-bubble { background: #fff; border: 3px solid #1a1a1a; border-radius: 50% 50% 50% 8%; padding: 16px 24px; position: relative; min-width: 140px; }
+  .think-bubble::before, .think-bubble::after { content: ''; position: absolute; background: #fff; border: 3px solid #1a1a1a; border-radius: 50%; }
+  .think-bubble::before { width: 14px; height: 14px; bottom: -22px; right: 36px; }
+  .think-bubble::after { width: 8px; height: 8px; bottom: -34px; right: 26px; }
+  .target-label { font-size: 11px; color: #999; font-weight: 700; margin-bottom: 4px; }
+  .target-value { font-size: 30px; font-weight: 900; color: #d83b3b; font-family: 'Courier New', monospace; }
 
-  .btn-start { background: linear-gradient(120deg,#ff5da2,#ff8a5c); color: #fff; border: none; border-radius: 14px; padding: 16px 40px; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 10px; }
-  .btn-start:disabled { opacity: .5; cursor: not-allowed; }
+  .main-btn { width: 150px; height: 150px; border-radius: 50%; border: 4px solid #1a1a1a; font-size: 19px; font-weight: 900; color: #fff; cursor: pointer; box-shadow: 0 8px 0 rgba(0,0,0,0.25); transition: all .1s; margin: 0 auto; }
+  .main-btn:active { transform: translateY(6px); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
+  .main-btn.state-start { background: #2ecc71; }
+  .main-btn.state-stop { background: #ff3b3b; }
+  .main-btn.state-ready { background: #ccc; }
 
-  .style-row { display: flex; gap: 10px; justify-content: center; margin-top: 24px; flex-wrap: wrap; }
-  .style-chip { padding: 8px 16px; border-radius: 99px; font-size: 12.5px; font-weight: 700; border: 1.5px solid #ececec; background: #fff; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+  .result-panel { margin-top: 24px; background: #fff; border: 2px solid #ececec; border-radius: 16px; padding: 20px; display: none; }
+  .result-panel.show { display: block; }
+  .result-diff { font-size: 30px; font-weight: 900; margin-bottom: 8px; }
+  .result-diff.win { color: #2da44e; }
+  .result-diff.lose { color: #d83b3b; }
+  .result-text { font-size: 13.5px; line-height: 1.7; color: #555; margin-bottom: 14px; text-align: left; }
+  .result-btns { display: flex; gap: 8px; }
+  .result-btns button { flex: 1; padding: 11px; border-radius: 10px; font-weight: 700; font-size: 13px; border: none; cursor: pointer; }
+  .btn-copy-result { background: #1f1f1f; color: #fff; }
+
+  .recent-list { margin-top: 20px; text-align: left; }
+  .recent-title { font-size: 12px; font-weight: 800; color: #999; margin-bottom: 8px; }
+  .recent-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f3f3f3; font-size: 12.5px; color: #666; }
+  .recent-row .recent-diff.win { color: #2da44e; font-weight: 700; }
+  .recent-row .recent-diff.lose { color: #d83b3b; font-weight: 700; }
+
+  .style-row { display: flex; gap: 10px; justify-content: center; margin-top: 22px; flex-wrap: wrap; }
+  .style-chip { padding: 8px 16px; border-radius: 99px; font-size: 12.5px; font-weight: 700; border: 1.5px solid #ececec; background: #fff; cursor: pointer; }
   .style-chip.active { border-color: #ff5da2; color: #ff5da2; background: #fff0f5; }
   .style-chip.locked { opacity: .55; }
-  .lock-icon { font-size: 11px; }
 
-  /* ===== Result Modal ===== */
-  .modal-overlay { position: fixed; inset: 0; background: rgba(20,20,20,.6); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
-  .modal-overlay.show { display: flex; }
-  .modal-box { background: #fff; border-radius: 22px; padding: 32px 26px; max-width: 380px; width: 100%; text-align: center; }
-  .modal-diff { font-size: 38px; font-weight: 900; margin: 14px 0; }
-  .modal-diff.win { color: #2da44e; }
-  .modal-diff.lose { color: #d83b3b; }
-  .modal-text { font-size: 14px; line-height: 1.7; color: #444; margin-bottom: 22px; }
-  .modal-btns { display: flex; gap: 10px; }
-  .modal-btns button { flex: 1; padding: 13px; border-radius: 12px; font-weight: 700; font-size: 13.5px; border: none; cursor: pointer; }
-  .btn-modal-copy { background: #1f1f1f; color: #fff; }
-  .btn-modal-retry { background: linear-gradient(120deg,#ff5da2,#ff8a5c); color: #fff; }
-
-  .content-footer-slot {
-    margin-top: 24px; padding: 16px; background: #fafafa; border: 1px dashed #ddd; border-radius: 12px;
-    font-size: 11.5px; color: #bbb; text-align: center;
-  }
-
-  .progress-text { font-size: 12px; color: #aaa; margin-top: 18px; }
-
-  .ad-banner-fixed-game {
-    position: fixed; bottom: 0; left: 0; right: 0; height: 50px; background: rgba(255,255,255,.96);
-    backdrop-filter: blur(8px); border-top: 1px solid #f0f0f0; display: flex; align-items: center;
-    justify-content: center; font-size: 11px; color: #bbb; z-index: 40;
-  }
+  .content-footer-slot { margin-top: 22px; padding: 16px; background: #fafafa; border: 1px dashed #ddd; border-radius: 12px; font-size: 11.5px; color: #bbb; text-align: center; }
+  .ad-banner-fixed-game { position: fixed; bottom: 0; left: 0; right: 0; height: 50px; background: rgba(255,255,255,.96); backdrop-filter: blur(8px); border-top: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #bbb; z-index: 40; }
   @media (min-width: 768px) { .ad-banner-fixed-game { display: none; } body { padding-bottom: 0; } }
 </style>
 </head>
 <body>
 
-<svg width="0" height="0" style="position:absolute;">
-  <filter id="crayon-filter">
-    <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" result="noise" />
-    <feDisplacementMap in="SourceGraphic" in2="noise" scale="4" />
-  </filter>
-</svg>
-
 <div class="topbar">
   <a href="games.html" class="back">← 糞Game大廳</a>
   <div class="spacer"></div>
-  <div class="topbar-actions">
-    <button class="tb-btn" onclick="showProgressModal()">📊 本關進度</button>
-  </div>
+  <button class="tb-btn" onclick="showProgressModal()">📊 本關進度</button>
 </div>
 
 <div class="wrap">
   <div class="game-title">⏱️ 黃金秒數盲數挑戰</div>
-  <div class="game-sub" id="game-sub-text">系統會給你一個目標秒數，第10秒後數字會消失，全靠你的生物鐘盲數！</div>
+  <div class="game-sub">記住下方的目標秒數，10秒後畫面會隱藏，靠你的生物鐘盲數按停！</div>
 
-  <!-- 風格 1: 日式發瘋 -->
-  <div id="stage-default" class="stage-default">
-    <svg class="hand-svg" viewBox="0 0 100 100">
-      <path d="M30 90 Q30 50 35 40 Q33 20 40 18 Q42 30 42 40 Q44 18 50 17 Q52 30 51 42 Q54 16 60 18 Q60 32 58 42 Q63 25 68 30 Q66 45 60 55 Q60 75 55 90 Z" fill="#ffd9b3" stroke="#000" stroke-width="2.5"/>
-      <line x1="40" y1="40" x2="40" y2="55" stroke="#000" stroke-width="1.5"/>
-      <line x1="50" y1="38" x2="50" y2="55" stroke="#000" stroke-width="1.5"/>
-      <line x1="60" y1="42" x2="60" y2="55" stroke="#000" stroke-width="1.5"/>
-      <path d="M44 25 Q45 22 46 25" stroke="#000" stroke-width="1.5" fill="none"/>
-      <path d="M52 24 Q53 21 54 24" stroke="#000" stroke-width="1.5" fill="none"/>
-      <path d="M60 26 Q61 23 62 26" stroke="#000" stroke-width="1.5" fill="none"/>
-    </svg>
-    <div class="timer-display-default" id="timer-display">--.--</div>
-    <button class="stop-btn-default" id="stop-btn" disabled onclick="stopTiming()">停止！</button>
+  <div class="mode-row">
+    <button class="mode-chip active" id="mode-easy" onclick="setMode('easy')">EASY（猜整秒）</button>
+    <button class="mode-chip" id="mode-hard" onclick="setMode('hard')">HARD（猜到小數點）</button>
   </div>
 
-  <!-- 風格 2: 線條漫畫 -->
-  <div id="stage-manga" class="stage-manga hidden">
-    <div class="speed-lines" id="speed-lines"></div>
-    <div class="timer-display-manga" id="timer-display-manga">--.--</div>
-    <button class="stop-btn-manga" id="stop-btn-manga" disabled onclick="stopTiming()">停止！</button>
+  <div class="board-frame">
+    <div class="board-screen" id="board-screen">
+      <div class="board-digit" id="d1">-</div>
+      <div class="board-digit" id="d2">-</div>
+      <div class="board-colon">:</div>
+      <div class="board-digit" id="d3">-</div>
+      <div class="board-digit" id="d4">-</div>
+    </div>
   </div>
 
-  <!-- 風格 3: 蠟筆塗鴉 -->
-  <div id="stage-crayon" class="stage-crayon hidden">
-    <div class="timer-display-crayon" id="timer-display-crayon">--.--</div>
-    <button class="stop-btn-crayon" id="stop-btn-crayon" disabled onclick="stopTiming()">停止！</button>
+  <div class="target-bubble-wrap">
+    <div class="think-bubble">
+      <div class="target-label">🎯 你的目標秒數</div>
+      <div class="target-value" id="target-display">--.--</div>
+    </div>
   </div>
 
-  <button class="btn-start" id="btn-start" onclick="startTiming()">開始挑戰 →</button>
+  <button class="main-btn state-start" id="main-btn" onclick="onMainBtnClick()">開始</button>
+
+  <div class="result-panel" id="result-panel">
+    <div class="result-diff" id="result-diff"></div>
+    <div class="result-text" id="result-text"></div>
+    <div class="result-btns">
+      <button class="btn-copy-result" onclick="copyResultText()">📋 複製發Threads</button>
+    </div>
+  </div>
+
+  <div class="recent-list" id="recent-list-wrap">
+    <div class="recent-title">📋 最近 5 次紀錄</div>
+    <div id="recent-list"></div>
+  </div>
 
   <div class="style-row" id="style-row"></div>
 
-  <div class="progress-text" id="progress-text"></div>
-</div>
-
-<div class="modal-overlay" id="result-modal">
-  <div class="modal-box">
-    <div style="font-size:13px;color:#999;font-weight:700;">目標 <span id="modal-target"></span> 秒</div>
-    <div class="modal-diff" id="modal-diff"></div>
-    <div class="modal-text" id="modal-text"></div>
-    <div class="modal-btns">
-      <button class="btn-modal-copy" onclick="copyResultText()">📋 複製發Threads</button>
-      <button class="btn-modal-retry" onclick="closeResultModal(); startTiming();">再挑戰</button>
-    </div>
-    <div class="content-footer-slot">廣告版位</div>
-  </div>
+  <div class="content-footer-slot">廣告版位</div>
 </div>
 
 <div class="ad-banner-fixed-game">廣告版位</div>
@@ -219,9 +163,9 @@ const AudioEngine = (() => {
   function playTick() {
     const c = getCtx(); const now = c.currentTime;
     const osc = c.createOscillator(); const gain = c.createGain();
-    osc.type = 'square'; osc.frequency.setValueAtTime(1000, now);
-    gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
-    osc.connect(gain).connect(c.destination); osc.start(now); osc.stop(now + 0.03);
+    osc.type = 'square'; osc.frequency.setValueAtTime(1200, now);
+    gain.gain.setValueAtTime(0.12, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+    osc.connect(gain).connect(c.destination); osc.start(now); osc.stop(now + 0.08);
   }
   return { playSuccess, playFail, playTick };
 })();
@@ -267,55 +211,100 @@ function showAdUnlockModal(onComplete) {
 let targetSeconds = 0;
 let startTime = 0;
 let timerInterval = null;
-let hiddenAt10s = false;
-let currentStyle = 'default';
+let gameState = 'idle';
+let lastWholeSecond = -1;
+let mode = 'easy';
+
+function setMode(m) {
+  if (gameState === 'running') return;
+  mode = m;
+  document.getElementById('mode-easy').classList.toggle('active', m === 'easy');
+  document.getElementById('mode-hard').classList.toggle('active', m === 'hard');
+  generateNewTarget();
+}
+
+function generateNewTarget() {
+  if (mode === 'easy') {
+    targetSeconds = Math.floor(15 + Math.random() * 6);
+  } else {
+    targetSeconds = Math.round((15 + Math.random() * 5) * 100) / 100;
+  }
+  document.getElementById('target-display').textContent = mode === 'easy' ? targetSeconds.toFixed(0) : targetSeconds.toFixed(2);
+  resetBoard();
+}
+
+function resetBoard() {
+  setDigits('----');
+  document.querySelectorAll('.board-digit').forEach(d => d.classList.remove('flash'));
+}
+
+function setDigits(clean) {
+  document.getElementById('d1').textContent = clean[0] || '-';
+  document.getElementById('d2').textContent = clean[1] || '-';
+  document.getElementById('d3').textContent = clean[2] || '-';
+  document.getElementById('d4').textContent = clean[3] || '-';
+}
+
+function onMainBtnClick() {
+  if (gameState === 'idle') startTiming();
+  else if (gameState === 'running') stopTiming();
+  else if (gameState === 'finished') resetForNewRound();
+}
 
 function startTiming() {
-  targetSeconds = (15 + Math.random() * 5);
-  targetSeconds = Math.round(targetSeconds * 100) / 100;
-  hiddenAt10s = false;
-  document.getElementById('btn-start').disabled = true;
-  setStopBtnDisabled(false);
+  gameState = 'running';
+  lastWholeSecond = -1;
+  document.getElementById('result-panel').classList.remove('show');
+
+  const btn = document.getElementById('main-btn');
+  btn.classList.remove('state-start');
+  btn.classList.add('state-stop');
+  btn.textContent = '停止！';
+
   startTime = performance.now();
-  timerInterval = setInterval(updateTimerDisplay, 50);
+  timerInterval = setInterval(updateTimerDisplay, 30);
 }
 
 function getElapsed() { return (performance.now() - startTime) / 1000; }
 
 function updateTimerDisplay() {
   const elapsed = getElapsed();
-  let displayText;
+  const wholeSecond = Math.floor(elapsed);
+
   if (elapsed >= 10) {
-    if (!hiddenAt10s) {
-      hiddenAt10s = true;
-      if (currentStyle === 'manga') document.getElementById('speed-lines').classList.add('active');
-    }
-    displayText = '???';
+    setDigits('----');
   } else {
-    displayText = elapsed.toFixed(2);
-    AudioEngine.playTick();
+    const secStr = String(wholeSecond).padStart(2, '0');
+    const centiStr = String(Math.floor((elapsed - wholeSecond) * 100)).padStart(2, '0');
+    setDigits(secStr + centiStr);
+
+    if (wholeSecond !== lastWholeSecond) {
+      lastWholeSecond = wholeSecond;
+      AudioEngine.playTick();
+      flashDigits();
+    }
   }
-  setTimerText(displayText);
 }
 
-function setTimerText(text) {
-  document.getElementById('timer-display').textContent = text;
-  document.getElementById('timer-display-manga').textContent = text;
-  document.getElementById('timer-display-crayon').textContent = text;
-}
-
-function setStopBtnDisabled(disabled) {
-  document.getElementById('stop-btn').disabled = disabled;
-  document.getElementById('stop-btn-manga').disabled = disabled;
-  document.getElementById('stop-btn-crayon').disabled = disabled;
+function flashDigits() {
+  const digits = document.querySelectorAll('.board-digit');
+  digits.forEach(d => d.classList.add('flash'));
+  setTimeout(() => digits.forEach(d => d.classList.remove('flash')), 150);
 }
 
 function stopTiming() {
   clearInterval(timerInterval);
   const actual = getElapsed();
-  setStopBtnDisabled(true);
-  document.getElementById('btn-start').disabled = false;
-  document.getElementById('speed-lines').classList.remove('active');
+  gameState = 'finished';
+
+  const btn = document.getElementById('main-btn');
+  btn.classList.remove('state-stop');
+  btn.classList.add('state-ready');
+  btn.textContent = '再挑戰一次';
+
+  const finalSec = Math.floor(actual);
+  const finalCenti = Math.floor((actual - finalSec) * 100);
+  setDigits(String(finalSec).padStart(2, '0') + String(finalCenti).padStart(2, '0'));
 
   const diff = Math.abs(actual - targetSeconds);
   const isWin = diff <= 0.3;
@@ -327,8 +316,19 @@ function stopTiming() {
   saveProgress(progress);
   checkUnlocks();
 
-  showResultModal(diff, actual, isWin);
-  saveGameResult('timing', { target: targetSeconds, actual: Math.round(actual * 100) / 100, diff: Math.round(diff * 100) / 100, win: isWin });
+  showResultPanel(diff, actual, isWin);
+  pushRecentResult(targetSeconds, actual, diff, isWin);
+  saveGameResult('timing', { target: targetSeconds, actual: Math.round(actual * 100) / 100, diff: Math.round(diff * 100) / 100, win: isWin, mode });
+}
+
+function resetForNewRound() {
+  gameState = 'idle';
+  const btn = document.getElementById('main-btn');
+  btn.classList.remove('state-ready');
+  btn.classList.add('state-start');
+  btn.textContent = '開始';
+  document.getElementById('result-panel').classList.remove('show');
+  generateNewTarget();
 }
 
 async function saveGameResult(gameId, recordDetail) {
@@ -344,11 +344,13 @@ async function saveGameResult(gameId, recordDetail) {
 
 let lastResultText = '';
 
-function showResultModal(diff, actual, isWin) {
-  document.getElementById('modal-target').textContent = targetSeconds.toFixed(2);
-  const diffEl = document.getElementById('modal-diff');
+function showResultPanel(diff, actual, isWin) {
+  const targetStr = mode === 'easy' ? targetSeconds.toFixed(0) : targetSeconds.toFixed(2);
+  const actualStr = actual.toFixed(2);
+
+  const diffEl = document.getElementById('result-diff');
   diffEl.textContent = (actual > targetSeconds ? '+' : '-') + diff.toFixed(2) + ' 秒';
-  diffEl.className = 'modal-diff ' + (isWin ? 'win' : 'lose');
+  diffEl.className = 'result-diff ' + (isWin ? 'win' : 'lose');
 
   let text;
   if (diff <= 0.05) {
@@ -356,18 +358,47 @@ function showResultModal(diff, actual, isWin) {
   } else if (diff <= 0.3) {
     text = `差一點！你的生物鐘慢/快了 ${diff.toFixed(2)} 秒。大概是今天冰美式喝不夠，或者單純是手抖。再試一次，你離神不遠了。`;
   } else {
-    text = `差太遠了吧！指定 ${targetSeconds.toFixed(2)} 秒你 ${actual.toFixed(2)} 秒就按？你的人生是不是也勝在速度？建議去檢查一下心律不整，快分享出去讓朋友笑你！`;
+    text = `差太遠了吧！指定 ${targetStr} 秒你 ${actualStr} 秒就按？你的人生是不是也勝在速度？建議去檢查一下心律不整，快分享出去讓朋友笑你！`;
   }
-  document.getElementById('modal-text').textContent = text;
-  lastResultText = `⏱️ QuizDrop黃金秒數挑戰\n目標：${targetSeconds.toFixed(2)}秒，我按了：${actual.toFixed(2)}秒\n${text}`;
-  document.getElementById('result-modal').classList.add('show');
+  document.getElementById('result-text').textContent = text;
+  lastResultText = `⏱️ QuizDrop黃金秒數挑戰\n目標：${targetStr}秒，我按了：${actualStr}秒\n${text}`;
+  document.getElementById('result-panel').classList.add('show');
 }
 
-function closeResultModal() { document.getElementById('result-modal').classList.remove('show'); }
-function copyResultText() { navigator.clipboard.writeText(lastResultText).then(() => alert('已複製！貼到 Threads 分享吧')); }
+function copyResultText() {
+  navigator.clipboard.writeText(lastResultText).then(() => alert('已複製！貼到 Threads 分享吧'));
+}
 
+const RECENT_KEY = 'quizdrop_timing_recent';
+function pushRecentResult(target, actual, diff, isWin) {
+  let recent = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+  recent.unshift({ target, actual: Math.round(actual * 100) / 100, diff: Math.round(diff * 100) / 100, isWin, mode });
+  recent = recent.slice(0, 5);
+  localStorage.setItem(RECENT_KEY, JSON.stringify(recent));
+  renderRecentList();
+}
+
+function renderRecentList() {
+  const recent = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+  const listEl = document.getElementById('recent-list');
+  if (recent.length === 0) {
+    listEl.innerHTML = '<div style="font-size:12.5px;color:#bbb;">還沒有紀錄，快來挑戰第一次！</div>';
+    return;
+  }
+  listEl.innerHTML = recent.map(r => {
+    const targetStr = r.mode === 'easy' ? r.target.toFixed(0) : r.target.toFixed(2);
+    return `
+      <div class="recent-row">
+        <span>目標 ${targetStr}s → 按了 ${r.actual.toFixed(2)}s</span>
+        <span class="recent-diff ${r.isWin ? 'win' : 'lose'}">${r.isWin ? '✓' : '✗'} 差 ${r.diff.toFixed(2)}s</span>
+      </div>
+    `;
+  }).join('');
+}
+
+let currentStyle = 'default';
 const STYLE_DEFS = [
-  { id: 'default', label: '🎌 日式發瘋', unlockCondition: null },
+  { id: 'default', label: '🎌 標準風格', unlockCondition: null },
   { id: 'manga', label: '📓 線條無色', unlockCondition: (p) => p.timing.wins >= 5, unlockText: '累積 5 次勝利解鎖' },
   { id: 'crayon', label: '🖍️ 蠟筆塗鴉', unlockCondition: (p) => p.timing.plays >= 15, unlockText: '遊玩 15 次或看廣告解鎖' },
 ];
@@ -378,27 +409,18 @@ function renderStyleRow() {
   row.innerHTML = STYLE_DEFS.map(s => {
     const unlocked = progress.timing.stylesUnlocked.includes(s.id);
     const cls = 'style-chip' + (s.id === currentStyle ? ' active' : '') + (!unlocked ? ' locked' : '');
-    return `<button class="${cls}" onclick="onStyleClick('${s.id}')">${s.label} ${!unlocked ? '<span class="lock-icon">🔒</span>' : ''}</button>`;
+    return `<button class="${cls}" onclick="onStyleClick('${s.id}')">${s.label} ${!unlocked ? '🔒' : ''}</button>`;
   }).join('');
-  document.getElementById('progress-text').textContent = `本關進度：累積勝利 ${progress.timing.wins} 次・遊玩 ${progress.timing.plays} 次`;
 }
 
 function onStyleClick(styleId) {
   const progress = getProgress();
   const styleDef = STYLE_DEFS.find(s => s.id === styleId);
   const unlocked = progress.timing.stylesUnlocked.includes(styleId);
-  if (unlocked) { switchToStyle(styleId); return; }
+  if (unlocked) { currentStyle = styleId; renderStyleRow(); return; }
   if (confirm(`此風格尚未解鎖（${styleDef.unlockText}）\n要看一段廣告直接解鎖嗎？`)) {
-    showAdUnlockModal(() => { unlockStyle('timing', styleId); switchToStyle(styleId); renderStyleRow(); });
+    showAdUnlockModal(() => { unlockStyle('timing', styleId); currentStyle = styleId; renderStyleRow(); });
   }
-}
-
-function switchToStyle(styleId) {
-  currentStyle = styleId;
-  document.getElementById('stage-default').classList.toggle('hidden', styleId !== 'default');
-  document.getElementById('stage-manga').classList.toggle('hidden', styleId !== 'manga');
-  document.getElementById('stage-crayon').classList.toggle('hidden', styleId !== 'crayon');
-  renderStyleRow();
 }
 
 function checkUnlocks() {
@@ -416,7 +438,9 @@ function showProgressModal() {
   alert(`📊 黃金秒數盲數挑戰\n\n累積勝利：${p.wins} 次\n累積遊玩：${p.plays} 次\n已解鎖風格：${p.stylesUnlocked.length} / ${STYLE_DEFS.length}`);
 }
 
+generateNewTarget();
 renderStyleRow();
+renderRecentList();
 </script>
 </body>
 </html>
