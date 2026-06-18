@@ -336,6 +336,12 @@ function updateTimerDisplay() {
   const elapsed = getElapsed();
   const wholeSecond = Math.floor(elapsed);
 
+  // 超過 11 秒自動視為失敗停止（上限防呆）
+  if (elapsed >= 11) {
+    stopTiming();
+    return;
+  }
+
   if (elapsed >= 3) {
     setDigits('----');
   } else {
@@ -346,8 +352,11 @@ function updateTimerDisplay() {
 
     if (wholeSecond !== lastWholeSecond) {
       lastWholeSecond = wholeSecond;
-      AudioEngine.playTick();
-      flashDigits();
+      // 00:00 不播聲音，避免玩家在起始時被誤導
+      if (wholeSecond > 0) {
+        AudioEngine.playTick();
+        flashDigits();
+      }
     }
   }
 }
