@@ -59,6 +59,35 @@
 
   .section-title { font-size: 18px; font-weight: 900; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
 
+  .tab-row { display: flex; gap: 8px; margin-bottom: 18px; border-bottom: 1.5px solid #f0f0f0; }
+  .tab-btn { padding: 12px 4px; background: none; border: none; font-size: 14.5px; font-weight: 700; color: #999; cursor: pointer; border-bottom: 2.5px solid transparent; margin-right: 16px; font-family: inherit; }
+  .tab-btn.active { color: #ff5da2; border-bottom-color: #ff5da2; }
+
+  .blackboard-trigger {
+    width: 100%; padding: 13px; border-radius: 12px; background: #fff7ed; border: 1.5px dashed #f0c987;
+    color: #b8860b; font-weight: 700; font-size: 13.5px; cursor: pointer; margin-bottom: 16px;
+  }
+
+  .game-history-item {
+    display: flex; align-items: center; gap: 10px; padding: 14px 4px; border-bottom: 1px solid #f5f5f5;
+    cursor: pointer; transition: background .15s; font-size: 13.5px; color: #444;
+  }
+  .game-history-item:hover { background: #fafafa; }
+
+  .blackboard-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 300; display: none; align-items: center; justify-content: center; padding: 20px; }
+  .blackboard-overlay.show { display: flex; }
+  .blackboard-box {
+    background: #1e352f; border: 3px solid rgba(255,255,255,0.4); border-radius: 16px; padding: 28px 24px;
+    max-width: 400px; width: 100%; color: #f0ead6; font-family: 'Noto Sans TC', sans-serif;
+    box-shadow: 0 0 0 6px rgba(255,255,255,0.05) inset;
+  }
+  .blackboard-title { font-size: 17px; font-weight: 900; margin-bottom: 18px; text-align: center; }
+  .blackboard-row { margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px dashed rgba(255,255,255,0.25); }
+  .blackboard-row:last-child { border-bottom: none; }
+  .blackboard-game-name { font-weight: 800; font-size: 14px; margin-bottom: 6px; }
+  .blackboard-stat { font-size: 12.5px; color: #c8d8d0; line-height: 1.6; }
+  .blackboard-close { width: 100%; padding: 11px; border-radius: 10px; background: rgba(255,255,255,0.15); color: #fff; border: none; font-weight: 700; margin-top: 14px; cursor: pointer; }
+
   .history-item {
     background: #fff; border: 1px solid #f0f0f0; border-radius: 16px; padding: 18px 20px;
     display: flex; align-items: center; gap: 14px; margin-bottom: 10px; transition: all .2s;
@@ -126,16 +155,40 @@
       <div class="save-msg" id="save-msg"></div>
     </div>
 
-    <div class="section-title">📜 我的測驗紀錄</div>
-    <div id="history-list">
-      <div class="empty-state">
-        <span class="emoji">🌱</span>
-        載入中...
+    <div class="tab-row">
+      <button class="tab-btn active" id="tab-quiz" onclick="switchTab('quiz')">📜 測驗紀錄</button>
+      <button class="tab-btn" id="tab-game" onclick="switchTab('game')">🎮 糞Game紀錄</button>
+    </div>
+
+    <div id="quiz-tab-content">
+      <div id="history-list">
+        <div class="empty-state">
+          <span class="emoji">🌱</span>
+          載入中...
+        </div>
+      </div>
+    </div>
+
+    <div id="game-tab-content" class="hidden">
+      <button class="blackboard-trigger" onclick="showBlackboardModal()">📊 查看全站總任務黑板</button>
+      <div id="game-history-list">
+        <div class="empty-state">
+          <span class="emoji">🎮</span>
+          還沒有遊戲紀錄，去玩一場吧！
+        </div>
       </div>
     </div>
 
   </div>
 
+</div>
+
+<div class="blackboard-overlay" id="blackboard-overlay">
+  <div class="blackboard-box">
+    <div class="blackboard-title">📊 全站總任務黑板</div>
+    <div id="blackboard-content"></div>
+    <button class="blackboard-close" onclick="closeBlackboardModal()">關閉</button>
+  </div>
 </div>
 
 <script>
@@ -186,7 +239,86 @@ async function init() {
   document.getElementById('email-display').value = currentUser.email;
   document.getElementById('avatar-initial').textContent = displayName.charAt(0).toUpperCase();
 
-  loadHistory();
+  /* ============================================================ */
+/* 糞Game 紀錄頁籤 + 全站任務黑板                                   */
+/* ============================================================ */
+const GAMES_META = [
+  { id: 'timing', title: '黃金秒數盲數挑戰', emoji: '⏱️', url: 'game-timing.html' },
+  { id: 'chicken', title: '社畜超度：尖叫雞進化論', emoji: '🐔', url: 'game-chicken.html' },
+  { id: 'bubble', title: '強迫症救星：無限捏泡泡紙', emoji: '🫧', url: 'game-bubble.html' },
+];
+
+function switchTab(tab) {
+  document.getElementById('tab-quiz').classList.toggle('active', tab === 'quiz');
+  document.getElementById('tab-game').classList.toggle('active', tab === 'game');
+  document.getElementById('quiz-tab-content').classList.toggle('hidden', tab !== 'quiz');
+  document.getElementById('game-tab-content').classList.toggle('hidden', tab !== 'game');
+  if (tab === 'game') renderGameHistory();
+}
+
+function getGameProgress() {
+  const raw = localStorage.getItem('quizdrop_game_progress');
+  return raw ? JSON.parse(raw) : {
+    timing: { wins: 0, plays: 0, stylesUnlocked: ['default'] },
+    chicken: { hits: 0, plays: 0, stylesUnlocked: ['default'] },
+    bubble: { totalPopped: 0, fastestSheetMs: null, stylesUnlocked: ['default'] },
+  };
+}
+
+function renderGameHistory() {
+  const progress = getGameProgress();
+  const listEl = document.getElementById('game-history-list');
+
+  const rows = GAMES_META.map(g => {
+    let recordText = '尚未遊玩過';
+    if (g.id === 'timing' && progress.timing.plays > 0) {
+      recordText = `累積勝利 ${progress.timing.wins} 次・遊玩 ${progress.timing.plays} 次`;
+    } else if (g.id === 'chicken' && progress.chicken.hits > 0) {
+      recordText = `累積暴擊 ${progress.chicken.hits} 次`;
+    } else if (g.id === 'bubble' && progress.bubble.totalPopped > 0) {
+      const fastest = progress.bubble.fastestSheetMs ? `，最快 ${(progress.bubble.fastestSheetMs / 1000).toFixed(2)} 秒` : '';
+      recordText = `累積捏爆 ${progress.bubble.totalPopped} 個${fastest}`;
+    }
+    return `
+      <div class="game-history-item" onclick="window.location.href='${g.url}'">
+        <span>${g.emoji}</span>
+        <span>${g.title}　｜　最新紀錄：${recordText}</span>
+      </div>
+    `;
+  }).join('');
+
+  listEl.innerHTML = rows;
+}
+
+function showBlackboardModal() {
+  const progress = getGameProgress();
+  const content = GAMES_META.map(g => {
+    let stats = '';
+    if (g.id === 'timing') {
+      stats = `累積勝利：${progress.timing.wins} 次<br>累積遊玩：${progress.timing.plays} 次<br>已解鎖風格：${progress.timing.stylesUnlocked.length} / 3`;
+    } else if (g.id === 'chicken') {
+      stats = `累積暴擊：${progress.chicken.hits} 次<br>已解鎖風格：${progress.chicken.stylesUnlocked.length} / 2`;
+    } else if (g.id === 'bubble') {
+      const fastest = progress.bubble.fastestSheetMs ? (progress.bubble.fastestSheetMs / 1000).toFixed(2) + ' 秒' : '尚無紀錄';
+      stats = `累積捏爆：${progress.bubble.totalPopped} 個<br>單張最快手速：${fastest}<br>已解鎖風格：${progress.bubble.stylesUnlocked.length} / 2`;
+    }
+    return `
+      <div class="blackboard-row">
+        <div class="blackboard-game-name">${g.emoji} ${g.title}</div>
+        <div class="blackboard-stat">${stats}</div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('blackboard-content').innerHTML = content;
+  document.getElementById('blackboard-overlay').classList.add('show');
+}
+
+function closeBlackboardModal() {
+  document.getElementById('blackboard-overlay').classList.remove('show');
+}
+
+loadHistory();
 }
 
 async function saveProfile() {

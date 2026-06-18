@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>黃金秒數盲數挑戰 - QuizDrop</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@700;900&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans TC', sans-serif; }
+  body { background: #f9f6f0; color: #2d2d2d; min-height: 100vh; padding-bottom: 60px; }
+  .hidden { display: none !important; }
+
+  .topbar { height: 58px; background: #fff; border-bottom: 1px solid #ececec; display: flex; align-items: center; padding: 0 16px; position: sticky; top: 0; z-index: 50; }
+  .back { color: #888; font-size: 13px; text-decoration: none; }
+  .spacer { flex: 1; }
+  .topbar-actions { display: flex; gap: 8px; }
+  .tb-btn { padding: 7px 14px; border-radius: 99px; font-size: 12.5px; font-weight: 700; border: 1.5px solid #ececec; background: #fff; cursor: pointer; }
+
+  .wrap { max-width: 480px; margin: 0 auto; padding: 30px 20px; text-align: center; }
+  .game-title { font-size: 22px; font-weight: 900; margin-bottom: 6px; }
+  .game-sub { color: #999; font-size: 13.5px; margin-bottom: 28px; }
+
+  /* ===== 風格 1: 日式發瘋 ===== */
+  .stage-default {
+    background: #f9f6f0; border: 4px solid #000; border-radius: 24px; padding: 36px 20px;
+  }
+  .timer-display-default {
+    font-size: 64px; font-weight: 900; font-family: 'Courier New', monospace; margin: 20px 0;
+  }
+  .hand-svg { width: 90px; margin: 10px auto; display: block; }
+  .stop-btn-default {
+    width: 130px; height: 130px; border-radius: 50%; background: #ff3b3b; border: 4px solid #000;
+    color: #fff; font-size: 18px; font-weight: 900; cursor: pointer; box-shadow: 0 8px 0 #8a0000;
+    transition: all .1s; margin-top: 20px;
+  }
+  .stop-btn-default:active { transform: translateY(6px); box-shadow: 0 2px 0 #8a0000; }
+  .stop-btn-default:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ===== 風格 2: 線條無色（漫畫風） ===== */
+  .stage-manga {
+    background: #fff; border: 3px solid #000; border-radius: 4px; padding: 36px 20px; position: relative; overflow: hidden;
+    filter: grayscale(1);
+  }
+  .timer-display-manga {
+    font-size: 64px; font-weight: 900; font-family: 'Courier New', monospace; margin: 20px 0; position: relative; z-index: 2;
+  }
+  .speed-lines {
+    position: absolute; inset: 0; opacity: 0; pointer-events: none; z-index: 1;
+    background: repeating-conic-gradient(from 0deg, #000 0deg 4deg, transparent 4deg 16deg);
+    transition: opacity .15s;
+  }
+  .speed-lines.active { opacity: 0.12; }
+  .stop-btn-manga {
+    width: 130px; height: 130px; border-radius: 50%; background: #fff; border: 3px solid #000;
+    color: #000; font-size: 18px; font-weight: 900; cursor: pointer; margin-top: 20px; position: relative; z-index: 2;
+  }
+  .stop-btn-manga:active { background: #ddd; }
+  .stop-btn-manga:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ===== 風格 3: 蠟筆塗鴉 ===== */
+  .stage-crayon {
+    background: #fffbe8; border-radius: 24px; padding: 36px 20px; position: relative;
+    border: 3px solid #c9a227;
+  }
+  .timer-display-crayon {
+    font-size: 60px; font-weight: 900; margin: 20px 0; color: #d4453a;
+    filter: url(#crayon-filter);
+  }
+  .stop-btn-crayon {
+    width: 130px; height: 130px; border-radius: 46% 54% 52% 48% / 50% 48% 52% 50%;
+    background: #ff6b6b; border: 3px solid #8b3a3a; color: #fff; font-size: 17px; font-weight: 900;
+    cursor: pointer; margin-top: 20px; filter: url(#crayon-filter);
+  }
+  .stop-btn-crayon:disabled { opacity: .4; cursor: not-allowed; }
+
+  .btn-start { background: linear-gradient(120deg,#ff5da2,#ff8a5c); color: #fff; border: none; border-radius: 14px; padding: 16px 40px; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 10px; }
+  .btn-start:disabled { opacity: .5; cursor: not-allowed; }
+
+  .style-row { display: flex; gap: 10px; justify-content: center; margin-top: 24px; flex-wrap: wrap; }
+  .style-chip { padding: 8px 16px; border-radius: 99px; font-size: 12.5px; font-weight: 700; border: 1.5px solid #ececec; background: #fff; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+  .style-chip.active { border-color: #ff5da2; color: #ff5da2; background: #fff0f5; }
+  .style-chip.locked { opacity: .55; }
+  .lock-icon { font-size: 11px; }
+
+  /* ===== Result Modal ===== */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(20,20,20,.6); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: #fff; border-radius: 22px; padding: 32px 26px; max-width: 380px; width: 100%; text-align: center; }
+  .modal-diff { font-size: 38px; font-weight: 900; margin: 14px 0; }
+  .modal-diff.win { color: #2da44e; }
+  .modal-diff.lose { color: #d83b3b; }
+  .modal-text { font-size: 14px; line-height: 1.7; color: #444; margin-bottom: 22px; }
+  .modal-btns { display: flex; gap: 10px; }
+  .modal-btns button { flex: 1; padding: 13px; border-radius: 12px; font-weight: 700; font-size: 13.5px; border: none; cursor: pointer; }
+  .btn-modal-copy { background: #1f1f1f; color: #fff; }
+  .btn-modal-retry { background: linear-gradient(120deg,#ff5da2,#ff8a5c); color: #fff; }
+
+  .content-footer-slot {
+    margin-top: 24px; padding: 16px; background: #fafafa; border: 1px dashed #ddd; border-radius: 12px;
+    font-size: 11.5px; color: #bbb; text-align: center;
+  }
+
+  .progress-text { font-size: 12px; color: #aaa; margin-top: 18px; }
+
+  .ad-banner-fixed-game {
+    position: fixed; bottom: 0; left: 0; right: 0; height: 50px; background: rgba(255,255,255,.96);
+    backdrop-filter: blur(8px); border-top: 1px solid #f0f0f0; display: flex; align-items: center;
+    justify-content: center; font-size: 11px; color: #bbb; z-index: 40;
+  }
+  @media (min-width: 768px) { .ad-banner-fixed-game { display: none; } body { padding-bottom: 0; } }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute;">
+  <filter id="crayon-filter">
+    <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" result="noise" />
+    <feDisplacementMap in="SourceGraphic" in2="noise" scale="4" />
+  </filter>
+</svg>
+
+<div class="topbar">
+  <a href="games.html" class="back">← 糞Game大廳</a>
+  <div class="spacer"></div>
+  <div class="topbar-actions">
+    <button class="tb-btn" onclick="showProgressModal()">📊 本關進度</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="game-title">⏱️ 黃金秒數盲數挑戰</div>
+  <div class="game-sub" id="game-sub-text">系統會給你一個目標秒數，第10秒後數字會消失，全靠你的生物鐘盲數！</div>
+
+  <!-- 風格 1: 日式發瘋 -->
+  <div id="stage-default" class="stage-default">
+    <svg class="hand-svg" viewBox="0 0 100 100">
+      <path d="M30 90 Q30 50 35 40 Q33 20 40 18 Q42 30 42 40 Q44 18 50 17 Q52 30 51 42 Q54 16 60 18 Q60 32 58 42 Q63 25 68 30 Q66 45 60 55 Q60 75 55 90 Z" fill="#ffd9b3" stroke="#000" stroke-width="2.5"/>
+      <line x1="40" y1="40" x2="40" y2="55" stroke="#000" stroke-width="1.5"/>
+      <line x1="50" y1="38" x2="50" y2="55" stroke="#000" stroke-width="1.5"/>
+      <line x1="60" y1="42" x2="60" y2="55" stroke="#000" stroke-width="1.5"/>
+      <path d="M44 25 Q45 22 46 25" stroke="#000" stroke-width="1.5" fill="none"/>
+      <path d="M52 24 Q53 21 54 24" stroke="#000" stroke-width="1.5" fill="none"/>
+      <path d="M60 26 Q61 23 62 26" stroke="#000" stroke-width="1.5" fill="none"/>
+    </svg>
+    <div class="timer-display-default" id="timer-display">--.--</div>
+    <button class="stop-btn-default" id="stop-btn" disabled onclick="stopTiming()">停止！</button>
+  </div>
+
+  <!-- 風格 2: 線條漫畫 -->
+  <div id="stage-manga" class="stage-manga hidden">
+    <div class="speed-lines" id="speed-lines"></div>
+    <div class="timer-display-manga" id="timer-display-manga">--.--</div>
+    <button class="stop-btn-manga" id="stop-btn-manga" disabled onclick="stopTiming()">停止！</button>
+  </div>
+
+  <!-- 風格 3: 蠟筆塗鴉 -->
+  <div id="stage-crayon" class="stage-crayon hidden">
+    <div class="timer-display-crayon" id="timer-display-crayon">--.--</div>
+    <button class="stop-btn-crayon" id="stop-btn-crayon" disabled onclick="stopTiming()">停止！</button>
+  </div>
+
+  <button class="btn-start" id="btn-start" onclick="startTiming()">開始挑戰 →</button>
+
+  <div class="style-row" id="style-row"></div>
+
+  <div class="progress-text" id="progress-text"></div>
+</div>
+
+<div class="modal-overlay" id="result-modal">
+  <div class="modal-box">
+    <div style="font-size:13px;color:#999;font-weight:700;">目標 <span id="modal-target"></span> 秒</div>
+    <div class="modal-diff" id="modal-diff"></div>
+    <div class="modal-text" id="modal-text"></div>
+    <div class="modal-btns">
+      <button class="btn-modal-copy" onclick="copyResultText()">📋 複製發Threads</button>
+      <button class="btn-modal-retry" onclick="closeResultModal(); startTiming();">再挑戰</button>
+    </div>
+    <div class="content-footer-slot">廣告版位</div>
+  </div>
+</div>
+
+<div class="ad-banner-fixed-game">廣告版位</div>
+
+<script>
+const SUPABASE_URL = 'https://xsflpzozgdgbtrtdzdlj.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzZmxwem96Z2RnYnRydGR6ZGxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTMyMzUsImV4cCI6MjA5NzE4OTIzNX0.Uyi5dYa73h0JJ9KwT2bP0C79wV_H-PoYneiR5xsbT6I';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let currentUser = null;
+supabaseClient.auth.getSession().then(({ data: { session } }) => { currentUser = session?.user || null; });
+
+function getGuestId() {
+  let gid = localStorage.getItem('quizdrop_guest_id');
+  if (!gid) { gid = 'guest_' + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('quizdrop_guest_id', gid); }
+  return gid;
+}
+
+const AudioEngine = (() => {
+  let ctx = null;
+  function getCtx() { if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === 'suspended') ctx.resume(); return ctx; }
+  function playSuccess() {
+    const c = getCtx(); const now = c.currentTime;
+    [523.25, 783.99].forEach((freq, i) => {
+      const osc = c.createOscillator(); const gain = c.createGain();
+      osc.type = 'sine'; osc.frequency.setValueAtTime(freq, now + i * 0.1);
+      gain.gain.setValueAtTime(0.2, now + i * 0.1);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.3);
+      osc.connect(gain).connect(c.destination); osc.start(now + i * 0.1); osc.stop(now + i * 0.1 + 0.3);
+    });
+  }
+  function playFail() {
+    const c = getCtx(); const now = c.currentTime;
+    const osc = c.createOscillator(); const gain = c.createGain();
+    osc.type = 'triangle'; osc.frequency.setValueAtTime(300, now);
+    osc.frequency.exponentialRampToValueAtTime(120, now + 0.4);
+    gain.gain.setValueAtTime(0.18, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+    osc.connect(gain).connect(c.destination); osc.start(now); osc.stop(now + 0.45);
+  }
+  function playTick() {
+    const c = getCtx(); const now = c.currentTime;
+    const osc = c.createOscillator(); const gain = c.createGain();
+    osc.type = 'square'; osc.frequency.setValueAtTime(1000, now);
+    gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+    osc.connect(gain).connect(c.destination); osc.start(now); osc.stop(now + 0.03);
+  }
+  return { playSuccess, playFail, playTick };
+})();
+
+const PROGRESS_KEY = 'quizdrop_game_progress';
+function getProgress() {
+  const raw = localStorage.getItem(PROGRESS_KEY);
+  return raw ? JSON.parse(raw) : {
+    timing: { wins: 0, plays: 0, stylesUnlocked: ['default'] },
+    chicken: { hits: 0, plays: 0, stylesUnlocked: ['default'] },
+    bubble: { totalPopped: 0, fastestSheetMs: null, stylesUnlocked: ['default'] },
+  };
+}
+function saveProgress(p) { localStorage.setItem(PROGRESS_KEY, JSON.stringify(p)); }
+function unlockStyle(gameId, styleName) {
+  const p = getProgress();
+  if (!p[gameId].stylesUnlocked.includes(styleName)) { p[gameId].stylesUnlocked.push(styleName); saveProgress(p); }
+}
+
+function showAdUnlockModal(onComplete) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(20,20,20,.6);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:20px;padding:28px;max-width:320px;width:100%;text-align:center;font-family:'Noto Sans TC',sans-serif;">
+      <div style="font-size:13px;color:#999;margin-bottom:12px;font-weight:700;" id="adm-counter">廣告播放中...</div>
+      <div style="background:repeating-linear-gradient(45deg,#f0f0f0,#f0f0f0 10px,#e8e8e8 10px,#e8e8e8 20px);border-radius:12px;height:140px;display:flex;align-items:center;justify-content:center;color:#999;font-size:13px;margin-bottom:14px;">📺 模擬廣告</div>
+      <div style="height:6px;background:#f0f0f0;border-radius:99px;overflow:hidden;margin-bottom:14px;"><div id="adm-fill" style="height:100%;background:linear-gradient(90deg,#ff5da2,#ff8a5c);width:0%;transition:width .1s linear;"></div></div>
+      <button id="adm-btn" disabled style="width:100%;padding:12px;border-radius:10px;background:#1f1f1f;color:#fff;border:none;font-weight:700;opacity:.3;cursor:not-allowed;">請等待...</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  let elapsed = 0; const duration = 3000;
+  const fill = overlay.querySelector('#adm-fill'); const btn = overlay.querySelector('#adm-btn');
+  const interval = setInterval(() => {
+    elapsed += 100; fill.style.width = Math.min(100, (elapsed / duration) * 100) + '%';
+    if (elapsed >= duration) {
+      clearInterval(interval); btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
+      btn.textContent = '完成，解鎖風格 →'; overlay.querySelector('#adm-counter').textContent = '廣告播放完畢！';
+    }
+  }, 100);
+  btn.onclick = () => { document.body.removeChild(overlay); onComplete(); };
+}
+
+let targetSeconds = 0;
+let startTime = 0;
+let timerInterval = null;
+let hiddenAt10s = false;
+let currentStyle = 'default';
+
+function startTiming() {
+  targetSeconds = (15 + Math.random() * 5);
+  targetSeconds = Math.round(targetSeconds * 100) / 100;
+  hiddenAt10s = false;
+  document.getElementById('btn-start').disabled = true;
+  setStopBtnDisabled(false);
+  startTime = performance.now();
+  timerInterval = setInterval(updateTimerDisplay, 50);
+}
+
+function getElapsed() { return (performance.now() - startTime) / 1000; }
+
+function updateTimerDisplay() {
+  const elapsed = getElapsed();
+  let displayText;
+  if (elapsed >= 10) {
+    if (!hiddenAt10s) {
+      hiddenAt10s = true;
+      if (currentStyle === 'manga') document.getElementById('speed-lines').classList.add('active');
+    }
+    displayText = '???';
+  } else {
+    displayText = elapsed.toFixed(2);
+    AudioEngine.playTick();
+  }
+  setTimerText(displayText);
+}
+
+function setTimerText(text) {
+  document.getElementById('timer-display').textContent = text;
+  document.getElementById('timer-display-manga').textContent = text;
+  document.getElementById('timer-display-crayon').textContent = text;
+}
+
+function setStopBtnDisabled(disabled) {
+  document.getElementById('stop-btn').disabled = disabled;
+  document.getElementById('stop-btn-manga').disabled = disabled;
+  document.getElementById('stop-btn-crayon').disabled = disabled;
+}
+
+function stopTiming() {
+  clearInterval(timerInterval);
+  const actual = getElapsed();
+  setStopBtnDisabled(true);
+  document.getElementById('btn-start').disabled = false;
+  document.getElementById('speed-lines').classList.remove('active');
+
+  const diff = Math.abs(actual - targetSeconds);
+  const isWin = diff <= 0.3;
+  if (isWin) AudioEngine.playSuccess(); else AudioEngine.playFail();
+
+  const progress = getProgress();
+  progress.timing.plays++;
+  if (isWin) progress.timing.wins++;
+  saveProgress(progress);
+  checkUnlocks();
+
+  showResultModal(diff, actual, isWin);
+  saveGameResult('timing', { target: targetSeconds, actual: Math.round(actual * 100) / 100, diff: Math.round(diff * 100) / 100, win: isWin });
+}
+
+async function saveGameResult(gameId, recordDetail) {
+  try {
+    await supabaseClient.from('game_results').insert({
+      user_id: currentUser?.id || null,
+      guest_id: currentUser ? null : getGuestId(),
+      game_id: gameId,
+      record_detail: recordDetail,
+    });
+  } catch (err) { console.warn('Game result sync failed (non-blocking):', err); }
+}
+
+let lastResultText = '';
+
+function showResultModal(diff, actual, isWin) {
+  document.getElementById('modal-target').textContent = targetSeconds.toFixed(2);
+  const diffEl = document.getElementById('modal-diff');
+  diffEl.textContent = (actual > targetSeconds ? '+' : '-') + diff.toFixed(2) + ' 秒';
+  diffEl.className = 'modal-diff ' + (isWin ? 'win' : 'lose');
+
+  let text;
+  if (diff <= 0.05) {
+    text = '恭喜！你的大腦是瑞士瓦特製錶級人體時鐘！超越全網 99% 的通靈人類，快截圖去 Threads 逼你朋友下跪！';
+  } else if (diff <= 0.3) {
+    text = `差一點！你的生物鐘慢/快了 ${diff.toFixed(2)} 秒。大概是今天冰美式喝不夠，或者單純是手抖。再試一次，你離神不遠了。`;
+  } else {
+    text = `差太遠了吧！指定 ${targetSeconds.toFixed(2)} 秒你 ${actual.toFixed(2)} 秒就按？你的人生是不是也勝在速度？建議去檢查一下心律不整，快分享出去讓朋友笑你！`;
+  }
+  document.getElementById('modal-text').textContent = text;
+  lastResultText = `⏱️ QuizDrop黃金秒數挑戰\n目標：${targetSeconds.toFixed(2)}秒，我按了：${actual.toFixed(2)}秒\n${text}`;
+  document.getElementById('result-modal').classList.add('show');
+}
+
+function closeResultModal() { document.getElementById('result-modal').classList.remove('show'); }
+function copyResultText() { navigator.clipboard.writeText(lastResultText).then(() => alert('已複製！貼到 Threads 分享吧')); }
+
+const STYLE_DEFS = [
+  { id: 'default', label: '🎌 日式發瘋', unlockCondition: null },
+  { id: 'manga', label: '📓 線條無色', unlockCondition: (p) => p.timing.wins >= 5, unlockText: '累積 5 次勝利解鎖' },
+  { id: 'crayon', label: '🖍️ 蠟筆塗鴉', unlockCondition: (p) => p.timing.plays >= 15, unlockText: '遊玩 15 次或看廣告解鎖' },
+];
+
+function renderStyleRow() {
+  const progress = getProgress();
+  const row = document.getElementById('style-row');
+  row.innerHTML = STYLE_DEFS.map(s => {
+    const unlocked = progress.timing.stylesUnlocked.includes(s.id);
+    const cls = 'style-chip' + (s.id === currentStyle ? ' active' : '') + (!unlocked ? ' locked' : '');
+    return `<button class="${cls}" onclick="onStyleClick('${s.id}')">${s.label} ${!unlocked ? '<span class="lock-icon">🔒</span>' : ''}</button>`;
+  }).join('');
+  document.getElementById('progress-text').textContent = `本關進度：累積勝利 ${progress.timing.wins} 次・遊玩 ${progress.timing.plays} 次`;
+}
+
+function onStyleClick(styleId) {
+  const progress = getProgress();
+  const styleDef = STYLE_DEFS.find(s => s.id === styleId);
+  const unlocked = progress.timing.stylesUnlocked.includes(styleId);
+  if (unlocked) { switchToStyle(styleId); return; }
+  if (confirm(`此風格尚未解鎖（${styleDef.unlockText}）\n要看一段廣告直接解鎖嗎？`)) {
+    showAdUnlockModal(() => { unlockStyle('timing', styleId); switchToStyle(styleId); renderStyleRow(); });
+  }
+}
+
+function switchToStyle(styleId) {
+  currentStyle = styleId;
+  document.getElementById('stage-default').classList.toggle('hidden', styleId !== 'default');
+  document.getElementById('stage-manga').classList.toggle('hidden', styleId !== 'manga');
+  document.getElementById('stage-crayon').classList.toggle('hidden', styleId !== 'crayon');
+  renderStyleRow();
+}
+
+function checkUnlocks() {
+  const progress = getProgress();
+  STYLE_DEFS.forEach(s => {
+    if (s.unlockCondition && s.unlockCondition(progress) && !progress.timing.stylesUnlocked.includes(s.id)) {
+      unlockStyle('timing', s.id);
+    }
+  });
+  renderStyleRow();
+}
+
+function showProgressModal() {
+  const p = getProgress().timing;
+  alert(`📊 黃金秒數盲數挑戰\n\n累積勝利：${p.wins} 次\n累積遊玩：${p.plays} 次\n已解鎖風格：${p.stylesUnlocked.length} / ${STYLE_DEFS.length}`);
+}
+
+renderStyleRow();
+</script>
+</body>
+</html>

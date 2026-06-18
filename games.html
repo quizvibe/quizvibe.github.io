@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>糞Game大廳 - QuizDrop</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans TC', sans-serif; }
+  body { background: #f9f6f0; color: #2d2d2d; min-height: 100vh; }
+
+  .topbar { height: 58px; background: #fff; border-bottom: 1px solid #ececec; display: flex; align-items: center; padding: 0 16px; }
+  .back { color: #888; font-size: 13px; text-decoration: none; }
+
+  .wrap { max-width: 600px; margin: 0 auto; padding: 36px 20px; text-align: center; }
+  .hero-title { font-size: 26px; font-weight: 900; margin-bottom: 8px; }
+  .hero-sub { color: #999; font-size: 14px; margin-bottom: 32px; }
+
+  .game-grid { display: grid; gap: 16px; }
+  .game-card {
+    background: #fff; border: 1px solid #f0f0f0; border-radius: 20px; padding: 22px;
+    display: flex; align-items: center; gap: 16px; text-align: left; cursor: pointer;
+    transition: transform .2s, box-shadow .2s; text-decoration: none; color: inherit;
+  }
+  .game-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px -10px rgba(0,0,0,.1); }
+  .game-emoji { font-size: 40px; flex-shrink: 0; }
+  .game-info h3 { font-size: 16.5px; font-weight: 800; margin-bottom: 4px; }
+  .game-info p { font-size: 13px; color: #999; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<div class="topbar"><a href="index.html" class="back">← QuizDrop</a></div>
+
+<div class="wrap">
+  <div class="hero-title">🎮 糞Game大廳</div>
+  <div class="hero-sub">解壓專用小遊戲，瘋狂玩到爽為止</div>
+  <div class="game-grid" id="game-grid"></div>
+</div>
+
+<script>
+// 陣列物件管理遊戲清單，未來新增遊戲只需要在這裡加一筆資料
+const GAMES_LIST = [
+  { id: 'timing', title: '黃金秒數盲數挑戰', desc: '考驗你的生物鐘，盲數到目標秒數', emoji: '⏱️', url: 'game-timing.html' },
+  { id: 'chicken', title: '社畜超度：尖叫雞進化論', desc: '瘋狂點擊洩憤，累積你的暴擊次數', emoji: '🐔', url: 'game-chicken.html' },
+  { id: 'bubble', title: '強迫症救星：無限捏泡泡紙', desc: '捏到爽為止，比比看誰手速最快', emoji: '🫧', url: 'game-bubble.html' },
+];
+
+document.getElementById('game-grid').innerHTML = GAMES_LIST.map(g => `
+  <a href="${g.url}" class="game-card">
+    <div class="game-emoji">${g.emoji}</div>
+    <div class="game-info">
+      <h3>${g.title}</h3>
+      <p>${g.desc}</p>
+    </div>
+  </a>
+`).join('');
+</script>
+</body>
+</html>
