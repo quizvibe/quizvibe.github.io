@@ -41,20 +41,22 @@
   .board-screen-overlay {
     position: absolute; top: 12%; left: 25%; width: 70%; height: 26%; z-index: 2;
     display: flex; align-items: center; justify-content: center;
-    font-size: 8.02vw; color: #fff; line-height: 1;
+    font-size: 7.22vw; color: #fff; line-height: 1;
   }
-  .board-screen-overlay { transform: translate(-10%, 25%); }
-  .board-digit-overlay.flash { color: #ff3b3b; }
+  .board-screen-overlay { transform: translate(-18.33%, 25%); }
+  .board-digit-overlay {
+    display: inline-block; width: 0.62em; text-align: center;
+  }
   .board-digit-overlay.flash { color: #ff3b3b; }
 
   .target-overlay {
     position: absolute; top: 63%; left: 3%; width: 36%; height: 18%; z-index: 2;
     display: flex; align-items: center; justify-content: center;
-    font-size: 5.7vw; color: #d83b3b; line-height: 1;
+    font-size: 4.85vw; color: #d83b3b; line-height: 1;
   }
   .target-overlay { transform: translate(12%, 23.5%); }
 
-  .hand-img-overlay { position: absolute; bottom: -18.3%; right: -10%; width: 60%; z-index: 4; transition: transform .09s; pointer-events: none; transform-origin: bottom right; }
+  .hand-img-overlay { position: absolute; bottom: -12%; right: -10%; width: 60%; z-index: 4; transition: transform .09s; pointer-events: none; transform-origin: bottom right; }
   .hand-img-overlay.pressing { transform: translateY(3%) rotate(-3deg) scale(0.97); }
 
   .impact-img-overlay { position: absolute; bottom: 26%; right: 26%; width: 28%; z-index: 4; pointer-events: none; opacity: 0; }
@@ -108,7 +110,7 @@
 
 <div class="wrap">
   <div class="game-title">⏱️ 黃金秒數盲數挑戰</div>
-  <div class="game-sub">記住思考泡泡裡的目標秒數，10秒後畫面會隱藏，靠你的生物鐘盲數按停！</div>
+  <div class="game-sub">記住思考泡泡裡的目標秒數，3秒後畫面會隱藏，靠你的生物鐘盲數按停！</div>
 
   <div class="game-stage">
     <img class="game-stage-bg" src="game-bg.png" alt="">
@@ -127,7 +129,11 @@
     </div>
 
     <div class="target-overlay">
-      <span class="led-font" id="target-display">--:--</span>
+      <span class="board-digit-overlay led-font" id="tg1">-</span>
+      <span class="board-digit-overlay led-font" id="tg2">-</span>
+      <span class="board-digit-overlay led-font">:</span>
+      <span class="board-digit-overlay led-font" id="tg3">-</span>
+      <span class="board-digit-overlay led-font" id="tg4">-</span>
     </div>
 
     <img class="impact-img-overlay" id="impact-img" src="hand-impact.png" alt="">
@@ -255,14 +261,17 @@ function setMode(m) {
 
 function generateNewTarget() {
   if (mode === 'easy') {
-    targetSeconds = Math.floor(15 + Math.random() * 6);
+    targetSeconds = Math.floor(5 + Math.random() * 6); // 5~10 整數秒
   } else {
-    targetSeconds = Math.round((15 + Math.random() * 5) * 100) / 100;
+    targetSeconds = Math.round((5 + Math.random() * 5) * 100) / 100; // 5.00~10.00
   }
-  const displayText = mode === 'easy'
-    ? String(targetSeconds).padStart(2, '0') + ':--'
-    : String(Math.floor(targetSeconds)).padStart(2, '0') + ':' + String(Math.round((targetSeconds % 1) * 100)).padStart(2, '0');
-  document.getElementById('target-display').textContent = displayText;
+  const cleanTarget = mode === 'easy'
+    ? String(targetSeconds).padStart(2, '0') + '--'
+    : String(Math.floor(targetSeconds)).padStart(2, '0') + String(Math.round((targetSeconds % 1) * 100)).padStart(2, '0');
+  document.getElementById('tg1').textContent = cleanTarget[0];
+  document.getElementById('tg2').textContent = cleanTarget[1];
+  document.getElementById('tg3').textContent = cleanTarget[2];
+  document.getElementById('tg4').textContent = cleanTarget[3];
   resetBoard();
 }
 
@@ -317,7 +326,7 @@ function updateTimerDisplay() {
   const elapsed = getElapsed();
   const wholeSecond = Math.floor(elapsed);
 
-  if (elapsed >= 10) {
+  if (elapsed >= 3) {
     setDigits('----');
   } else {
     const secStr = String(wholeSecond).padStart(2, '0');
