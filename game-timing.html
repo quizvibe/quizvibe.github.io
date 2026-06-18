@@ -48,19 +48,19 @@
   .board-screen-overlay {
     position: absolute; top: 12%; left: 25%; width: 70%; height: 26%; z-index: 2;
     display: flex; align-items: center; justify-content: center;
-    font-size: 9.9vw; color: #fff; line-height: 1;
+    font-size: 8.91vw; color: #fff; line-height: 1;
   }
-  /* 中心點：水平右移約10%寬度、垂直下移約12.5%高度（以畫面邊長計算） */
-  .board-screen-overlay { transform: translate(10%, 12.5%); }
+  /* 累計：水平右移10%後再左移20% = 淨右移約-10%（等同左移10%）；垂直累計下移12.5%+12.5%=25% */
+  .board-screen-overlay { transform: translate(-10%, 25%); }
   .board-digit-overlay.flash { color: #ff3b3b; }
 
   .target-overlay {
     position: absolute; top: 63%; left: 3%; width: 36%; height: 18%; z-index: 2;
     display: flex; align-items: center; justify-content: center;
-    font-size: 8.1vw; color: #d83b3b; line-height: 1;
+    font-size: 7.45vw; color: #d83b3b; line-height: 1;
   }
-  /* 縮小5%、往右下移動約1/8~1/9邊長 */
-  .target-overlay { transform: translate(12%, 11%); }
+  /* 累計：縮小5%+8%、往右下移動約1/8~1/9邊長，再下移1/8 */
+  .target-overlay { transform: translate(12%, 23.5%); }
 
   .hand-img-overlay { position: absolute; bottom: -4%; right: -10%; width: 60%; z-index: 4; transition: transform .09s; pointer-events: none; transform-origin: bottom right; }
   .hand-img-overlay.pressing { transform: translateY(3%) rotate(-3deg) scale(0.97); }
@@ -70,7 +70,7 @@
   @keyframes impactPopOverlay { 0% { opacity: 1; transform: scale(0.6); } 100% { opacity: 0; transform: scale(1.5); } }
 
   .main-btn-overlay {
-    position: absolute; bottom: 13%; right: 25%; width: 25%; height: 15%; z-index: 3;
+    position: absolute; bottom: 13%; right: 37.5%; width: 25%; height: 15%; z-index: 3;
     border-radius: 50%; border: 4px solid #1a1a1a; font-size: 2.6vw; font-weight: 900; color: #fff;
     cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,0.3); transition: all .08s;
     transform: perspective(280px) rotateX(35deg);
