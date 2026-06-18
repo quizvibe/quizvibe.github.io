@@ -7,14 +7,27 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@700;900&display=swap');
-  @font-face {
-    font-family: 'SevenSeg';
-    src: url('https://cdn.jsdelivr.net/gh/keshikan/DSEG@v0.46/fonts/DSEG7-Classic/DSEG7Classic-Bold.woff2') format('woff2');
-  }
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans TC', sans-serif; }
   html { overflow-y: scroll; }
   body { background: #f9f6f0; color: #2d2d2d; min-height: 100vh; padding-bottom: 60px; }
   .hidden { display: none !important; }
+
+  /* ===== 純 CSS 七段顯示器數字（不依賴任何外部字體檔案） ===== */
+  .seg-digit { position: relative; display: inline-block; width: 0.55em; height: 1em; margin: 0 0.05em; }
+  .seg-digit .seg { position: absolute; background: currentColor; opacity: 0.12; transition: opacity .08s; }
+  .seg-digit .seg.on { opacity: 1; }
+  .seg-digit .seg-a { top: 0; left: 12%; width: 76%; height: 12%; clip-path: polygon(10% 0,90% 0,100% 50%,90% 100%,10% 100%,0% 50%); }
+  .seg-digit .seg-b { top: 4%; right: 0; width: 14%; height: 44%; clip-path: polygon(0 10%,100% 0,100% 90%,0 100%,50% 50%); }
+  .seg-digit .seg-c { bottom: 4%; right: 0; width: 14%; height: 44%; clip-path: polygon(0 0,100% 10%,100% 100%,0 90%,50% 50%); }
+  .seg-digit .seg-d { bottom: 0; left: 12%; width: 76%; height: 12%; clip-path: polygon(10% 0,90% 0,100% 50%,90% 100%,10% 100%,0% 50%); }
+  .seg-digit .seg-e { bottom: 4%; left: 0; width: 14%; height: 44%; clip-path: polygon(0 0,100% 10%,100% 90%,0 100%,50% 50%); }
+  .seg-digit .seg-f { top: 4%; left: 0; width: 14%; height: 44%; clip-path: polygon(0 10%,100% 0,100% 100%,0 90%,50% 50%); }
+  .seg-digit .seg-g { top: 44%; left: 12%; width: 76%; height: 12%; clip-path: polygon(10% 0,90% 0,100% 50%,90% 100%,10% 100%,0% 50%); }
+
+  .seg-colon { position: relative; display: inline-block; width: 0.2em; height: 1em; vertical-align: top; }
+  .seg-colon .dot { position: absolute; left: 50%; width: 16%; height: 12%; background: currentColor; border-radius: 50%; transform: translateX(-50%); }
+  .seg-colon .dot.top { top: 28%; }
+  .seg-colon .dot.bottom { top: 60%; }
 
   .topbar { height: 58px; background: #fff; border-bottom: 1px solid #ececec; display: flex; align-items: center; padding: 0 16px; position: sticky; top: 0; z-index: 50; }
   .back { color: #888; font-size: 13px; text-decoration: none; }
@@ -32,13 +45,22 @@
   .mode-chip { padding: 4px 11px; border-radius: 4px; font-size: 11px; font-weight: 800; cursor: pointer; border: 2px solid #2d2d2d; background: #f5d547; color: #2d2d2d; transform: rotate(-2deg); }
   .mode-chip.active { background: #ff8a3d; }
 
-  .board-screen-overlay { position: absolute; top: 12%; left: 15%; width: 70%; height: 26%; z-index: 2; display: flex; align-items: center; justify-content: center; gap: 2%; }
-  .board-digit-overlay { font-family: 'SevenSeg', 'Courier New', monospace; font-size: 11vw; font-weight: 700; color: #fff; line-height: 1; transition: color .1s; }
+  .board-screen-overlay {
+    position: absolute; top: 12%; left: 25%; width: 70%; height: 26%; z-index: 2;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9.9vw; color: #fff; line-height: 1;
+  }
+  /* 中心點：水平右移約10%寬度、垂直下移約12.5%高度（以畫面邊長計算） */
+  .board-screen-overlay { transform: translate(10%, 12.5%); }
   .board-digit-overlay.flash { color: #ff3b3b; }
-  .board-colon-overlay { font-family: 'SevenSeg', monospace; font-size: 9vw; color: #fff; line-height: 1; }
 
-  .target-overlay { position: absolute; top: 63%; left: 3%; width: 36%; height: 18%; z-index: 2; display: flex; align-items: center; justify-content: center; }
-  .target-value-overlay { font-family: 'SevenSeg', monospace; font-size: 8.5vw; font-weight: 700; color: #d83b3b; line-height: 1; }
+  .target-overlay {
+    position: absolute; top: 63%; left: 3%; width: 36%; height: 18%; z-index: 2;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8.1vw; color: #d83b3b; line-height: 1;
+  }
+  /* 縮小5%、往右下移動約1/8~1/9邊長 */
+  .target-overlay { transform: translate(12%, 11%); }
 
   .hand-img-overlay { position: absolute; bottom: -4%; right: -10%; width: 60%; z-index: 4; transition: transform .09s; pointer-events: none; transform-origin: bottom right; }
   .hand-img-overlay.pressing { transform: translateY(3%) rotate(-3deg) scale(0.97); }
@@ -48,8 +70,8 @@
   @keyframes impactPopOverlay { 0% { opacity: 1; transform: scale(0.6); } 100% { opacity: 0; transform: scale(1.5); } }
 
   .main-btn-overlay {
-    position: absolute; bottom: 13%; right: 31%; width: 25%; height: 15%; z-index: 3;
-    border-radius: 50%; border: 4px solid #1a1a1a; font-size: 3vw; font-weight: 900; color: #fff;
+    position: absolute; bottom: 13%; right: 25%; width: 25%; height: 15%; z-index: 3;
+    border-radius: 50%; border: 4px solid #1a1a1a; font-size: 2.6vw; font-weight: 900; color: #fff;
     cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,0.3); transition: all .08s;
     transform: perspective(280px) rotateX(35deg);
   }
@@ -105,21 +127,21 @@
     </div>
 
     <div class="board-screen-overlay" id="board-screen-overlay">
-      <span class="board-digit-overlay" id="d1">-</span>
-      <span class="board-digit-overlay" id="d2">-</span>
-      <span class="board-colon-overlay">:</span>
-      <span class="board-digit-overlay" id="d3">-</span>
-      <span class="board-digit-overlay" id="d4">-</span>
+      <span class="seg-digit" id="d1"></span>
+      <span class="seg-digit" id="d2"></span>
+      <span class="seg-colon"><span class="dot top"></span><span class="dot bottom"></span></span>
+      <span class="seg-digit" id="d3"></span>
+      <span class="seg-digit" id="d4"></span>
     </div>
 
     <div class="target-overlay">
-      <span class="target-value-overlay" id="target-display">--.--</span>
+      <span class="seg-digit" id="t1"></span><span class="seg-digit" id="t2"></span><span class="seg-colon" id="target-dot-wrap"><span class="dot top"></span><span class="dot bottom"></span></span><span class="seg-digit" id="t3"></span><span class="seg-digit" id="t4"></span>
     </div>
 
     <img class="impact-img-overlay" id="impact-img" src="hand-impact.png" alt="">
     <img class="hand-img-overlay" id="hand-img" src="hand-clean.png" alt="">
 
-    <button class="main-btn-overlay state-start" id="main-btn" onclick="onMainBtnClick()">開始</button>
+    <button class="main-btn-overlay state-start" id="main-btn" onclick="onMainBtnClick()">START</button>
   </div>
 
   <div class="result-panel" id="result-panel">
@@ -245,7 +267,13 @@ function generateNewTarget() {
   } else {
     targetSeconds = Math.round((15 + Math.random() * 5) * 100) / 100;
   }
-  document.getElementById('target-display').textContent = mode === 'easy' ? targetSeconds.toFixed(0) : targetSeconds.toFixed(2);
+  const targetStr = mode === 'easy' ? targetSeconds.toFixed(0).padStart(2, ' ') : targetSeconds.toFixed(2);
+  // 整秒模式只顯示前兩位（秒數），小數點模式顯示完整 4 位數字
+  const cleanTarget = mode === 'easy'
+    ? String(targetSeconds).padStart(2, '0') + '--'
+    : String(Math.floor(targetSeconds)).padStart(2, '0') + String(Math.round((targetSeconds % 1) * 100)).padStart(2, '0');
+  setTargetDigits(cleanTarget);
+  document.getElementById('target-dot-wrap').style.display = mode === 'easy' ? 'none' : 'inline-block';
   resetBoard();
 }
 
@@ -254,11 +282,40 @@ function resetBoard() {
   document.querySelectorAll('.board-digit-overlay').forEach(d => d.classList.remove('flash'));
 }
 
+// 七段顯示器數字對照表：每個數字對應 a~g 七段中哪幾段要點亮
+const SEG_MAP = {
+  '0': ['a','b','c','d','e','f'],
+  '1': ['b','c'],
+  '2': ['a','b','g','e','d'],
+  '3': ['a','b','g','c','d'],
+  '4': ['f','g','b','c'],
+  '5': ['a','f','g','c','d'],
+  '6': ['a','f','g','e','c','d'],
+  '7': ['a','b','c'],
+  '8': ['a','b','c','d','e','f','g'],
+  '9': ['a','b','c','d','f','g'],
+  '-': [],
+};
+
+function renderSegDigit(el, char) {
+  const segs = SEG_MAP[char] || [];
+  el.innerHTML = ['a','b','c','d','e','f','g'].map(s =>
+    `<span class="seg seg-${s}${segs.includes(s) ? ' on' : ''}"></span>`
+  ).join('');
+}
+
 function setDigits(clean) {
-  document.getElementById('d1').textContent = clean[0] || '-';
-  document.getElementById('d2').textContent = clean[1] || '-';
-  document.getElementById('d3').textContent = clean[2] || '-';
-  document.getElementById('d4').textContent = clean[3] || '-';
+  renderSegDigit(document.getElementById('d1'), clean[0] || '-');
+  renderSegDigit(document.getElementById('d2'), clean[1] || '-');
+  renderSegDigit(document.getElementById('d3'), clean[2] || '-');
+  renderSegDigit(document.getElementById('d4'), clean[3] || '-');
+}
+
+function setTargetDigits(clean) {
+  renderSegDigit(document.getElementById('t1'), clean[0] || '-');
+  renderSegDigit(document.getElementById('t2'), clean[1] || '-');
+  renderSegDigit(document.getElementById('t3'), clean[2] || '-');
+  renderSegDigit(document.getElementById('t4'), clean[3] || '-');
 }
 
 function onMainBtnClick() {
@@ -288,7 +345,7 @@ function startTiming() {
   const btn = document.getElementById('main-btn');
   btn.classList.remove('state-start');
   btn.classList.add('state-stop');
-  btn.textContent = '停止';
+  btn.textContent = 'STOP';
 
   startTime = performance.now();
   timerInterval = setInterval(updateTimerDisplay, 30);
@@ -330,7 +387,7 @@ function stopTiming() {
   const btn = document.getElementById('main-btn');
   btn.classList.remove('state-stop');
   btn.classList.add('state-ready');
-  btn.textContent = '再來';
+  btn.textContent = 'AGAIN';
 
   const finalSec = Math.floor(actual);
   const finalCenti = Math.round((actual - finalSec) * 100);
@@ -356,7 +413,7 @@ function resetForNewRound() {
   const btn = document.getElementById('main-btn');
   btn.classList.remove('state-ready');
   btn.classList.add('state-start');
-  btn.textContent = '開始';
+  btn.textContent = 'START';
   document.getElementById('result-panel').classList.remove('show');
   generateNewTarget();
 }
