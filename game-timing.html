@@ -7,7 +7,12 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@700;900&display=swap');
+  @font-face {
+    font-family: 'SevenSeg';
+    src: url('https://cdn.jsdelivr.net/gh/keshikan/DSEG@v0.46/fonts/DSEG7-Classic/DSEG7Classic-Bold.woff2') format('woff2');
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans TC', sans-serif; }
+  html { overflow-y: scroll; }
   body { background: #f9f6f0; color: #2d2d2d; min-height: 100vh; padding-bottom: 60px; }
   .hidden { display: none !important; }
 
@@ -20,62 +25,45 @@
   .game-title { font-size: 21px; font-weight: 900; margin-bottom: 4px; }
   .game-sub { color: #999; font-size: 13px; margin-bottom: 18px; line-height: 1.6; }
 
-  /* ===== 遊戲主框框（粗黑邊框，日式搞笑漫畫風） ===== */
-  .game-frame {
-    background: #f9f6f0; border: 5px solid #1a1a1a; border-radius: 20px;
-    padding: 24px 18px 32px; margin-bottom: 24px; position: relative;
+  .game-stage { position: relative; width: 100%; aspect-ratio: 1 / 1; max-width: 480px; margin: 0 auto 24px; border-radius: 18px; overflow: hidden; }
+  .game-stage-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; display: block; }
+
+  .mode-row-overlay { position: absolute; top: 3%; right: 3%; display: flex; gap: 5px; z-index: 5; }
+  .mode-chip { padding: 4px 11px; border-radius: 4px; font-size: 11px; font-weight: 800; cursor: pointer; border: 2px solid #2d2d2d; background: #f5d547; color: #2d2d2d; transform: rotate(-2deg); }
+  .mode-chip.active { background: #ff8a3d; }
+
+  .board-screen-overlay { position: absolute; top: 12%; left: 15%; width: 70%; height: 26%; z-index: 2; display: flex; align-items: center; justify-content: center; gap: 2%; }
+  .board-digit-overlay { font-family: 'SevenSeg', 'Courier New', monospace; font-size: 11vw; font-weight: 700; color: #fff; line-height: 1; transition: color .1s; }
+  .board-digit-overlay.flash { color: #ff3b3b; }
+  .board-colon-overlay { font-family: 'SevenSeg', monospace; font-size: 9vw; color: #fff; line-height: 1; }
+
+  .target-overlay { position: absolute; top: 63%; left: 3%; width: 36%; height: 18%; z-index: 2; display: flex; align-items: center; justify-content: center; }
+  .target-value-overlay { font-family: 'SevenSeg', monospace; font-size: 8.5vw; font-weight: 700; color: #d83b3b; line-height: 1; }
+
+  .hand-img-overlay { position: absolute; bottom: -4%; right: -10%; width: 60%; z-index: 4; transition: transform .09s; pointer-events: none; transform-origin: bottom right; }
+  .hand-img-overlay.pressing { transform: translateY(3%) rotate(-3deg) scale(0.97); }
+
+  .impact-img-overlay { position: absolute; bottom: 26%; right: 26%; width: 28%; z-index: 4; pointer-events: none; opacity: 0; }
+  .impact-img-overlay.show { animation: impactPopOverlay .35s ease-out forwards; }
+  @keyframes impactPopOverlay { 0% { opacity: 1; transform: scale(0.6); } 100% { opacity: 0; transform: scale(1.5); } }
+
+  .main-btn-overlay {
+    position: absolute; bottom: 13%; right: 31%; width: 25%; height: 15%; z-index: 3;
+    border-radius: 50%; border: 4px solid #1a1a1a; font-size: 3vw; font-weight: 900; color: #fff;
+    cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,0.3); transition: all .08s;
+    transform: perspective(280px) rotateX(35deg);
   }
+  .main-btn-overlay:active, .main-btn-overlay.pressed { transform: perspective(280px) rotateX(35deg) translateY(5px); box-shadow: 0 1px 0 rgba(0,0,0,0.3); }
+  .main-btn-overlay.state-start { background: #2ecc71; }
+  .main-btn-overlay.state-stop { background: #ff3b3b; }
+  .main-btn-overlay.state-ready { background: #ccc; }
 
-  .mode-row { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
-  .mode-chip { padding: 8px 22px; border-radius: 99px; font-size: 13px; font-weight: 800; cursor: pointer; border: 2px solid #2d2d2d; background: #fff; color: #2d2d2d; }
-  .mode-chip.active { background: #2d2d2d; color: #fff; }
-
-  .board-frame { background: #fff; border: 4px solid #1a1a1a; border-radius: 16px; padding: 14px; margin-bottom: 22px; }
-  .board-screen { background: #2b2b2b; border-radius: 8px; padding: 28px 10px; display: flex; align-items: center; justify-content: center; gap: 4px; }
-  .board-digit { width: 52px; height: 78px; background: #1a1a1a; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: 'Courier New', monospace; font-size: 44px; font-weight: 900; color: #ffffff; border: 2px solid #444; transition: color .1s, background .1s; }
-  .board-digit.flash { color: #ff3b3b; background: #3a1818; }
-  .board-colon { font-size: 40px; font-weight: 900; color: #fff; margin: 0 2px; }
-
-  .target-bubble-wrap { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 8px; }
-  .think-bubble { background: #fff; border: 3px solid #1a1a1a; border-radius: 50% 50% 50% 8%; padding: 16px 24px; position: relative; min-width: 140px; }
-  .think-bubble::before, .think-bubble::after { content: ''; position: absolute; background: #fff; border: 3px solid #1a1a1a; border-radius: 50%; }
-  .think-bubble::before { width: 14px; height: 14px; bottom: -22px; right: 36px; }
-  .think-bubble::after { width: 8px; height: 8px; bottom: -34px; right: 26px; }
-  .target-label { font-size: 11px; color: #999; font-weight: 700; margin-bottom: 4px; }
-  .target-value { font-size: 30px; font-weight: 900; color: #d83b3b; font-family: 'Courier New', monospace; }
-
-  /* ===== 按鈕 + 手部 SVG（日式漫畫風誇張按壓感） ===== */
-  .btn-hand-stage { position: relative; height: 230px; margin-top: 18px; display: flex; align-items: flex-end; justify-content: center; }
-
-  .hand-img {
-    position: absolute; width: 170px; left: 50%; transform: translateX(-50%) translateY(0); top: -10px;
-    z-index: 3; transition: transform .09s; pointer-events: none;
-  }
-  .hand-img.pressing { transform: translateX(-50%) translateY(26px) rotate(-4deg); }
-
-  .impact-img {
-    position: absolute; width: 220px; left: 50%; top: 30px; transform: translateX(-50%) scale(0.7);
-    z-index: 2; pointer-events: none; opacity: 0;
-  }
-  .impact-img.show { animation: impactPop .35s ease-out forwards; }
-  @keyframes impactPop {
-    0% { opacity: 1; transform: translateX(-50%) scale(0.6); }
-    100% { opacity: 0; transform: translateX(-50%) scale(1.4); }
-  }
-
-  .main-btn-wrap { position: relative; z-index: 1; margin-top: 95px; }
-  .main-btn { width: 150px; height: 150px; border-radius: 50%; border: 5px solid #1a1a1a; font-size: 19px; font-weight: 900; color: #fff; cursor: pointer; box-shadow: 0 9px 0 rgba(0,0,0,0.3); transition: all .08s; }
-  .main-btn:active, .main-btn.pressed { transform: translateY(7px); box-shadow: 0 2px 0 rgba(0,0,0,0.3); }
-  .main-btn.state-start { background: #2ecc71; }
-  .main-btn.state-stop { background: #ff3b3b; }
-  .main-btn.state-ready { background: #ccc; }
-
-  .result-panel { margin-top: 24px; background: #fff; border: 2px solid #ececec; border-radius: 16px; padding: 20px; display: none; }
+  .result-panel { margin-top: 24px; background: #fff; border: 2px solid #ececec; border-radius: 16px; padding: 20px; display: none; text-align: left; }
   .result-panel.show { display: block; }
-  .result-diff { font-size: 30px; font-weight: 900; margin-bottom: 8px; }
+  .result-diff { font-size: 30px; font-weight: 900; margin-bottom: 8px; text-align: center; }
   .result-diff.win { color: #2da44e; }
   .result-diff.lose { color: #d83b3b; }
-  .result-text { font-size: 13.5px; line-height: 1.7; color: #555; margin-bottom: 14px; text-align: left; }
+  .result-text { font-size: 13.5px; line-height: 1.7; color: #555; margin-bottom: 14px; }
   .result-btns { display: flex; gap: 8px; }
   .result-btns button { flex: 1; padding: 11px; border-radius: 10px; font-weight: 700; font-size: 13px; border: none; cursor: pointer; }
   .btn-copy-result { background: #1f1f1f; color: #fff; }
@@ -106,40 +94,32 @@
 
 <div class="wrap">
   <div class="game-title">⏱️ 黃金秒數盲數挑戰</div>
-  <div class="game-sub">記住下方的目標秒數，10秒後畫面會隱藏，靠你的生物鐘盲數按停！</div>
+  <div class="game-sub">記住思考泡泡裡的目標秒數，10秒後畫面會隱藏，靠你的生物鐘盲數按停！</div>
 
-  <div class="game-frame">
-    <div class="mode-row">
-      <button class="mode-chip active" id="mode-easy" onclick="setMode('easy')">EASY（猜整秒）</button>
-      <button class="mode-chip" id="mode-hard" onclick="setMode('hard')">HARD（猜到小數點）</button>
+  <div class="game-stage">
+    <img class="game-stage-bg" src="game-bg.png" alt="">
+
+    <div class="mode-row-overlay">
+      <button class="mode-chip active" id="mode-easy" onclick="setMode('easy')">EASY</button>
+      <button class="mode-chip" id="mode-hard" onclick="setMode('hard')">HARD</button>
     </div>
 
-    <div class="board-frame">
-      <div class="board-screen" id="board-screen">
-        <div class="board-digit" id="d1">-</div>
-        <div class="board-digit" id="d2">-</div>
-        <div class="board-colon">:</div>
-        <div class="board-digit" id="d3">-</div>
-        <div class="board-digit" id="d4">-</div>
-      </div>
+    <div class="board-screen-overlay" id="board-screen-overlay">
+      <span class="board-digit-overlay" id="d1">-</span>
+      <span class="board-digit-overlay" id="d2">-</span>
+      <span class="board-colon-overlay">:</span>
+      <span class="board-digit-overlay" id="d3">-</span>
+      <span class="board-digit-overlay" id="d4">-</span>
     </div>
 
-    <div class="target-bubble-wrap">
-      <div class="think-bubble">
-        <div class="target-label">🎯 你的目標秒數</div>
-        <div class="target-value" id="target-display">--.--</div>
-      </div>
+    <div class="target-overlay">
+      <span class="target-value-overlay" id="target-display">--.--</span>
     </div>
 
-    <div class="btn-hand-stage">
-      <img class="impact-img" id="impact-img" src="hand-impact.png" alt="">
+    <img class="impact-img-overlay" id="impact-img" src="hand-impact.png" alt="">
+    <img class="hand-img-overlay" id="hand-img" src="hand-clean.png" alt="">
 
-      <img class="hand-img" id="hand-img" src="hand-clean.png" alt="">
-
-      <div class="main-btn-wrap">
-        <button class="main-btn state-start" id="main-btn" onclick="onMainBtnClick()">開始</button>
-      </div>
-    </div>
+    <button class="main-btn-overlay state-start" id="main-btn" onclick="onMainBtnClick()">開始</button>
   </div>
 
   <div class="result-panel" id="result-panel">
@@ -271,7 +251,7 @@ function generateNewTarget() {
 
 function resetBoard() {
   setDigits('----');
-  document.querySelectorAll('.board-digit').forEach(d => d.classList.remove('flash'));
+  document.querySelectorAll('.board-digit-overlay').forEach(d => d.classList.remove('flash'));
 }
 
 function setDigits(clean) {
@@ -288,22 +268,16 @@ function onMainBtnClick() {
   else if (gameState === 'finished') resetForNewRound();
 }
 
-// 觸發「啪！」的按壓動畫：手往下壓旋轉 + 按鈕下沉 + 衝擊特效圖閃現
 function triggerPressAnimation() {
   const hand = document.getElementById('hand-img');
   const btn = document.getElementById('main-btn');
   const impact = document.getElementById('impact-img');
-
   hand.classList.add('pressing');
   btn.classList.add('pressed');
   impact.classList.remove('show');
-  void impact.offsetWidth; // 強制 reflow，確保動畫能重新觸發
+  void impact.offsetWidth;
   impact.classList.add('show');
-
-  setTimeout(() => {
-    hand.classList.remove('pressing');
-    btn.classList.remove('pressed');
-  }, 140);
+  setTimeout(() => { hand.classList.remove('pressing'); btn.classList.remove('pressed'); }, 140);
 }
 
 function startTiming() {
@@ -314,7 +288,7 @@ function startTiming() {
   const btn = document.getElementById('main-btn');
   btn.classList.remove('state-start');
   btn.classList.add('state-stop');
-  btn.textContent = '停止！';
+  btn.textContent = '停止';
 
   startTime = performance.now();
   timerInterval = setInterval(updateTimerDisplay, 30);
@@ -330,7 +304,6 @@ function updateTimerDisplay() {
     setDigits('----');
   } else {
     const secStr = String(wholeSecond).padStart(2, '0');
-    // 用四捨五入修正浮點數運算誤差（例如 17.03 - 17 在電腦裡可能變成 0.029999...）
     const centiValue = Math.round((elapsed - wholeSecond) * 100);
     const centiStr = String(centiValue).padStart(2, '0');
     setDigits(secStr + centiStr);
@@ -344,7 +317,7 @@ function updateTimerDisplay() {
 }
 
 function flashDigits() {
-  const digits = document.querySelectorAll('.board-digit');
+  const digits = document.querySelectorAll('.board-digit-overlay');
   digits.forEach(d => d.classList.add('flash'));
   setTimeout(() => digits.forEach(d => d.classList.remove('flash')), 150);
 }
@@ -357,7 +330,7 @@ function stopTiming() {
   const btn = document.getElementById('main-btn');
   btn.classList.remove('state-stop');
   btn.classList.add('state-ready');
-  btn.textContent = '再挑戰一次';
+  btn.textContent = '再來';
 
   const finalSec = Math.floor(actual);
   const finalCenti = Math.round((actual - finalSec) * 100);
