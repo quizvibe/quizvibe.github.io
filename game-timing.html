@@ -342,7 +342,7 @@ function updateTimerDisplay() {
     return;
   }
 
-  if (elapsed >= 3) {
+  if (elapsed > 3) {
     setDigits('----');
   } else {
     const secStr = String(wholeSecond).padStart(2, '0');
@@ -352,7 +352,7 @@ function updateTimerDisplay() {
 
     if (wholeSecond !== lastWholeSecond) {
       lastWholeSecond = wholeSecond;
-      // 00:00 不播聲音，避免玩家在起始時被誤導
+      // 第0秒（剛按START瞬間）不響，1、2、3秒都響
       if (wholeSecond > 0) {
         AudioEngine.playTick();
         flashDigits();
