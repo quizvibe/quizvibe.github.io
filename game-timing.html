@@ -256,6 +256,16 @@ function setMode(m) {
   mode = m;
   document.getElementById('mode-easy').classList.toggle('active', m === 'easy');
   document.getElementById('mode-hard').classList.toggle('active', m === 'hard');
+
+  // 切換難度時，不論目前是 finished 或 idle，都重置回 START 狀態
+  if (gameState === 'finished') {
+    gameState = 'idle';
+    const btn = document.getElementById('main-btn');
+    btn.className = 'main-btn-overlay state-start';
+    btn.textContent = 'START';
+    document.getElementById('result-panel').classList.remove('show');
+  }
+
   generateNewTarget();
 }
 
@@ -417,7 +427,7 @@ function showResultPanel(diff, actual, isWin) {
     text = `差太遠了吧！指定 ${targetStr} 秒你 ${actualStr} 秒就按？你的人生是不是也勝在速度？建議去檢查一下心律不整，快分享出去讓朋友笑你！`;
   }
   document.getElementById('result-text').textContent = text;
-  lastResultText = `⏱️ QuizDrop黃金秒數挑戰\n目標：${targetStr}秒，我按了：${actualStr}秒\n${text}`;
+  lastResultText = `⏱️ QuizDrop黃金秒數挑戰\n目標：${targetStr}秒，我按了：${actualStr}秒\n${text}\n\n👉 來挑戰我：https://www.quizdrop.me/game-timing.html`;
   document.getElementById('result-panel').classList.add('show');
 }
 
