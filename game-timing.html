@@ -342,7 +342,7 @@ function updateTimerDisplay() {
     return;
   }
 
-  if (elapsed > 3) {
+  if (elapsed >= 4) {
     setDigits('----');
   } else {
     const secStr = String(wholeSecond).padStart(2, '0');
