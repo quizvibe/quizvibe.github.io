@@ -20,6 +20,12 @@
   .game-title { font-size: 21px; font-weight: 900; margin-bottom: 4px; }
   .game-sub { color: #999; font-size: 13px; margin-bottom: 18px; line-height: 1.6; }
 
+  /* ===== 遊戲主框框（粗黑邊框，日式搞笑漫畫風） ===== */
+  .game-frame {
+    background: #f9f6f0; border: 5px solid #1a1a1a; border-radius: 20px;
+    padding: 24px 18px 32px; margin-bottom: 24px; position: relative;
+  }
+
   .mode-row { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
   .mode-chip { padding: 8px 22px; border-radius: 99px; font-size: 13px; font-weight: 800; cursor: pointer; border: 2px solid #2d2d2d; background: #fff; color: #2d2d2d; }
   .mode-chip.active { background: #2d2d2d; color: #fff; }
@@ -30,7 +36,7 @@
   .board-digit.flash { color: #ff3b3b; background: #3a1818; }
   .board-colon { font-size: 40px; font-weight: 900; color: #fff; margin: 0 2px; }
 
-  .target-bubble-wrap { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 24px; }
+  .target-bubble-wrap { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 8px; }
   .think-bubble { background: #fff; border: 3px solid #1a1a1a; border-radius: 50% 50% 50% 8%; padding: 16px 24px; position: relative; min-width: 140px; }
   .think-bubble::before, .think-bubble::after { content: ''; position: absolute; background: #fff; border: 3px solid #1a1a1a; border-radius: 50%; }
   .think-bubble::before { width: 14px; height: 14px; bottom: -22px; right: 36px; }
@@ -38,8 +44,28 @@
   .target-label { font-size: 11px; color: #999; font-weight: 700; margin-bottom: 4px; }
   .target-value { font-size: 30px; font-weight: 900; color: #d83b3b; font-family: 'Courier New', monospace; }
 
-  .main-btn { width: 150px; height: 150px; border-radius: 50%; border: 4px solid #1a1a1a; font-size: 19px; font-weight: 900; color: #fff; cursor: pointer; box-shadow: 0 8px 0 rgba(0,0,0,0.25); transition: all .1s; margin: 0 auto; }
-  .main-btn:active { transform: translateY(6px); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
+  /* ===== 按鈕 + 手部 SVG（日式漫畫風誇張按壓感） ===== */
+  .btn-hand-stage { position: relative; height: 230px; margin-top: 18px; display: flex; align-items: flex-end; justify-content: center; }
+
+  .hand-img {
+    position: absolute; width: 170px; left: 50%; transform: translateX(-50%) translateY(0); top: -10px;
+    z-index: 3; transition: transform .09s; pointer-events: none;
+  }
+  .hand-img.pressing { transform: translateX(-50%) translateY(26px) rotate(-4deg); }
+
+  .impact-img {
+    position: absolute; width: 220px; left: 50%; top: 30px; transform: translateX(-50%) scale(0.7);
+    z-index: 2; pointer-events: none; opacity: 0;
+  }
+  .impact-img.show { animation: impactPop .35s ease-out forwards; }
+  @keyframes impactPop {
+    0% { opacity: 1; transform: translateX(-50%) scale(0.6); }
+    100% { opacity: 0; transform: translateX(-50%) scale(1.4); }
+  }
+
+  .main-btn-wrap { position: relative; z-index: 1; margin-top: 95px; }
+  .main-btn { width: 150px; height: 150px; border-radius: 50%; border: 5px solid #1a1a1a; font-size: 19px; font-weight: 900; color: #fff; cursor: pointer; box-shadow: 0 9px 0 rgba(0,0,0,0.3); transition: all .08s; }
+  .main-btn:active, .main-btn.pressed { transform: translateY(7px); box-shadow: 0 2px 0 rgba(0,0,0,0.3); }
   .main-btn.state-start { background: #2ecc71; }
   .main-btn.state-stop { background: #ff3b3b; }
   .main-btn.state-ready { background: #ccc; }
@@ -82,29 +108,39 @@
   <div class="game-title">⏱️ 黃金秒數盲數挑戰</div>
   <div class="game-sub">記住下方的目標秒數，10秒後畫面會隱藏，靠你的生物鐘盲數按停！</div>
 
-  <div class="mode-row">
-    <button class="mode-chip active" id="mode-easy" onclick="setMode('easy')">EASY（猜整秒）</button>
-    <button class="mode-chip" id="mode-hard" onclick="setMode('hard')">HARD（猜到小數點）</button>
-  </div>
+  <div class="game-frame">
+    <div class="mode-row">
+      <button class="mode-chip active" id="mode-easy" onclick="setMode('easy')">EASY（猜整秒）</button>
+      <button class="mode-chip" id="mode-hard" onclick="setMode('hard')">HARD（猜到小數點）</button>
+    </div>
 
-  <div class="board-frame">
-    <div class="board-screen" id="board-screen">
-      <div class="board-digit" id="d1">-</div>
-      <div class="board-digit" id="d2">-</div>
-      <div class="board-colon">:</div>
-      <div class="board-digit" id="d3">-</div>
-      <div class="board-digit" id="d4">-</div>
+    <div class="board-frame">
+      <div class="board-screen" id="board-screen">
+        <div class="board-digit" id="d1">-</div>
+        <div class="board-digit" id="d2">-</div>
+        <div class="board-colon">:</div>
+        <div class="board-digit" id="d3">-</div>
+        <div class="board-digit" id="d4">-</div>
+      </div>
+    </div>
+
+    <div class="target-bubble-wrap">
+      <div class="think-bubble">
+        <div class="target-label">🎯 你的目標秒數</div>
+        <div class="target-value" id="target-display">--.--</div>
+      </div>
+    </div>
+
+    <div class="btn-hand-stage">
+      <img class="impact-img" id="impact-img" src="hand-impact.png" alt="">
+
+      <img class="hand-img" id="hand-img" src="hand-clean.png" alt="">
+
+      <div class="main-btn-wrap">
+        <button class="main-btn state-start" id="main-btn" onclick="onMainBtnClick()">開始</button>
+      </div>
     </div>
   </div>
-
-  <div class="target-bubble-wrap">
-    <div class="think-bubble">
-      <div class="target-label">🎯 你的目標秒數</div>
-      <div class="target-value" id="target-display">--.--</div>
-    </div>
-  </div>
-
-  <button class="main-btn state-start" id="main-btn" onclick="onMainBtnClick()">開始</button>
 
   <div class="result-panel" id="result-panel">
     <div class="result-diff" id="result-diff"></div>
@@ -246,9 +282,28 @@ function setDigits(clean) {
 }
 
 function onMainBtnClick() {
+  triggerPressAnimation();
   if (gameState === 'idle') startTiming();
   else if (gameState === 'running') stopTiming();
   else if (gameState === 'finished') resetForNewRound();
+}
+
+// 觸發「啪！」的按壓動畫：手往下壓旋轉 + 按鈕下沉 + 衝擊特效圖閃現
+function triggerPressAnimation() {
+  const hand = document.getElementById('hand-img');
+  const btn = document.getElementById('main-btn');
+  const impact = document.getElementById('impact-img');
+
+  hand.classList.add('pressing');
+  btn.classList.add('pressed');
+  impact.classList.remove('show');
+  void impact.offsetWidth; // 強制 reflow，確保動畫能重新觸發
+  impact.classList.add('show');
+
+  setTimeout(() => {
+    hand.classList.remove('pressing');
+    btn.classList.remove('pressed');
+  }, 140);
 }
 
 function startTiming() {
@@ -275,7 +330,9 @@ function updateTimerDisplay() {
     setDigits('----');
   } else {
     const secStr = String(wholeSecond).padStart(2, '0');
-    const centiStr = String(Math.floor((elapsed - wholeSecond) * 100)).padStart(2, '0');
+    // 用四捨五入修正浮點數運算誤差（例如 17.03 - 17 在電腦裡可能變成 0.029999...）
+    const centiValue = Math.round((elapsed - wholeSecond) * 100);
+    const centiStr = String(centiValue).padStart(2, '0');
     setDigits(secStr + centiStr);
 
     if (wholeSecond !== lastWholeSecond) {
@@ -303,7 +360,7 @@ function stopTiming() {
   btn.textContent = '再挑戰一次';
 
   const finalSec = Math.floor(actual);
-  const finalCenti = Math.floor((actual - finalSec) * 100);
+  const finalCenti = Math.round((actual - finalSec) * 100);
   setDigits(String(finalSec).padStart(2, '0') + String(finalCenti).padStart(2, '0'));
 
   const diff = Math.abs(actual - targetSeconds);
