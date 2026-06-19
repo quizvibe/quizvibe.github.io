@@ -64,6 +64,7 @@
   .nav-3::before { background: linear-gradient(120deg,#7c4dff,#b388ff); box-shadow: 0 8px 24px -6px rgba(124,77,255,0.55); }
   .nav-4::before { background: linear-gradient(120deg,#00bfa5,#64ffda); box-shadow: 0 8px 24px -6px rgba(0,191,165,0.55); }
   .nav-5::before { background: linear-gradient(120deg,#ff3d71,#ff9100); box-shadow: 0 8px 24px -6px rgba(255,61,113,0.6); }
+  .nav-6::before { background: linear-gradient(120deg,#ffb300,#ff5da2); box-shadow: 0 8px 24px -6px rgba(255,179,0,0.55); }
   .nav-5 { margin-top: 6px; border: 1.5px dashed #ffd1de; }
   .nav-5 .label::after {
     content: "NEW"; margin-left: 8px; font-size: 9px; font-weight: 800;
@@ -106,6 +107,18 @@
     border-radius: 99px; padding: 6px 14px 6px 6px; cursor: pointer; font-size: 13.5px; font-weight: 600;
   }
   .user-avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(120deg,#ff5da2,#ff8a5c); display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; font-weight:800; }
+  .user-dropdown {
+    position: absolute; top: 100%; right: 0; margin-top: 10px; background: #fff;
+    border: 1px solid #f0f0f0; border-radius: 14px; min-width: 170px;
+    box-shadow: 0 12px 32px -8px rgba(0,0,0,0.15); overflow: hidden; z-index: 200; display: none;
+  }
+  .user-dropdown.show { display: block; }
+  .user-dropdown button {
+    width: 100%; text-align: left; padding: 13px 16px; background: none; border: none;
+    color: #1f1f1f; font-size: 13.5px; cursor: pointer; transition: background .15s; font-family: inherit;
+  }
+  .user-dropdown button:hover { background: #f8f8f8; }
+  .user-dropdown button.danger { color: #ff5a5a; }
 
   /* ===================== Hero ===================== */
   .hero { padding: 130px 20px 50px; text-align: center; max-width: 760px; margin: 0 auto; }
@@ -128,6 +141,7 @@
   .cat-chip[data-cat="3"]:hover { background: linear-gradient(120deg,#7c4dff,#b388ff); box-shadow: 0 8px 20px -4px rgba(124,77,255,0.5); }
   .cat-chip[data-cat="4"]:hover { background: linear-gradient(120deg,#00bfa5,#64ffda); box-shadow: 0 8px 20px -4px rgba(0,191,165,0.5); }
   .cat-chip[data-cat="5"]:hover { background: linear-gradient(120deg,#ff3d71,#ff9100); box-shadow: 0 8px 20px -4px rgba(255,61,113,0.55); }
+  .cat-chip[data-cat="6"]:hover { background: linear-gradient(120deg,#ffb300,#ff5da2); box-shadow: 0 8px 20px -4px rgba(255,179,0,0.55); }
 
   /* ===================== Quiz Cards ===================== */
   .section-wrap { max-width: 1080px; margin: 0 auto; padding: 36px 20px 80px; }
@@ -232,6 +246,9 @@
     <button class="nav-item nav-5" onclick="openCustomQuiz()">
       <span class="icon">🚀</span><span class="label">客製化</span><span class="sub">創作你的測驗</span>
     </button>
+    <button class="nav-item nav-6" onclick="window.location.href='games.html'">
+      <span class="icon">🎮</span><span class="label">糞Game</span><span class="sub">解壓小遊戲</span>
+    </button>
   </nav>
   <div class="sidebar-footer">
     <button onclick="openFeedbackModal()" style="background:none;border:none;color:var(--accent);font-weight:700;font-size:13px;cursor:pointer;padding:0;margin-bottom:10px;display:block;">💬 給我們回饋意見</button>
@@ -266,12 +283,15 @@
     </div>
 
     <!-- Logged in state (hidden by default) -->
-    <div id="user-chip-wrap" class="hidden flex items-center gap-2">
-      <div class="user-chip" onclick="window.location.href='profile.html'">
+    <div id="user-chip-wrap" class="hidden" style="position:relative;">
+      <div class="user-chip" onclick="toggleUserDropdown()">
         <div class="user-avatar" id="user-avatar-initial">U</div>
         <span id="user-email-display">user@email.com</span>
       </div>
-      <button class="btn-auth btn-login" onclick="handleLogout()" style="padding:9px 14px;">登出</button>
+      <div class="user-dropdown" id="user-dropdown">
+        <button onclick="window.location.href='profile.html'">👤 個人頁面</button>
+        <button class="danger" onclick="handleLogout()">🚪 登出</button>
+      </div>
     </div>
   </div>
 </div>
@@ -289,6 +309,7 @@
     <div class="cat-chip" data-cat="3" onclick="filterCategory('edge')">🤝 隱居邊緣人</div>
     <div class="cat-chip" data-cat="4" onclick="filterCategory('soul')">⏳ 靈魂年齡鑑定</div>
     <div class="cat-chip" data-cat="5" onclick="openCustomQuiz()">🚀 客製化</div>
+    <div class="cat-chip" data-cat="6" onclick="window.location.href='games.html'">🎮 糞Game</div>
   </div>
 </div>
 
@@ -600,7 +621,12 @@ function updateAuthModalUI() {
 function togglePwVisibility(inputId, btn) {
   const input = document.getElementById(inputId);
   const showing = input.type === 'text';
+  const savedValue = input.value; // Chrome 強密碼自動填入後切換 type 有時會清空顯示，先保存值
   input.type = showing ? 'password' : 'text';
+  // 強制重新賦值，修正 Chrome 自動填入後欄位視覺空白的問題
+  if (input.value !== savedValue) {
+    input.value = savedValue;
+  }
   btn.textContent = showing ? '👁️' : '🙈';
   btn.classList.toggle('showing', !showing);
 }
@@ -718,6 +744,17 @@ function handleLogout() {
     });
   }
 }
+
+function toggleUserDropdown() {
+  document.getElementById('user-dropdown').classList.toggle('show');
+}
+
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('user-chip-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('user-dropdown')?.classList.remove('show');
+  }
+});
 
 /* 檢查既有登入狀態 */
 if (supabaseClient) {
