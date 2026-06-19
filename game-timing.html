@@ -327,7 +327,13 @@ function startTiming() {
   btn.textContent = 'STOP';
 
   startTime = performance.now();
-  timerInterval = setInterval(updateTimerDisplay, 30);
+  timerInterval = requestAnimationFrame(timerLoop);
+}
+
+function timerLoop() {
+  if (gameState !== 'running') return;
+  updateTimerDisplay();
+  timerInterval = requestAnimationFrame(timerLoop);
 }
 
 function getElapsed() { return (performance.now() - startTime) / 1000; }
@@ -368,7 +374,7 @@ function flashDigits() {
 }
 
 function stopTiming() {
-  clearInterval(timerInterval);
+  cancelAnimationFrame(timerInterval);
   const actual = getElapsed();
   gameState = 'finished';
 
@@ -424,7 +430,9 @@ function showResultPanel(diff, actual, isWin) {
   const actualStr = actual.toFixed(2);
 
   const diffEl = document.getElementById('result-diff');
-  diffEl.textContent = (actual > targetSeconds ? '+' : '-') + diff.toFixed(2) + ' 秒';
+  const diffStr = diff.toFixed(2);
+  const sign = diffStr === '0.00' ? '' : (actual > targetSeconds ? '+' : '-');
+  diffEl.textContent = sign + diffStr + ' 秒';
   diffEl.className = 'result-diff ' + (isWin ? 'win' : 'lose');
 
   let text;
