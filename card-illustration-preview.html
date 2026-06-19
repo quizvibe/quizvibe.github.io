@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>卡片插圖實際套用預覽</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans TC', sans-serif; }
+  body { background: #f7f2e9; color: #4a3f35; padding: 40px 24px; }
+
+  .quiz-grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fill,minmax(220px,1fr)); gap: 20px; }
+  .quiz-card { background: #fffdf8; border: 1.5px solid #d9cbb3; border-radius: 18px; padding: 18px; cursor: pointer; transition: transform .2s; text-align: center; }
+  .quiz-card:hover { transform: translateY(-4px); }
+  .quiz-card img { width: 100%; aspect-ratio: 1/1; object-fit: contain; margin-bottom: 10px; }
+  .quiz-card h3 { font-weight: 700; font-size: 15px; margin-bottom: 6px; line-height: 1.4; color: #4a3f35; }
+  .quiz-card p { font-size: 12px; color: #a39884; line-height: 1.6; }
+  .quiz-tag { display: inline-block; margin-top: 10px; font-size: 11px; padding: 3px 10px; border-radius: 99px; background: #f1e9da; color: #a9633a; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="quiz-grid">
+  <div class="quiz-card">
+    <img src="card-edge.png" alt="邊緣人">
+    <h3>現代隱居邊緣人</h3>
+    <p>你是不是早就活成了一座孤島？</p>
+    <div class="quiz-tag">官方測驗</div>
+  </div>
+  <div class="quiz-card">
+    <img src="card-love.png" alt="戀愛">
+    <h3>戀愛重症診斷</h3>
+    <p>暈船指數與吸渣體質全面體檢</p>
+    <div class="quiz-tag">官方測驗</div>
+  </div>
+  <div class="quiz-card">
+    <img src="card-work.png" alt="職場">
+    <h3>職場生存戰</h3>
+    <p>找出你的辦公室人格分類</p>
+    <div class="quiz-tag">官方測驗</div>
+  </div>
+  <div class="quiz-card">
+    <img src="card-soul.png" alt="靈魂">
+    <h3>靈魂老化度</h3>
+    <p>測試你的精神退化指數</p>
+    <div class="quiz-tag">官方測驗</div>
+  </div>
+  <div class="quiz-card">
+    <img src="card-crazy.png" alt="瘋狂">
+    <h3>全網瘋傳盲盒</h3>
+    <p>測出你深藏的瘋狂人格</p>
+    <div class="quiz-tag">官方測驗</div>
+  </div>
+</div>
+
+</body>
+</html>
