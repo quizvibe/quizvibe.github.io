@@ -249,6 +249,7 @@ let startTime = 0;
 let timerInterval = null;
 let gameState = 'idle';
 let lastWholeSecond = -1;
+let hasShownSecond3 = false;
 let mode = 'easy';
 
 function setMode(m) {
@@ -319,6 +320,7 @@ function triggerPressAnimation() {
 function startTiming() {
   gameState = 'running';
   lastWholeSecond = -1;
+  hasShownSecond3 = false;
   document.getElementById('result-panel').classList.remove('show');
 
   const btn = document.getElementById('main-btn');
@@ -348,9 +350,11 @@ function updateTimerDisplay() {
     return;
   }
 
-  if (elapsed >= 4) {
+  // 確保「03」這個整數秒至少完整顯示過一次，避免快速跳幀時被完全跳過
+  if (wholeSecond >= 4 || (wholeSecond === 3 && hasShownSecond3)) {
     setDigits('----');
   } else {
+    if (wholeSecond === 3) hasShownSecond3 = true;
     const secStr = String(wholeSecond).padStart(2, '0');
     const centiValue = Math.round((elapsed - wholeSecond) * 100);
     const centiStr = String(centiValue).padStart(2, '0');
