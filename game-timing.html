@@ -27,6 +27,26 @@
   .spacer { flex: 1; }
   .tb-btn { padding: 7px 14px; border-radius: 99px; font-size: 12.5px; font-weight: 700; border: 1.5px solid #ececec; background: #fff; cursor: pointer; }
 
+  .qt-lang-pill { display: flex; gap: 3px; background: #f5f5f5; border-radius: 99px; padding: 3px; }
+  .qt-lang-pill button { padding: 4px 9px; border-radius: 99px; font-size: 11.5px; font-weight: 600; color: #999; border: none; background: none; cursor: pointer; transition: all .2s; }
+  .qt-lang-pill button.active { background: #fff; color: #ff5da2; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+
+  .qt-btn { padding: 7px 13px; border-radius: 99px; font-size: 12.5px; font-weight: 700; border: 1.5px solid #ececec; background: #fff; cursor: pointer; }
+  .qt-btn.qt-signup { background: linear-gradient(120deg,#ff5da2,#ff8a5c); color: #fff; border: none; }
+
+  .qt-user-wrap { position: relative; }
+  .qt-user-chip { display: flex; align-items: center; gap: 7px; background: #f6f6f6; border-radius: 99px; padding: 5px 12px 5px 5px; cursor: pointer; font-size: 12.5px; font-weight: 600; }
+  .qt-avatar { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(120deg,#ff5da2,#ff8a5c); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 800; }
+  .qt-dropdown {
+    position: absolute; top: 100%; right: 0; margin-top: 8px; background: #fff;
+    border: 1px solid #f0f0f0; border-radius: 14px; min-width: 160px;
+    box-shadow: 0 12px 32px -8px rgba(0,0,0,0.12); overflow: hidden; z-index: 200; display: none;
+  }
+  .qt-dropdown.show { display: block; }
+  .qt-dropdown button { width: 100%; text-align: left; padding: 12px 16px; background: none; border: none; color: #2d2d2d; font-size: 13.5px; cursor: pointer; transition: background .15s; font-family: inherit; }
+  .qt-dropdown button:hover { background: #f8f8f8; }
+  .qt-dropdown button.danger { color: #d83b3b; }
+
   .wrap { max-width: 480px; margin: 0 auto; padding: 24px 20px; text-align: center; }
   .game-title { font-size: 21px; font-weight: 900; margin-bottom: 4px; }
   .game-sub { color: #999; font-size: 13px; margin-bottom: 18px; line-height: 1.6; }
@@ -105,7 +125,26 @@
 <div class="topbar">
   <a href="games.html" class="back">← 糞Game大廳</a>
   <div class="spacer"></div>
+  <div class="qt-lang-pill">
+    <button class="active" onclick="setLang('zh')" data-lang-btn="zh">中</button>
+    <button onclick="setLang('ja')" data-lang-btn="ja">日</button>
+    <button onclick="setLang('en')" data-lang-btn="en">EN</button>
+  </div>
   <button class="tb-btn" onclick="showProgressModal()">📊 本關進度</button>
+  <div id="qt-auth-buttons" style="display:flex; gap:8px;">
+    <button class="qt-btn qt-login" onclick="window.location.href='index.html'">登入</button>
+    <button class="qt-btn qt-signup" onclick="window.location.href='index.html'">註冊</button>
+  </div>
+  <div id="qt-user-chip-wrap" class="hidden qt-user-wrap">
+    <div class="qt-user-chip" onclick="toggleUserDropdown()">
+      <div class="qt-avatar" id="qt-avatar-initial">U</div>
+      <span id="qt-username-display">用戶</span>
+    </div>
+    <div class="qt-dropdown" id="qt-dropdown">
+      <button onclick="window.location.href='profile.html'">👤 個人頁面</button>
+      <button class="danger" onclick="handleLogoutGames()">🚪 登出</button>
+    </div>
+  </div>
 </div>
 
 <div class="wrap">
@@ -528,6 +567,75 @@ function showProgressModal() {
 generateNewTarget();
 renderStyleRow();
 renderRecentList();
+
+/* ---------------- 登入狀態判斷 + 頭像顯示 ---------------- */
+async function initAuthUI() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session?.user) {
+    showLoggedInUI(session.user);
+  }
+  supabaseClient.auth.onAuthStateChange((event, newSession) => {
+    if (newSession?.user) {
+      showLoggedInUI(newSession.user);
+      currentUser = newSession.user;
+    } else {
+      document.getElementById('qt-auth-buttons').classList.remove('hidden');
+      document.getElementById('qt-user-chip-wrap').classList.add('hidden');
+      currentUser = null;
+    }
+  });
+}
+
+function showLoggedInUI(user) {
+  document.getElementById('qt-auth-buttons').classList.add('hidden');
+  document.getElementById('qt-user-chip-wrap').classList.remove('hidden');
+  const nickname = user.user_metadata?.nickname || user.email?.split('@')[0] || '用戶';
+  document.getElementById('qt-username-display').textContent = nickname;
+  document.getElementById('qt-avatar-initial').textContent = nickname.charAt(0).toUpperCase();
+}
+
+function toggleUserDropdown() {
+  document.getElementById('qt-dropdown').classList.toggle('show');
+}
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('qt-user-chip-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('qt-dropdown')?.classList.remove('show');
+  }
+});
+function handleLogoutGames() {
+  if (confirm('要登出嗎？')) {
+    supabaseClient.auth.signOut().then(() => { window.location.reload(); });
+  }
+}
+initAuthUI();
+
+/* ---------------- 語言切換 ---------------- */
+const i18nTiming = {
+  zh: { gameTitle: '⏱️ 黃金秒數盲數挑戰', gameSub: '記住思考泡泡裡的目標秒數，3秒後畫面會隱藏，靠你的生物鐘盲數按停！', back: '← 糞Game大廳', progress: '📊 本關進度', login: '登入', signup: '註冊', profile: '👤 個人頁面', logout: '🚪 登出' },
+  ja: { gameTitle: '⏱️ タイムレース', gameSub: '吹き出しの目標秒数を覚えて、3秒後に画面が隠れます。体内時計で止めてみよう！', back: '← ゲームロビー', progress: '📊 進捗確認', login: 'ログイン', signup: '登録', profile: '👤 プロフィール', logout: '🚪 ログアウト' },
+  en: { gameTitle: '⏱️ Golden Second Challenge', gameSub: 'Remember the target seconds in the bubble — after 3 seconds the display hides. Stop using your internal clock!', back: '← Game Lobby', progress: '📊 Progress', login: 'Log in', signup: 'Sign up', profile: '👤 Profile', logout: '🚪 Log out' },
+};
+function setLang(l) {
+  document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === l));
+  localStorage.setItem('quizdrop_lang', l);
+  const t = i18nTiming[l];
+  document.querySelector('.game-title').textContent = t.gameTitle;
+  document.querySelector('.game-sub').textContent = t.gameSub;
+  document.querySelector('.back').textContent = t.back;
+  document.querySelector('.tb-btn').textContent = t.progress;
+  const loginBtn = document.querySelector('.qt-login');
+  const signupBtn = document.querySelector('.qt-signup');
+  if (loginBtn) loginBtn.textContent = t.login;
+  if (signupBtn) signupBtn.textContent = t.signup;
+  document.querySelector('#qt-dropdown button:not(.danger)').textContent = t.profile;
+  document.querySelector('#qt-dropdown button.danger').textContent = t.logout;
+}
+(function initLangFromStorage() {
+  const saved = localStorage.getItem('quizdrop_lang');
+  if (saved && saved !== 'zh') setLang(saved);
+})();
 </script>
+
 </body>
 </html>
