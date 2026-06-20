@@ -206,10 +206,8 @@ function applyLang() {
 
 // 頁面載入時，讀取之前儲存的語言偏好（必須放在所有函式宣告之後執行，避免時序錯誤）
 (function initLangFromStorage() {
-  const saved = localStorage.getItem('quizdrop_lang');
-  if (saved && saved !== 'zh') {
-    setLang(saved);
-  }
+  const saved = localStorage.getItem('quizdrop_lang') || 'zh';
+  setLang(saved);
 })();
 
 initAuthUI();

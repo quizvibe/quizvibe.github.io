@@ -596,6 +596,8 @@ function addQuestion() {
     <button type="button" class="btn-add-q btn-add-option" style="margin-bottom:0;padding:9px;font-size:12.5px;" onclick="addOptionToQuestion(this)">+ 新增選項</button>
   `;
   document.getElementById('questions-container').appendChild(block);
+  // 新增題目時，預設帶的選項只有空殼容器，需要立即渲染加分結果的選擇 chip
+  block.querySelectorAll('.opt-result-multiselect').forEach(wrap => renderMultiselectChips(wrap, []));
   renumberQuestions();
   updateQuestionButtonState();
 }

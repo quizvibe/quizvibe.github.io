@@ -428,8 +428,8 @@ function setLang(l) {
   renderStyleRow();
 }
 (function initLangFromStorage() {
-  const saved = localStorage.getItem('quizdrop_lang');
-  if (saved && saved !== 'zh') setLang(saved);
+  const saved = localStorage.getItem('quizdrop_lang') || 'zh';
+  setLang(saved);
 })();
 
 /* 所有初始化呼叫統一放在檔案最末端，確保 currentLang 等變數已宣告完畢 */

@@ -727,8 +727,8 @@ function setLang(l) {
   }
 }
 (function initLangFromStorage() {
-  const saved = localStorage.getItem('quizdrop_lang');
-  if (saved && saved !== 'zh') setLang(saved);
+  const saved = localStorage.getItem('quizdrop_lang') || 'zh';
+  setLang(saved); // 一律呼叫，不可省略中文，因為HTML預設文字（如EASY/HARD）並未完整對應任何一個語言版本
 })();
 
 /* 所有初始化呼叫統一放在檔案最末端執行，確保 currentLang 等變數與所有函式都已宣告完畢，避免 ReferenceError 中斷整段 script */

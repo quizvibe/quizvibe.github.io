@@ -867,10 +867,8 @@ function activateSearchInput() {
 
 /* 套用之前儲存的語言偏好 — 放在檔案最末端執行，確保所有變數與函式都已宣告完畢 */
 (function initLangFromStorage() {
-  const saved = localStorage.getItem('quizdrop_lang');
-  if (saved && i18n[saved]) {
-    setLang(saved);
-  }
+  const saved = localStorage.getItem('quizdrop_lang') || 'zh';
+  setLang(saved);
 })();
 </script>
 </body>

@@ -607,8 +607,8 @@ function retry() {
 }
 
 (function initLangFromStorage() {
-  const saved = localStorage.getItem('quizdrop_lang');
-  if (saved && saved !== 'zh') setLang(saved);
+  const saved = localStorage.getItem('quizdrop_lang') || 'zh';
+  setLang(saved);
 })();
 </script>
 </body>
