@@ -417,6 +417,9 @@ async function init() {
   document.getElementById('email-display').value = currentUser.email;
   document.getElementById('avatar-initial').textContent = displayName.charAt(0).toUpperCase();
 
+  loadHistory(); // 確認登入與使用者資料載入完成後才讀取測驗紀錄
+}
+
   /* ============================================================ */
 /* 糞Game 紀錄頁籤 + 全站任務黑板                                   */
 /* ============================================================ */
@@ -502,9 +505,6 @@ function showBlackboardModal() {
 
 function closeBlackboardModal() {
   document.getElementById('blackboard-overlay').classList.remove('show');
-}
-
-loadHistory();
 }
 
 async function saveProfile() {
