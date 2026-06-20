@@ -498,8 +498,10 @@ function setLang(l) {
   const searchPlaceholderEl = document.getElementById('search-placeholder-text');
   if (searchInputEl) { searchInputEl.placeholder = t.searchPlaceholder; }
   if (searchPlaceholderEl) { searchPlaceholderEl.textContent = t.searchPlaceholder; }
-  document.querySelector('.btn-login').textContent = t.login;
-  document.querySelector('.btn-signup').textContent = t.signup;
+  const btnLoginEl = document.querySelector('.btn-login');
+  const btnSignupEl = document.querySelector('.btn-signup');
+  if (btnLoginEl) btnLoginEl.textContent = t.login;
+  if (btnSignupEl) btnSignupEl.textContent = t.signup;
   document.getElementById('cat-chip-custom').textContent = t.customChip;
   renderQuizCards();
 

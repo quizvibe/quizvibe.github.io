@@ -7,47 +7,48 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
   * { font-family: 'Noto Sans TC', sans-serif; }
-  body { background: #fafaf9; color: #1f1f1f; margin: 0; }
+  body { background: #f7f2e9; color: #4a3f35; margin: 0; }
 
   .topbar {
-    height: 64px; background: rgba(255,255,255,0.92); backdrop-filter: blur(10px);
-    border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; padding: 0 20px; gap: 14px;
+    height: 64px; background: rgba(255,253,248,0.94); backdrop-filter: blur(10px);
+    border-bottom: 1px solid #ece4d4; display: flex; align-items: center; padding: 0 20px; gap: 14px;
     position: sticky; top: 0; z-index: 10;
   }
-  .back-btn { display:flex; align-items:center; gap:6px; font-weight:700; font-size:14px; color:#444; text-decoration:none; }
-  .logo { font-weight: 900; font-size: 18px; }
-  .logo .drop { color: #ff5da2; }
+  .back-btn { display:flex; align-items:center; gap:6px; font-weight:700; font-size:14px; color:#4a3f35; text-decoration:none; }
+  .logo { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 18px; }
+  .logo .drop { color: #a9633a; }
   .topbar-right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
-  .lang-pill { display: flex; gap: 3px; background: #f3f3f2; border-radius: 99px; padding: 3px; }
-  .lang-pill button { padding: 5px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; color: #999; border: none; background: none; cursor: pointer; transition: all .2s; }
-  .lang-pill button.active { background: #fff; color: #1f1f1f; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  .lang-pill { display: flex; gap: 3px; background: #f1e9da; border-radius: 10px; padding: 3px; }
+  .lang-pill button { padding: 5px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; color: #9c8f7e; border: none; background: none; cursor: pointer; transition: all .2s; }
+  .lang-pill button.active { background: #fffdf8; color: #a9633a; box-shadow: 0 1px 4px rgba(80,60,30,0.1); }
 
   .wrap { max-width: 680px; margin: 0 auto; padding: 40px 20px 80px; }
 
   .profile-card {
-    background: #fff; border-radius: 24px; padding: 32px 28px; margin-bottom: 28px;
-    border: 1px solid #f0f0f0; box-shadow: 0 4px 20px -8px rgba(0,0,0,0.06);
+    background: #fffdf8; border-radius: 20px; padding: 32px 28px; margin-bottom: 28px;
+    border: 1.5px solid #d9cbb3; box-shadow: 0 4px 20px -8px rgba(80,60,30,0.08);
   }
 
   .avatar-big {
     width: 72px; height: 72px; border-radius: 50%;
-    background: linear-gradient(120deg,#ff5da2,#ff8a5c); color: #fff;
+    background: #a9633a; color: #fff;
     display: flex; align-items: center; justify-content: center;
     font-size: 28px; font-weight: 800; margin-bottom: 16px;
   }
 
-  .field-label { font-size: 12px; font-weight: 700; color: #999; margin-bottom: 6px; display:block; }
+  .field-label { font-size: 12px; font-weight: 700; color: #9c8f7e; margin-bottom: 6px; display:block; }
   .input-field {
-    width: 100%; padding: 12px 16px; border-radius: 12px; border: 1.5px solid #ececec;
+    width: 100%; padding: 12px 16px; border-radius: 10px; border: 1.5px solid #d9cbb3;
     font-size: 14.5px; margin-bottom: 16px; outline: none; transition: border-color .2s;
+    background: #fffdf8; color: #4a3f35;
   }
-  .input-field:focus { border-color: #ff8aae; }
-  .input-field:disabled { background: #f7f7f7; color: #999; }
+  .input-field:focus { border-color: #a9633a; }
+  .input-field:disabled { background: #f1e9da; color: #9c8f7e; }
 
   .btn-save {
-    padding: 12px 28px; border-radius: 99px; background: linear-gradient(120deg,#ff5da2,#ff8a5c);
+    padding: 12px 28px; border-radius: 4px; background: #4a3f35;
     color: #fff; font-weight: 800; border: none; cursor: pointer; font-size: 14px; transition: opacity .2s;
   }
   .btn-save:hover { opacity: 0.9; }
@@ -86,27 +87,29 @@
   .pw-eye.showing { opacity: 0.9; }
 
   .save-msg { font-size: 13px; padding: 8px 0; display: none; }
-  .save-msg.success { color: #2da44e; display: block; }
-  .save-msg.error { color: #d83b3b; display: block; }
+  .save-msg.success { color: #4a7a3a; display: block; }
+  .save-msg.error { color: #b14a35; display: block; }
 
-  .section-title { font-size: 18px; font-weight: 900; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .section-title { font-size: 18px; font-weight: 900; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; color: #4a3f35; }
 
-  .tab-row { display: flex; gap: 8px; margin-bottom: 18px; border-bottom: 1.5px solid #f0f0f0; }
-  .tab-btn { padding: 12px 4px; background: none; border: none; font-size: 14.5px; font-weight: 700; color: #999; cursor: pointer; border-bottom: 2.5px solid transparent; margin-right: 16px; font-family: inherit; }
-  .tab-btn.active { color: #ff5da2; border-bottom-color: #ff5da2; }
+  .tab-row { display: flex; gap: 8px; margin-bottom: 18px; border-bottom: 1.5px solid #ece4d4; }
+  .tab-btn { padding: 12px 4px; background: none; border: none; font-size: 14.5px; font-weight: 700; color: #9c8f7e; cursor: pointer; border-bottom: 2.5px solid transparent; margin-right: 16px; font-family: inherit; }
+  .tab-btn.active { color: #a9633a; border-bottom-color: #a9633a; }
 
   .blackboard-trigger {
-    width: 100%; padding: 13px; border-radius: 12px; background: #fff7ed; border: 1.5px dashed #f0c987;
-    color: #b8860b; font-weight: 700; font-size: 13.5px; cursor: pointer; margin-bottom: 16px;
+    width: 100%; padding: 13px; border-radius: 10px; background: #f1e9da; border: 1.5px dashed #c99a6b;
+    color: #a9633a; font-weight: 700; font-size: 13.5px; cursor: pointer; margin-bottom: 16px;
   }
 
   .game-history-item {
-    display: flex; align-items: center; gap: 10px; padding: 14px 4px; border-bottom: 1px solid #f5f5f5;
-    cursor: pointer; transition: background .15s; font-size: 13.5px; color: #444;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 12px; border-bottom: 1px solid #ece4d4;
+    cursor: pointer; transition: background .15s; font-size: 13.5px; color: #4a3f35; border-radius: 10px;
   }
-  .game-history-item:hover { background: #fafafa; }
+  .game-history-item:hover { background: #f7f2e9; }
+  .game-history-item .ghi-left { display: flex; align-items: center; gap: 10px; }
+  .game-history-item .ghi-arrow { color: #b5a890; font-size: 16px; flex-shrink: 0; }
 
-  .blackboard-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 300; display: none; align-items: center; justify-content: center; padding: 20px; }
+  .blackboard-overlay { position: fixed; inset: 0; background: rgba(40,30,20,.5); z-index: 300; display: none; align-items: center; justify-content: center; padding: 20px; }
   .blackboard-overlay.show { display: flex; }
   .blackboard-box {
     background: #1e352f; border: 3px solid rgba(255,255,255,0.4); border-radius: 16px; padding: 28px 24px;
@@ -121,26 +124,26 @@
   .blackboard-close { width: 100%; padding: 11px; border-radius: 10px; background: rgba(255,255,255,0.15); color: #fff; border: none; font-weight: 700; margin-top: 14px; cursor: pointer; }
 
   .history-item {
-    background: #fff; border: 1px solid #f0f0f0; border-radius: 16px; padding: 18px 20px;
+    background: #fffdf8; border: 1.5px solid #d9cbb3; border-radius: 16px; padding: 18px 20px;
     display: flex; align-items: center; gap: 14px; margin-bottom: 10px; transition: all .2s;
   }
-  .history-item:hover { box-shadow: 0 6px 16px -6px rgba(0,0,0,0.08); transform: translateX(2px); }
+  .history-item:hover { box-shadow: 0 6px 16px -6px rgba(80,60,30,0.1); transform: translateX(2px); border-color: #a9633a; }
   .history-emoji { font-size: 28px; flex-shrink: 0; }
   .history-info { flex: 1; }
-  .history-title { font-weight: 700; font-size: 14.5px; }
-  .history-result { font-size: 13px; color: #ff5da2; font-weight: 600; margin-top: 2px; }
-  .history-date { font-size: 11.5px; color: #bbb; margin-top: 2px; }
+  .history-title { font-weight: 700; font-size: 14.5px; color: #4a3f35; }
+  .history-result { font-size: 13px; color: #a9633a; font-weight: 600; margin-top: 2px; }
+  .history-date { font-size: 11.5px; color: #b5a890; margin-top: 2px; }
 
-  .empty-state { text-align: center; padding: 50px 20px; color: #bbb; }
+  .empty-state { text-align: center; padding: 50px 20px; color: #b5a890; }
   .empty-state .emoji { font-size: 44px; margin-bottom: 12px; display: block; }
 
   .login-required { text-align: center; padding: 80px 20px; }
   .login-required .emoji { font-size: 56px; margin-bottom: 16px; display: block; }
-  .login-required h2 { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
-  .login-required p { color: #999; font-size: 14px; margin-bottom: 24px; }
+  .login-required h2 { font-size: 20px; font-weight: 800; margin-bottom: 8px; color: #4a3f35; }
+  .login-required p { color: #9c8f7e; font-size: 14px; margin-bottom: 24px; }
   .login-required a {
-    display: inline-block; padding: 13px 32px; border-radius: 99px;
-    background: linear-gradient(120deg,#ff5da2,#ff8a5c); color: #fff; font-weight: 800;
+    display: inline-block; padding: 13px 32px; border-radius: 4px;
+    background: #4a3f35; color: #fff; font-weight: 800;
     text-decoration: none; font-size: 14.5px;
   }
 </style>
@@ -150,7 +153,7 @@
 <div class="topbar">
   <a href="index.html" class="back-btn">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-    回首頁
+    <span id="back-to-home-text">回首頁</span>
   </a>
   <div class="topbar-right">
     <div class="lang-pill">
@@ -167,9 +170,9 @@
   <!-- Not logged in state -->
   <div id="login-required-view" class="login-required hidden">
     <span class="emoji">🔒</span>
-    <h2>請先登入</h2>
-    <p>登入後才能查看你的個人頁面與測驗紀錄</p>
-    <a href="index.html">回首頁登入 →</a>
+    <h2 id="login-required-title">請先登入</h2>
+    <p id="login-required-desc">登入後才能查看你的個人頁面與測驗紀錄</p>
+    <a href="index.html" id="login-required-link">回首頁登入 →</a>
   </div>
 
   <!-- Logged in state -->
@@ -177,14 +180,14 @@
 
     <div class="profile-card">
       <div class="avatar-big" id="avatar-initial">U</div>
-      <label class="field-label">暱稱</label>
+      <label class="field-label" id="label-nickname">暱稱</label>
       <input type="text" class="input-field" id="nickname-input" maxlength="20" />
 
-      <label class="field-label">Email</label>
+      <label class="field-label" id="label-email">Email</label>
       <input type="text" class="input-field" id="email-display" disabled />
 
       <button class="btn-save" onclick="saveProfile()" id="save-btn">儲存變更</button>
-      <button class="btn-change-pw" onclick="openPasswordModal()">🔑 修改密碼</button>
+      <button class="btn-change-pw" onclick="openPasswordModal()" id="btn-change-pw-text">🔑 修改密碼</button>
       <div class="save-msg" id="save-msg"></div>
     </div>
 
@@ -197,22 +200,22 @@
       <div id="history-list">
         <div class="empty-state">
           <span class="emoji">🌱</span>
-          載入中...
+          <span id="loading-text">載入中...</span>
         </div>
       </div>
     </div>
 
     <div id="game-tab-content" class="hidden">
-      <button class="blackboard-trigger" onclick="showBlackboardModal()">📊 查看全站總任務黑板</button>
+      <button class="blackboard-trigger" onclick="showBlackboardModal()" id="blackboard-trigger-text">📊 查看全站總任務黑板</button>
       <div id="game-history-list">
         <div class="empty-state">
           <span class="emoji">🎮</span>
-          還沒有遊戲紀錄，去玩一場吧！
+          <span id="no-game-history-text">還沒有遊戲紀錄，去玩一場吧！</span>
         </div>
       </div>
     </div>
 
-    <button class="btn-logout-bottom" onclick="handleProfileLogout()">🚪 登出</button>
+    <button class="btn-logout-bottom" onclick="handleProfileLogout()" id="btn-logout-text">🚪 登出</button>
 
   </div>
 
@@ -220,9 +223,9 @@
 
 <div class="blackboard-overlay" id="blackboard-overlay">
   <div class="blackboard-box">
-    <div class="blackboard-title">📊 全站總任務黑板</div>
+    <div class="blackboard-title" id="blackboard-title-text">📊 全站總任務黑板</div>
     <div id="blackboard-content"></div>
-    <button class="blackboard-close" onclick="closeBlackboardModal()">關閉</button>
+    <button class="blackboard-close" onclick="closeBlackboardModal()" id="blackboard-close-text">關閉</button>
   </div>
 </div>
 
@@ -230,22 +233,22 @@
   <div class="modal-box">
     <button class="modal-close" onclick="closePasswordModal()">✕</button>
     <div id="pw-step-form">
-      <div class="modal-title">🔑 修改密碼</div>
-      <div class="modal-sub">請輸入目前密碼與新密碼</div>
+      <div class="modal-title" id="pw-modal-title">🔑 修改密碼</div>
+      <div class="modal-sub" id="pw-modal-sub">請輸入目前密碼與新密碼</div>
 
-      <label class="field-label">目前密碼</label>
+      <label class="field-label" id="label-pw-old">目前密碼</label>
       <div class="pw-field-wrap">
         <input type="password" class="input-field" id="pw-old" />
         <button type="button" class="pw-eye" onclick="togglePwVisibility('pw-old', this)">👁️</button>
       </div>
 
-      <label class="field-label">新密碼（至少6位數）</label>
+      <label class="field-label" id="label-pw-new">新密碼（至少6位數）</label>
       <div class="pw-field-wrap">
         <input type="password" class="input-field" id="pw-new" />
         <button type="button" class="pw-eye" onclick="togglePwVisibility('pw-new', this)">👁️</button>
       </div>
 
-      <label class="field-label">再次輸入新密碼</label>
+      <label class="field-label" id="label-pw-new-confirm">再次輸入新密碼</label>
       <div class="pw-field-wrap">
         <input type="password" class="input-field" id="pw-new-confirm" />
         <button type="button" class="pw-eye" onclick="togglePwVisibility('pw-new-confirm', this)">👁️</button>
@@ -256,18 +259,18 @@
     </div>
 
     <div id="pw-step-confirm" class="hidden">
-      <div class="modal-title">⚠️ 確定要變更密碼嗎？</div>
-      <div class="modal-sub">變更後，下次登入請使用新密碼</div>
+      <div class="modal-title" id="pw-confirm-title">⚠️ 確定要變更密碼嗎？</div>
+      <div class="modal-sub" id="pw-confirm-sub">變更後，下次登入請使用新密碼</div>
       <div style="display:flex; gap:10px; margin-top:20px;">
-        <button class="btn-save" style="background:#f3f3f2; color:#1f1f1f;" onclick="cancelPasswordConfirm()">取消</button>
-        <button class="btn-save" onclick="finalizePasswordChange()">確定變更</button>
+        <button class="btn-save" style="background:#f1e9da; color:#4a3f35;" onclick="cancelPasswordConfirm()" id="pw-cancel-text">取消</button>
+        <button class="btn-save" onclick="finalizePasswordChange()" id="pw-confirm-final-text">確定變更</button>
       </div>
     </div>
 
     <div id="pw-step-success" class="hidden" style="text-align:center;">
       <span style="font-size:48px; display:block; margin-bottom:12px;">✅</span>
-      <div class="modal-title">密碼已成功變更！</div>
-      <button class="btn-save" onclick="closePasswordModal()">完成</button>
+      <div class="modal-title" id="pw-success-title">密碼已成功變更！</div>
+      <button class="btn-save" onclick="closePasswordModal()" id="pw-success-done-text">完成</button>
     </div>
   </div>
 </div>
@@ -277,25 +280,115 @@ const SUPABASE_URL = 'https://xsflpzozgdgbtrtdzdlj.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzZmxwem96Z2RnYnRydGR6ZGxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTMyMzUsImV4cCI6MjA5NzE4OTIzNX0.Uyi5dYa73h0JJ9KwT2bP0C79wV_H-PoYneiR5xsbT6I';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+const i18nProfile = {
+  zh: {
+    backToHome: '回首頁', loginRequiredTitle: '請先登入', loginRequiredDesc: '登入後才能查看你的個人頁面與測驗紀錄', loginRequiredLink: '回首頁登入 →',
+    labelNickname: '暱稱', labelEmail: 'Email', btnSave: '儲存變更', btnChangePw: '🔑 修改密碼',
+    tabQuiz: '📜 測驗紀錄', tabGame: '🎮 糞Game紀錄', loadingText: '載入中...',
+    blackboardTrigger: '📊 查看全站總任務黑板', noGameHistory: '還沒有遊戲紀錄，去玩一場吧！', btnLogout: '🚪 登出',
+    blackboardTitle: '📊 全站總任務黑板', blackboardClose: '關閉',
+    pwModalTitle: '🔑 修改密碼', pwModalSub: '請輸入目前密碼與新密碼',
+    labelPwOld: '目前密碼', labelPwNew: '新密碼（至少6位數）', labelPwNewConfirm: '再次輸入新密碼',
+    pwConfirmTitle: '⚠️ 確定要變更密碼嗎？', pwConfirmSub: '變更後，下次登入請使用新密碼',
+    pwCancel: '取消', pwConfirmFinal: '確定變更', pwSuccessTitle: '密碼已成功變更！', pwSuccessDone: '完成',
+    noQuizHistory: '還沒有測驗紀錄，去玩第一個測驗吧！', unknownQuiz: '未知測驗', resultLabel: '結果',
+    notPlayedYet: '尚未遊玩過', latestRecord: '最新紀錄',
+    timingRecord: (wins, plays) => `累積勝利 ${wins} 次・遊玩 ${plays} 次`,
+    chickenRecord: (hits) => `累積暴擊 ${hits} 次`,
+    bubbleRecord: (total) => `累積捏爆 ${total} 個`,
+    fastestSuffix: (sec) => `，最快 ${sec} 秒`,
+    confirmLogout: '要登出嗎？',
+  },
+  ja: {
+    backToHome: 'ホームへ', loginRequiredTitle: 'ログインが必要です', loginRequiredDesc: 'ログインするとプロフィールとクイズ履歴が見られます', loginRequiredLink: 'ホームでログイン →',
+    labelNickname: 'ニックネーム', labelEmail: 'メール', btnSave: '保存', btnChangePw: '🔑 パスワード変更',
+    tabQuiz: '📜 クイズ履歴', tabGame: '🎮 ゲーム履歴', loadingText: '読み込み中...',
+    blackboardTrigger: '📊 全体の進捗ボードを見る', noGameHistory: 'まだゲーム履歴がありません、遊んでみよう！', btnLogout: '🚪 ログアウト',
+    blackboardTitle: '📊 全体の進捗ボード', blackboardClose: '閉じる',
+    pwModalTitle: '🔑 パスワード変更', pwModalSub: '現在のパスワードと新しいパスワードを入力してください',
+    labelPwOld: '現在のパスワード', labelPwNew: '新しいパスワード（6文字以上）', labelPwNewConfirm: '新しいパスワード（再入力）',
+    pwConfirmTitle: '⚠️ パスワードを変更しますか？', pwConfirmSub: '変更後は新しいパスワードでログインしてください',
+    pwCancel: 'キャンセル', pwConfirmFinal: '変更する', pwSuccessTitle: 'パスワードを変更しました！', pwSuccessDone: '完了',
+    noQuizHistory: 'まだクイズ履歴がありません、最初のクイズに挑戦しよう！', unknownQuiz: '不明なクイズ', resultLabel: '結果',
+    notPlayedYet: 'まだプレイしていません', latestRecord: '最新の記録',
+    timingRecord: (wins, plays) => `累計勝利 ${wins} 回・プレイ ${plays} 回`,
+    chickenRecord: (hits) => `累計ヒット ${hits} 回`,
+    bubbleRecord: (total) => `累計ポップ ${total} 個`,
+    fastestSuffix: (sec) => `、最速 ${sec} 秒`,
+    confirmLogout: 'ログアウトしますか？',
+  },
+  en: {
+    backToHome: 'Back to home', loginRequiredTitle: 'Please log in', loginRequiredDesc: 'Log in to view your profile and quiz history', loginRequiredLink: 'Go to home & log in →',
+    labelNickname: 'Nickname', labelEmail: 'Email', btnSave: 'Save changes', btnChangePw: '🔑 Change password',
+    tabQuiz: '📜 Quiz History', tabGame: '🎮 Game History', loadingText: 'Loading...',
+    blackboardTrigger: '📊 View site-wide progress board', noGameHistory: 'No game history yet, go play something!', btnLogout: '🚪 Log out',
+    blackboardTitle: '📊 Site-wide Progress Board', blackboardClose: 'Close',
+    pwModalTitle: '🔑 Change Password', pwModalSub: 'Enter your current password and new password',
+    labelPwOld: 'Current password', labelPwNew: 'New password (6+ characters)', labelPwNewConfirm: 'Confirm new password',
+    pwConfirmTitle: '⚠️ Confirm password change?', pwConfirmSub: 'Use your new password next time you log in',
+    pwCancel: 'Cancel', pwConfirmFinal: 'Confirm change', pwSuccessTitle: 'Password changed successfully!', pwSuccessDone: 'Done',
+    noQuizHistory: 'No quiz history yet, take your first quiz!', unknownQuiz: 'Unknown quiz', resultLabel: 'Result',
+    notPlayedYet: 'Not played yet', latestRecord: 'Latest record',
+    timingRecord: (wins, plays) => `${wins} wins out of ${plays} plays`,
+    chickenRecord: (hits) => `${hits} total hits`,
+    bubbleRecord: (total) => `${total} total popped`,
+    fastestSuffix: (sec) => `, fastest ${sec}s`,
+    confirmLogout: 'Log out?',
+  },
+};
+let currentLang = 'zh';
+
 function setLang(l) {
-  // 目前個人頁面只有中文版本，但保留切換架構供未來擴充
+  currentLang = l;
   document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === l));
   localStorage.setItem('quizdrop_lang', l);
-  if (l !== 'zh') {
-    alert('日文/英文版本即將推出，敬請期待！');
-    document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === 'zh'));
-    localStorage.setItem('quizdrop_lang', 'zh');
+
+  const t = i18nProfile[l];
+  document.getElementById('back-to-home-text').textContent = t.backToHome;
+  document.getElementById('login-required-title').textContent = t.loginRequiredTitle;
+  document.getElementById('login-required-desc').textContent = t.loginRequiredDesc;
+  document.getElementById('login-required-link').textContent = t.loginRequiredLink;
+  document.getElementById('label-nickname').textContent = t.labelNickname;
+  document.getElementById('label-email').textContent = t.labelEmail;
+  document.getElementById('save-btn').textContent = t.btnSave;
+  document.getElementById('btn-change-pw-text').textContent = t.btnChangePw;
+  document.getElementById('tab-quiz').textContent = t.tabQuiz;
+  document.getElementById('tab-game').textContent = t.tabGame;
+  document.getElementById('loading-text').textContent = t.loadingText;
+  document.getElementById('blackboard-trigger-text').textContent = t.blackboardTrigger;
+  document.getElementById('no-game-history-text').textContent = t.noGameHistory;
+  document.getElementById('btn-logout-text').textContent = t.btnLogout;
+  document.getElementById('blackboard-title-text').textContent = t.blackboardTitle;
+  document.getElementById('blackboard-close-text').textContent = t.blackboardClose;
+  document.getElementById('pw-modal-title').textContent = t.pwModalTitle;
+  document.getElementById('pw-modal-sub').textContent = t.pwModalSub;
+  document.getElementById('label-pw-old').textContent = t.labelPwOld;
+  document.getElementById('label-pw-new').textContent = t.labelPwNew;
+  document.getElementById('label-pw-new-confirm').textContent = t.labelPwNewConfirm;
+  document.getElementById('pw-confirm-title').textContent = t.pwConfirmTitle;
+  document.getElementById('pw-confirm-sub').textContent = t.pwConfirmSub;
+  document.getElementById('pw-cancel-text').textContent = t.pwCancel;
+  document.getElementById('pw-confirm-final-text').textContent = t.pwConfirmFinal;
+  document.getElementById('pw-success-title').textContent = t.pwSuccessTitle;
+  document.getElementById('pw-success-done-text').textContent = t.pwSuccessDone;
+
+  // 重新渲染依賴語言的動態內容（測驗紀錄的標題/結果本身不翻譯，但日期格式與空狀態文字要跟著語言切換）
+  if (currentUser) {
+    if (!document.getElementById('quiz-tab-content').classList.contains('hidden')) loadHistory();
+    if (!document.getElementById('game-tab-content').classList.contains('hidden')) renderGameHistory();
   }
 }
 
 (function initLangFromStorage() {
   const saved = localStorage.getItem('quizdrop_lang') || 'zh';
+  currentLang = saved;
   document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === saved));
 })();
 
 let currentUser = null;
 
 async function init() {
+  setLang(currentLang); // 套用之前儲存的語言偏好，確保載入時文字已是正確語言
   const { data: { session } } = await supabaseClient.auth.getSession();
 
   if (!session) {
@@ -349,21 +442,25 @@ function getGameProgress() {
 function renderGameHistory() {
   const progress = getGameProgress();
   const listEl = document.getElementById('game-history-list');
+  const t = i18nProfile[currentLang];
 
   const rows = GAMES_META.map(g => {
-    let recordText = '尚未遊玩過';
+    let recordText = t.notPlayedYet;
     if (g.id === 'timing' && progress.timing.plays > 0) {
-      recordText = `累積勝利 ${progress.timing.wins} 次・遊玩 ${progress.timing.plays} 次`;
+      recordText = t.timingRecord(progress.timing.wins, progress.timing.plays);
     } else if (g.id === 'chicken' && progress.chicken.hits > 0) {
-      recordText = `累積暴擊 ${progress.chicken.hits} 次`;
+      recordText = t.chickenRecord(progress.chicken.hits);
     } else if (g.id === 'bubble' && progress.bubble.totalPopped > 0) {
-      const fastest = progress.bubble.fastestSheetMs ? `，最快 ${(progress.bubble.fastestSheetMs / 1000).toFixed(2)} 秒` : '';
-      recordText = `累積捏爆 ${progress.bubble.totalPopped} 個${fastest}`;
+      const fastest = progress.bubble.fastestSheetMs ? t.fastestSuffix((progress.bubble.fastestSheetMs / 1000).toFixed(2)) : '';
+      recordText = t.bubbleRecord(progress.bubble.totalPopped) + fastest;
     }
     return `
       <div class="game-history-item" onclick="window.location.href='${g.url}'">
-        <span>${g.emoji}</span>
-        <span>${g.title}　｜　最新紀錄：${recordText}</span>
+        <div class="ghi-left">
+          <span>${g.emoji}</span>
+          <span>${g.title}　｜　${t.latestRecord}：${recordText}</span>
+        </div>
+        <span class="ghi-arrow">→</span>
       </div>
     `;
   }).join('');
@@ -445,6 +542,7 @@ const QUIZ_URL_MAP = {
 
 async function loadHistory() {
   const listEl = document.getElementById('history-list');
+  const t = i18nProfile[currentLang];
 
   const { data, error } = await supabaseClient
     .from('quiz_results')
@@ -456,15 +554,17 @@ async function loadHistory() {
     listEl.innerHTML = `
       <div class="empty-state">
         <span class="emoji">🌱</span>
-        還沒有測驗紀錄，去玩第一個測驗吧！
+        ${t.noQuizHistory}
       </div>
     `;
     return;
   }
 
+  const localeMap = { zh: 'zh-TW', ja: 'ja-JP', en: 'en-US' };
+
   listEl.innerHTML = data.map(item => {
-    const date = new Date(item.played_at).toLocaleDateString('zh-TW', { year:'numeric', month:'long', day:'numeric' });
-    const quizTitle = item.quizzes?.title || '未知測驗';
+    const date = new Date(item.played_at).toLocaleDateString(localeMap[currentLang], { year:'numeric', month:'long', day:'numeric' });
+    const quizTitle = item.quizzes?.title || t.unknownQuiz;
     const quizUrl = QUIZ_URL_MAP[item.quiz_id];
     const linkHref = quizUrl ? `${quizUrl}?result=${encodeURIComponent(item.result_label)}` : '#';
     const clickable = quizUrl ? `onclick="window.location.href='${linkHref}'" style="cursor:pointer;"` : '';
@@ -473,7 +573,7 @@ async function loadHistory() {
         <span class="history-emoji">✨</span>
         <div class="history-info">
           <div class="history-title">${escapeHtml(quizTitle)}</div>
-          <div class="history-result">結果：${escapeHtml(item.result_title || item.result_label)}</div>
+          <div class="history-result">${t.resultLabel}：${escapeHtml(item.result_title || item.result_label)}</div>
           <div class="history-date">${date}</div>
         </div>
         ${quizUrl ? '<span style="color:#ccc;font-size:18px;">›</span>' : ''}
@@ -610,7 +710,7 @@ async function finalizePasswordChange() {
 /* 登出（個人頁面底部）                                            */
 /* ============================================================ */
 function handleProfileLogout() {
-  if (confirm('要登出嗎？')) {
+  if (confirm(i18nProfile[currentLang].confirmLogout)) {
     supabaseClient.auth.signOut().then(() => { window.location.href = 'index.html'; });
   }
 }
