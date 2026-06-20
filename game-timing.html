@@ -467,8 +467,10 @@ async function saveGameResult(gameId, recordDetail) {
 }
 
 let lastResultText = '';
+let lastResultData = null; // { diff, actual, isWin } — 用於語言切換時重新渲染結果面板
 
 function showResultPanel(diff, actual, isWin) {
+  lastResultData = { diff, actual, isWin };
   const t = i18nTiming[currentLang];
   const targetStr = mode === 'easy' ? targetSeconds.toFixed(0) : targetSeconds.toFixed(2);
   const actualStr = actual.toFixed(2);
@@ -697,6 +699,11 @@ function setLang(l) {
   // 重新渲染所有依賴語言的動態內容
   renderRecentList();
   renderStyleRow();
+
+  // 若結果面板目前正在顯示，重新計算並渲染一次結果文字（含分享文案），確保跟上新語言
+  if (lastResultData && document.getElementById('result-panel').classList.contains('show')) {
+    showResultPanel(lastResultData.diff, lastResultData.actual, lastResultData.isWin);
+  }
 }
 (function initLangFromStorage() {
   const saved = localStorage.getItem('quizdrop_lang');
