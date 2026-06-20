@@ -6,129 +6,161 @@
 <title>我要出題 - QuizDrop</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans TC', sans-serif; }
-  body { background: #faf7f2; color: #1f1f1f; min-height: 100vh; padding-bottom: 60px; }
+  body { background: #f7f2e9; color: #4a3f35; min-height: 100vh; padding-bottom: 60px; }
+  .hidden { display: none !important; }
 
-  .topbar { height: 60px; background: #fff; border-bottom: 1px solid #ececec; display: flex; align-items: center; padding: 0 20px; position: sticky; top: 0; z-index: 20; }
-  .back-btn { color: #777; font-size: 14px; text-decoration: none; display: flex; align-items: center; gap: 5px; }
-  .logo { font-weight: 900; font-size: 18px; margin-left: auto; }
-  .logo .drop { color: #ff5da2; }
+  .topbar { height: 60px; background: #fffdf8; border-bottom: 1px solid #ece4d4; display: flex; align-items: center; padding: 0 20px; position: sticky; top: 0; z-index: 20; }
+  .back-btn { color: #9c8f7e; font-size: 14px; text-decoration: none; display: flex; align-items: center; gap: 5px; }
+  .logo { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 18px; margin-left: auto; color: #4a3f35; }
+  .logo .drop { color: #a9633a; }
 
   .wrap { max-width: 680px; margin: 0 auto; padding: 36px 20px; }
 
-  /* ===== Locked state (paywall) ===== */
+  .slot-bar {
+    background: #fffdf8; border: 1.5px solid #d9cbb3; border-radius: 16px; padding: 16px 20px;
+    margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+  .slot-bar-info { font-size: 13.5px; color: #6b5d4d; }
+  .slot-bar-info b { color: #a9633a; font-size: 15px; }
+  .slot-dots { display: flex; gap: 5px; }
+  .slot-dot { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid #d9cbb3; }
+  .slot-dot.filled { background: #a9633a; border-color: #a9633a; }
+  .slot-dot.locked { background: #f1e9da; border-color: #e0d4bd; }
+
   .lock-card {
-    background: #fff; border-radius: 24px; padding: 48px 32px; text-align: center;
-    box-shadow: 0 8px 30px -10px rgba(0,0,0,0.08); border: 1px solid #f0f0f0;
+    background: #fffdf8; border-radius: 20px; padding: 48px 32px; text-align: center;
+    box-shadow: 0 8px 30px -10px rgba(80,60,30,0.1); border: 1.5px solid #d9cbb3;
   }
   .lock-emoji { font-size: 56px; margin-bottom: 18px; display: block; }
-  .lock-card h2 { font-size: 22px; font-weight: 900; margin-bottom: 10px; }
-  .lock-card p { color: #888; font-size: 14.5px; line-height: 1.7; margin-bottom: 28px; }
+  .lock-card h2 { font-size: 22px; font-weight: 900; margin-bottom: 10px; color: #4a3f35; }
+  .lock-card p { color: #9c8f7e; font-size: 14.5px; line-height: 1.7; margin-bottom: 28px; }
   .price-tag {
-    display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(120deg,#fff0f5,#fff7ed);
-    border: 1.5px solid #ffd1de; border-radius: 99px; padding: 10px 22px; font-size: 14px; font-weight: 700;
-    color: #ff5da2; margin-bottom: 28px;
+    display: inline-flex; align-items: center; gap: 8px; background: #f1e9da;
+    border: 1.5px solid #d9cbb3; border-radius: 10px; padding: 10px 22px; font-size: 14px; font-weight: 700;
+    color: #a9633a; margin-bottom: 28px;
   }
   .btn-unlock {
-    background: linear-gradient(120deg,#ff5da2,#ff8a5c); color: #fff; border: none; border-radius: 14px;
-    padding: 16px 36px; font-size: 16px; font-weight: 800; cursor: pointer; transition: transform .2s;
-    box-shadow: 0 8px 24px -6px rgba(255,93,162,.4);
+    background: #4a3f35; color: #fff; border: none; border-radius: 4px;
+    padding: 16px 36px; font-size: 16px; font-weight: 800; cursor: pointer; transition: opacity .2s;
   }
-  .btn-unlock:hover { transform: translateY(-2px); }
-  .unlock-timer { margin-top: 16px; font-size: 12.5px; color: #aaa; }
+  .btn-unlock:hover { opacity: 0.9; }
 
-  /* ===== Ad placeholder modal ===== */
   .ad-overlay {
-    position: fixed; inset: 0; background: rgba(20,20,20,0.6); z-index: 200;
+    position: fixed; inset: 0; background: rgba(60,45,30,0.6); z-index: 200;
     display: none; align-items: center; justify-content: center; padding: 20px;
   }
   .ad-overlay.show { display: flex; }
-  .ad-box { background: #fff; border-radius: 20px; padding: 32px; max-width: 360px; width: 100%; text-align: center; }
+  .ad-box { background: #fffdf8; border-radius: 20px; padding: 32px; max-width: 360px; width: 100%; text-align: center; }
   .ad-placeholder {
-    background: repeating-linear-gradient(45deg, #f0f0f0, #f0f0f0 10px, #e8e8e8 10px, #e8e8e8 20px);
+    background: repeating-linear-gradient(45deg, #f1e9da, #f1e9da 10px, #ece0ce 10px, #ece0ce 20px);
     border-radius: 14px; height: 200px; display: flex; align-items: center; justify-content: center;
-    color: #999; font-size: 13px; font-weight: 700; margin-bottom: 18px;
+    color: #9c8f7e; font-size: 13px; font-weight: 700; margin-bottom: 18px;
   }
-  .ad-progress-bar { height: 6px; background: #f0f0f0; border-radius: 99px; overflow: hidden; margin-bottom: 14px; }
-  .ad-progress-fill { height: 100%; background: linear-gradient(90deg,#ff5da2,#ff8a5c); width: 0%; transition: width .1s linear; }
-  .ad-status { font-size: 13px; color: #888; margin-bottom: 16px; }
-  .ad-counter { font-size: 13px; color: #ff5da2; font-weight: 700; margin-bottom: 16px; }
+  .ad-progress-bar { height: 6px; background: #f1e9da; border-radius: 99px; overflow: hidden; margin-bottom: 14px; }
+  .ad-progress-fill { height: 100%; background: #a9633a; width: 0%; transition: width .1s linear; }
+  .ad-status { font-size: 13px; color: #9c8f7e; margin-bottom: 16px; }
   .btn-ad-next {
-    width: 100%; padding: 13px; border-radius: 12px; background: #1f1f1f; color: #fff; font-weight: 700;
+    width: 100%; padding: 13px; border-radius: 4px; background: #4a3f35; color: #fff; font-weight: 700;
     border: none; cursor: pointer; font-size: 14px; opacity: 0.3; pointer-events: none; transition: opacity .2s;
   }
   .btn-ad-next.ready { opacity: 1; pointer-events: all; }
 
-  /* ===== Creator form ===== */
+  .pay-box { background: #fffdf8; border-radius: 20px; padding: 32px; max-width: 360px; width: 100%; text-align: center; }
+  .pay-box h3 { font-size: 18px; font-weight: 900; margin-bottom: 8px; color: #4a3f35; }
+  .pay-box p { font-size: 13.5px; color: #9c8f7e; margin-bottom: 20px; line-height: 1.6; }
+  .pay-price { font-size: 32px; font-weight: 900; color: #a9633a; margin-bottom: 20px; }
+  .pay-note { font-size: 11.5px; color: #b5a890; margin-top: 12px; }
+
   #creator-form { display: none; }
-  .section-card { background: #fff; border-radius: 20px; padding: 28px 24px; margin-bottom: 20px; border: 1px solid #f0f0f0; }
-  .section-title { font-size: 15px; font-weight: 800; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-  .field-label { font-size: 12.5px; font-weight: 700; color: #999; margin-bottom: 6px; display: block; }
+  .section-card { background: #fffdf8; border-radius: 18px; padding: 28px 24px; margin-bottom: 20px; border: 1.5px solid #d9cbb3; }
+  .section-title { font-size: 15px; font-weight: 800; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; color: #4a3f35; }
+  .field-label { font-size: 12.5px; font-weight: 700; color: #9c8f7e; margin-bottom: 6px; display: block; }
+  .char-count { font-size: 11px; color: #b5a890; text-align: right; margin-top: -10px; margin-bottom: 10px; }
   .input-field, textarea.input-field {
-    width: 100%; padding: 12px 16px; border-radius: 12px; border: 1.5px solid #ececec;
-    font-size: 14px; margin-bottom: 14px; outline: none; transition: border-color .2s; font-family: inherit;
+    width: 100%; padding: 12px 16px; border-radius: 10px; border: 1.5px solid #d9cbb3;
+    font-size: 14px; margin-bottom: 6px; outline: none; transition: border-color .2s; font-family: inherit;
+    background: #fffdf8; color: #4a3f35;
   }
-  .input-field:focus { border-color: #ff8aae; }
+  .input-field:focus { border-color: #a9633a; }
   textarea.input-field { resize: vertical; }
 
-  .result-block { background: #fafafa; border-radius: 14px; padding: 16px; margin-bottom: 12px; border: 1px solid #f0f0f0; }
-  .result-block-title { font-size: 13px; font-weight: 800; color: #ff5da2; margin-bottom: 10px; }
+  .result-block { background: #f7f2e9; border-radius: 14px; padding: 16px; margin-bottom: 12px; border: 1px solid #ece4d4; }
+  .result-block-title { font-size: 13px; font-weight: 800; color: #a9633a; margin-bottom: 10px; }
 
-  .question-block { background: #fafafa; border-radius: 16px; padding: 18px; margin-bottom: 14px; border: 1px solid #f0f0f0; position: relative; }
-  .question-num { font-size: 12.5px; font-weight: 800; color: #999; margin-bottom: 10px; }
-  .option-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+  .question-block { background: #f7f2e9; border-radius: 16px; padding: 18px; margin-bottom: 14px; border: 1px solid #ece4d4; position: relative; }
+  .question-num { font-size: 12.5px; font-weight: 800; color: #9c8f7e; margin-bottom: 10px; }
+  .option-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: flex-start; }
   .option-row .input-field { margin-bottom: 0; flex: 1; }
-  .option-row select { padding: 10px 12px; border-radius: 10px; border: 1.5px solid #ececec; font-size: 13px; background: #fff; font-family: inherit; flex-shrink: 0; width: 130px; }
+  .opt-result-multiselect { display: flex; flex-wrap: wrap; gap: 4px; width: 150px; flex-shrink: 0; padding-top: 2px; }
+  .opt-result-chip {
+    padding: 5px 9px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;
+    border: 1.5px solid #d9cbb3; background: #fffdf8; color: #9c8f7e; transition: all .15s; user-select: none;
+  }
+  .opt-result-chip.selected { background: #a9633a; border-color: #a9633a; color: #fff; }
+  .opt-result-chip.disabled { opacity: 0.35; cursor: not-allowed; }
   .btn-remove-q {
     position: absolute; top: 14px; right: 14px; width: 26px; height: 26px; border-radius: 50%;
-    background: #ffeaea; color: #d83b3b; border: none; cursor: pointer; font-size: 13px; font-weight: 700;
+    background: #f6e0d8; color: #b14a35; border: none; cursor: pointer; font-size: 13px; font-weight: 700;
   }
 
   .btn-add-q {
-    width: 100%; padding: 14px; border-radius: 14px; background: #fff; border: 1.5px dashed #ffb3cb;
-    color: #ff5da2; font-weight: 700; font-size: 14px; cursor: pointer; margin-bottom: 24px; transition: all .2s;
+    width: 100%; padding: 14px; border-radius: 10px; background: #fffdf8; border: 1.5px dashed #c99a6b;
+    color: #a9633a; font-weight: 700; font-size: 14px; cursor: pointer; margin-bottom: 24px; transition: all .2s;
   }
-  .btn-add-q:hover { background: #fff5f8; }
+  .btn-add-q:hover { background: #f7f2e9; }
   .btn-add-q:disabled { opacity: 0.4; cursor: not-allowed; }
 
   .btn-publish {
-    width: 100%; padding: 16px; border-radius: 14px; background: linear-gradient(120deg,#ff5da2,#ff8a5c);
+    width: 100%; padding: 16px; border-radius: 4px; background: #4a3f35;
     color: #fff; font-weight: 800; font-size: 16px; border: none; cursor: pointer; transition: opacity .2s;
   }
   .btn-publish:hover { opacity: 0.9; }
   .btn-publish:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .form-msg { font-size: 13px; padding: 10px 14px; border-radius: 10px; margin-bottom: 16px; display: none; }
-  .form-msg.error { background: #ffeaea; color: #d83b3b; display: block; }
-  .form-msg.success { background: #eaffea; color: #2da44e; display: block; }
+  .form-msg.error { background: #f6e0d8; color: #b14a35; display: block; }
+  .form-msg.success { background: #e2ecdc; color: #4a7a3a; display: block; }
 
-  /* ===== Success / share screen ===== */
   #success-screen { display: none; text-align: center; padding: 40px 0; }
   .success-emoji { font-size: 64px; margin-bottom: 16px; display: block; }
-  #success-screen h2 { font-size: 22px; font-weight: 900; margin-bottom: 10px; }
+  #success-screen h2 { font-size: 22px; font-weight: 900; margin-bottom: 10px; color: #4a3f35; }
   .share-url-box {
-    background: #fafafa; border: 1.5px solid #ececec; border-radius: 14px; padding: 14px 18px;
-    font-size: 13.5px; color: #555; word-break: break-all; margin: 20px 0; text-align: left;
+    background: #f7f2e9; border: 1.5px solid #d9cbb3; border-radius: 14px; padding: 14px 18px;
+    font-size: 13.5px; color: #6b5d4d; word-break: break-all; margin: 20px 0; text-align: left;
   }
   .btn-copy-url {
-    background: #1f1f1f; color: #fff; border: none; border-radius: 12px; padding: 13px 28px;
+    background: #4a3f35; color: #fff; border: none; border-radius: 4px; padding: 13px 28px;
     font-weight: 700; cursor: pointer; font-size: 14px; margin-right: 10px;
   }
   .btn-go-quiz {
-    background: linear-gradient(120deg,#ff5da2,#ff8a5c); color: #fff; border: none; border-radius: 12px;
-    padding: 13px 28px; font-weight: 700; cursor: pointer; font-size: 14px;
+    background: none; color: #4a3f35; border: none; border-bottom: 2px solid #a9633a;
+    padding: 13px 4px; font-weight: 700; cursor: pointer; font-size: 14px;
   }
 
   .login-required { text-align: center; padding: 80px 20px; }
   .login-required .emoji { font-size: 56px; margin-bottom: 16px; display: block; }
-  .login-required h2 { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
-  .login-required p { color: #999; font-size: 14px; margin-bottom: 24px; }
+  .login-required h2 { font-size: 20px; font-weight: 800; margin-bottom: 8px; color: #4a3f35; }
+  .login-required p { color: #9c8f7e; font-size: 14px; margin-bottom: 24px; }
   .login-required a {
-    display: inline-block; padding: 13px 32px; border-radius: 99px;
-    background: linear-gradient(120deg,#ff5da2,#ff8a5c); color: #fff; font-weight: 800;
-    text-decoration: none; font-size: 14.5px;
+    display: inline-block; padding: 13px 32px; border-radius: 4px;
+    background: #4a3f35; color: #fff; font-weight: 800; text-decoration: none; font-size: 14.5px;
   }
+
+  .my-quizzes-list { margin-bottom: 24px; }
+  .slot-card {
+    background: #fffdf8; border: 1.5px solid #d9cbb3; border-radius: 14px; padding: 16px 18px;
+    margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .slot-card-info { flex: 1; min-width: 0; }
+  .slot-card-info h4 { font-size: 14px; font-weight: 700; color: #4a3f35; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .slot-card-info p { font-size: 11.5px; color: #b5a890; }
+  .slot-card-empty { color: #b5a890; font-size: 13px; font-style: italic; }
+  .slot-card-btns { display: flex; gap: 6px; flex-shrink: 0; }
+  .slot-card-btns button { padding: 7px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; border: 1.5px solid #d9cbb3; background: #fffdf8; color: #6b5d4d; }
+  .slot-card-btns button.danger { color: #b14a35; border-color: #e0b8a8; }
+  .slot-card-btns button.primary { background: #4a3f35; color: #fff; border: none; }
 </style>
 </head>
 <body>
@@ -140,46 +172,55 @@
 
 <div class="wrap">
 
-  <!-- 未登入：要求先登入 -->
   <div id="login-required-view" class="login-required hidden">
     <span class="emoji">🔒</span>
     <h2>請先登入</h2>
-    <p>登入後才能創作你的專屬心理測驗</p>
+    <p>加入會員即可免費創作 1 個專屬心理測驗</p>
     <a href="index.html">回首頁登入 →</a>
   </div>
 
-  <!-- 已登入但尚未解鎖：付費牆 -->
+  <div id="dashboard-view" class="hidden">
+    <div class="slot-bar">
+      <div class="slot-bar-info">已解鎖 <b id="slot-count-text">1 / 10</b> 個創作額度</div>
+      <div class="slot-dots" id="slot-dots"></div>
+    </div>
+    <div class="my-quizzes-list" id="my-quizzes-list"></div>
+  </div>
+
   <div id="lock-view" class="hidden">
     <div class="lock-card">
-      <span class="lock-emoji">🚀</span>
-      <h2>創作你的專屬心理測驗</h2>
-      <p>設計題目、自訂結果，發布後立刻取得專屬連結，<br>分享給朋友一起玩！</p>
-      <div class="price-tag">🎬 看 2 段廣告，解鎖 2 小時無限出題權限</div>
+      <span class="lock-emoji" id="lock-emoji">🚀</span>
+      <h2 id="lock-title">解鎖下一個創作額度</h2>
+      <p id="lock-desc">看一段廣告，立即解鎖這個創作額度！</p>
+      <div class="price-tag" id="lock-price-tag">🎬 看 1 段廣告，免費解鎖</div>
       <br>
-      <button class="btn-unlock" onclick="startAdFlow()">看廣告，立即解鎖 →</button>
-      <p class="unlock-timer" id="unlock-timer-text"></p>
+      <button class="btn-unlock" id="btn-unlock-action" onclick="startUnlockFlow()">看廣告，立即解鎖 →</button>
+      <br><br>
+      <button class="back-btn" onclick="showDashboard()" style="border:none;background:none;cursor:pointer;">← 返回</button>
     </div>
   </div>
 
-  <!-- 已解鎖：出題表單 -->
   <div id="creator-view" class="hidden">
     <div class="form-msg" id="top-msg"></div>
 
     <div class="section-card">
       <div class="section-title">📝 測驗基本資訊</div>
       <label class="field-label">測驗名稱</label>
-      <input type="text" class="input-field" id="quiz-title" placeholder="例如：你前世是什麼動物？" maxlength="60" />
+      <input type="text" class="input-field" id="quiz-title" placeholder="例如：你前世是什麼動物？" maxlength="30" oninput="updateCharCount(this, 'title-count', 30)" />
+      <div class="char-count" id="title-count">0 / 30</div>
       <label class="field-label">測驗簡介</label>
-      <textarea class="input-field" id="quiz-desc" rows="2" placeholder="簡單介紹一下這個測驗在測什麼" maxlength="150"></textarea>
+      <textarea class="input-field" id="quiz-desc" rows="2" placeholder="簡單介紹一下這個測驗在測什麼" maxlength="100" oninput="updateCharCount(this, 'desc-count', 100)"></textarea>
+      <div class="char-count" id="desc-count">0 / 100</div>
     </div>
 
     <div class="section-card">
-      <div class="section-title">🏆 設定 4 個結果</div>
+      <div class="section-title">🏆 設定結果（最少 4 個，最多 8 個）</div>
       <div id="results-container"></div>
+      <button class="btn-add-q" id="btn-add-result" onclick="addResult()">+ 新增結果</button>
     </div>
 
     <div class="section-card">
-      <div class="section-title">❓ 設計題目（5～10 題）</div>
+      <div class="section-title">❓ 設計題目（最少 5 題，最多 10 題）</div>
       <div id="questions-container"></div>
       <button class="btn-add-q" id="btn-add-question" onclick="addQuestion()">+ 新增題目</button>
     </div>
@@ -187,11 +228,10 @@
     <button class="btn-publish" id="btn-publish" onclick="publishQuiz()">🚀 發布測驗</button>
   </div>
 
-  <!-- 發布成功畫面 -->
   <div id="success-screen">
     <span class="success-emoji">🎉</span>
     <h2>測驗發布成功！</h2>
-    <p style="color:#888;font-size:14px;">把這個連結分享給朋友，讓他們也來玩玩看</p>
+    <p style="color:#9c8f7e;font-size:14px;">把這個連結分享給朋友，讓他們也來玩玩看</p>
     <div class="share-url-box" id="share-url-display"></div>
     <button class="btn-copy-url" onclick="copyShareUrl()">📋 複製連結</button>
     <button class="btn-go-quiz" onclick="goToMyQuiz()">立即查看 →</button>
@@ -199,14 +239,25 @@
 
 </div>
 
-<!-- 廣告占位視窗 -->
 <div class="ad-overlay" id="ad-overlay">
   <div class="ad-box">
-    <div class="ad-counter" id="ad-counter">廣告 1 / 2</div>
-    <div class="ad-placeholder">📺 廣告播放中...</div>
+    <div class="ad-status" id="ad-status-title">廣告播放中...</div>
+    <div class="ad-placeholder">📺 模擬廣告</div>
     <div class="ad-progress-bar"><div class="ad-progress-fill" id="ad-progress-fill"></div></div>
     <div class="ad-status" id="ad-status">請耐心等待...</div>
-    <button class="btn-ad-next" id="btn-ad-next" onclick="nextAdStep()">繼續</button>
+    <button class="btn-ad-next" id="btn-ad-next" onclick="onAdFinished()">完成解鎖 →</button>
+  </div>
+</div>
+
+<div class="ad-overlay" id="pay-overlay">
+  <div class="pay-box">
+    <h3>解鎖第 <span id="pay-slot-num"></span> 個創作額度</h3>
+    <p>第 6 個額度開始需要付費購買，購買後永久擁有，可重複編輯使用</p>
+    <div class="pay-price">NT$ 10</div>
+    <button class="btn-unlock" style="width:100%;" onclick="onPaymentConfirmed()">模擬付款完成 →</button>
+    <div class="pay-note">⚠️ 此為模擬付款流程，正式金流串接待後續開發</div>
+    <br>
+    <button class="back-btn" onclick="closePayOverlay()" style="border:none;background:none;cursor:pointer;">取消</button>
   </div>
 </div>
 
@@ -215,22 +266,35 @@ const SUPABASE_URL = 'https://xsflpzozgdgbtrtdzdlj.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzZmxwem96Z2RnYnRydGR6ZGxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTMyMzUsImV4cCI6MjA5NzE4OTIzNX0.Uyi5dYa73h0JJ9KwT2bP0C79wV_H-PoYneiR5xsbT6I';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const UNLOCK_STORAGE_KEY = 'quizdrop_creator_unlock_until';
-const UNLOCK_DURATION_MS = 2 * 60 * 60 * 1000; // 2 小時
-const TOTAL_ADS = 2;
-const AD_DURATION_MS = 3000; // 每段「廣告」模擬播放 3 秒（正式上線後可換成真實 AdSense 互動式廣告的回呼）
+const MAX_SLOTS = 10;
+const FREE_AD_UNLOCK_UNTIL = 5;
+const MIN_RESULTS = 4, MAX_RESULTS = 8;
+const MIN_QUESTIONS = 5, MAX_QUESTIONS = 10;
+const MIN_OPTIONS = 4, MAX_OPTIONS = 6;
+const MAX_RESULTS_PER_OPTION = 2;
+const TITLE_MAX = 30, DESC_MAX = 100, QTEXT_MAX = 30, OPTTEXT_MAX = 30;
 
 let currentUser = null;
-let resultCount = 4;
+let mySlotsUnlocked = 1;
+let myQuizzes = [];
+let targetSlotIndex = null;
+let resultCount = MIN_RESULTS;
 let questionCount = 0;
-const MIN_QUESTIONS = 5;
-const MAX_QUESTIONS = 10;
 
-/* ============================================================ */
-/* 1. 初始化：檢查登入狀態與解鎖狀態                                */
-/* ============================================================ */
 async function init() {
-  const { data: { session } } = await supabaseClient.auth.getSession();
+  const session = await new Promise((resolve) => {
+    supabaseClient.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        resolve(session);
+      } else {
+        const { data: listener } = supabaseClient.auth.onAuthStateChange((event, newSession) => {
+          listener.subscription.unsubscribe();
+          resolve(newSession);
+        });
+        setTimeout(() => resolve(null), 800);
+      }
+    });
+  });
 
   if (!session) {
     document.getElementById('login-required-view').classList.remove('hidden');
@@ -238,57 +302,143 @@ async function init() {
   }
   currentUser = session.user;
 
-  if (isUnlocked()) {
-    showCreatorForm();
-  } else {
-    document.getElementById('lock-view').classList.remove('hidden');
-  }
+  await loadUserSlots();
+  await loadMyQuizzes();
+  showDashboard();
 }
 init();
 
-function isUnlocked() {
-  const until = localStorage.getItem(UNLOCK_STORAGE_KEY);
-  if (!until) return false;
-  return Date.now() < parseInt(until, 10);
+async function loadUserSlots() {
+  try {
+    const { data, error } = await supabaseClient.from('users').select('quiz_slots_unlocked').eq('id', currentUser.id).single();
+    if (error) throw error;
+    mySlotsUnlocked = data?.quiz_slots_unlocked || 1;
+  } catch (err) {
+    console.warn('讀取額度失敗，使用預設值1:', err);
+    mySlotsUnlocked = 1;
+  }
 }
 
-function showCreatorForm() {
+async function loadMyQuizzes() {
+  try {
+    const { data, error } = await supabaseClient.from('quizzes').select('id, title, slot_index').eq('creator_id', currentUser.id).order('slot_index');
+    if (error) throw error;
+    myQuizzes = data || [];
+  } catch (err) {
+    console.warn('讀取我的測驗失敗:', err);
+    myQuizzes = [];
+  }
+}
+
+function showDashboard() {
+  document.getElementById('login-required-view').classList.add('hidden');
   document.getElementById('lock-view').classList.add('hidden');
-  document.getElementById('creator-view').classList.remove('hidden');
-  initResultBlocks();
-  // 預設先給 5 題起手
-  for (let i = 0; i < MIN_QUESTIONS; i++) addQuestion();
-  updateUnlockTimerDisplay();
+  document.getElementById('creator-view').classList.add('hidden');
+  document.getElementById('success-screen').style.display = 'none';
+  document.getElementById('dashboard-view').classList.remove('hidden');
+
+  document.getElementById('slot-count-text').textContent = `${mySlotsUnlocked} / ${MAX_SLOTS}`;
+
+  const dotsEl = document.getElementById('slot-dots');
+  dotsEl.innerHTML = '';
+  for (let i = 1; i <= MAX_SLOTS; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'slot-dot' + (i <= mySlotsUnlocked ? ' filled' : ' locked');
+    dotsEl.appendChild(dot);
+  }
+
+  const listEl = document.getElementById('my-quizzes-list');
+  let html = '';
+  for (let i = 1; i <= MAX_SLOTS; i++) {
+    const quiz = myQuizzes.find(q => q.slot_index === i);
+    const unlocked = i <= mySlotsUnlocked;
+
+    if (!unlocked) {
+      const isAdSlot = i <= FREE_AD_UNLOCK_UNTIL;
+      html += `
+        <div class="slot-card">
+          <div class="slot-card-info"><span class="slot-card-empty">🔒 額度 ${i}（${isAdSlot ? '看廣告解鎖' : '付費解鎖 NT$10'}）</span></div>
+          <div class="slot-card-btns"><button class="primary" onclick="goUnlockSlot(${i})">解鎖</button></div>
+        </div>`;
+    } else if (!quiz) {
+      html += `
+        <div class="slot-card">
+          <div class="slot-card-info"><span class="slot-card-empty">✨ 額度 ${i}：尚未建立測驗</span></div>
+          <div class="slot-card-btns"><button class="primary" onclick="goCreateInSlot(${i})">開始創作</button></div>
+        </div>`;
+    } else {
+      html += `
+        <div class="slot-card">
+          <div class="slot-card-info"><h4>${escapeAttr(quiz.title)}</h4><p>額度 ${i}</p></div>
+          <div class="slot-card-btns">
+            <button onclick="window.location.href='quiz.html?id=${quiz.id}'">查看</button>
+            <button class="danger" onclick="deleteAndRecreate(${i}, '${quiz.id}')">刪除重建</button>
+          </div>
+        </div>`;
+    }
+  }
+  listEl.innerHTML = html;
 }
 
-function updateUnlockTimerDisplay() {
-  const until = localStorage.getItem(UNLOCK_STORAGE_KEY);
-  if (!until) return;
-  const remainMs = parseInt(until, 10) - Date.now();
-  if (remainMs <= 0) return;
-  const remainMin = Math.ceil(remainMs / 60000);
-  const msg = document.createElement('div');
-  msg.className = 'form-msg success';
-  msg.style.display = 'block';
-  msg.textContent = `✅ 出題權限剩餘 ${remainMin} 分鐘`;
-  document.getElementById('creator-view').prepend(msg);
+function goUnlockSlot(slotIndex) {
+  targetSlotIndex = slotIndex;
+  document.getElementById('dashboard-view').classList.add('hidden');
+  document.getElementById('lock-view').classList.remove('hidden');
+
+  const isAdSlot = slotIndex <= FREE_AD_UNLOCK_UNTIL;
+  document.getElementById('lock-title').textContent = `解鎖第 ${slotIndex} 個創作額度`;
+  if (isAdSlot) {
+    document.getElementById('lock-desc').textContent = '看一段廣告，立即免費解鎖這個創作額度！';
+    document.getElementById('lock-price-tag').textContent = '🎬 看 1 段廣告，免費解鎖';
+    document.getElementById('btn-unlock-action').textContent = '看廣告，立即解鎖 →';
+  } else {
+    document.getElementById('lock-desc').textContent = '第 6 個額度開始需要付費購買，購買後永久擁有';
+    document.getElementById('lock-price-tag').textContent = '💰 付費 NT$10 解鎖';
+    document.getElementById('btn-unlock-action').textContent = '前往付款 →';
+  }
 }
 
-/* ============================================================ */
-/* 2. 廣告解鎖流程（Placeholder，正式上線後換成 AdSense 互動廣告）   */
-/* ============================================================ */
-let currentAdStep = 0;
+function startUnlockFlow() {
+  if (targetSlotIndex <= FREE_AD_UNLOCK_UNTIL) {
+    startAdFlow();
+  } else {
+    document.getElementById('pay-slot-num').textContent = targetSlotIndex;
+    document.getElementById('pay-overlay').classList.add('show');
+  }
+}
+
+function closePayOverlay() {
+  document.getElementById('pay-overlay').classList.remove('show');
+}
+
+async function onPaymentConfirmed() {
+  document.getElementById('pay-overlay').classList.remove('show');
+  await grantSlotUnlock(targetSlotIndex);
+}
+
+function goCreateInSlot(slotIndex) {
+  targetSlotIndex = slotIndex;
+  showCreatorForm();
+}
+
+async function deleteAndRecreate(slotIndex, quizId) {
+  if (!confirm('刪除後該測驗的所有資料（題目、結果、玩家紀錄）都會永久消失，且無法復原，確定要刪除嗎？')) return;
+  try {
+    const { error } = await supabaseClient.from('quizzes').delete().eq('id', quizId);
+    if (error) throw error;
+    myQuizzes = myQuizzes.filter(q => q.id !== quizId);
+    targetSlotIndex = slotIndex;
+    showCreatorForm();
+  } catch (err) {
+    alert('刪除失敗：' + err.message);
+  }
+}
+
+const AD_DURATION_MS = 3000;
 
 function startAdFlow() {
-  currentAdStep = 0;
   document.getElementById('ad-overlay').classList.add('show');
-  playAdStep();
-}
-
-function playAdStep() {
-  currentAdStep++;
-  document.getElementById('ad-counter').textContent = `廣告 ${currentAdStep} / ${TOTAL_ADS}`;
-  document.getElementById('ad-status').textContent = '請耐心等待...';
+  document.getElementById('ad-status-title').textContent = '廣告播放中...';
   document.getElementById('btn-ad-next').classList.remove('ready');
   document.getElementById('btn-ad-next').textContent = '請等待廣告播放完畢';
 
@@ -302,49 +452,130 @@ function playAdStep() {
     fill.style.width = pct + '%';
     if (elapsed >= AD_DURATION_MS) {
       clearInterval(interval);
-      document.getElementById('ad-status').textContent = '廣告播放完畢！';
+      document.getElementById('ad-status-title').textContent = '廣告播放完畢！';
       document.getElementById('btn-ad-next').classList.add('ready');
-      document.getElementById('btn-ad-next').textContent = currentAdStep < TOTAL_ADS ? '下一段廣告 →' : '完成解鎖 →';
     }
   }, 100);
 }
 
-function nextAdStep() {
-  if (currentAdStep < TOTAL_ADS) {
-    playAdStep();
-  } else {
-    // 全部廣告看完，正式解鎖
-    const unlockUntil = Date.now() + UNLOCK_DURATION_MS;
-    localStorage.setItem(UNLOCK_STORAGE_KEY, unlockUntil.toString());
-    document.getElementById('ad-overlay').classList.remove('show');
-    document.getElementById('lock-view').classList.add('hidden');
-    showCreatorForm();
-  }
+async function onAdFinished() {
+  document.getElementById('ad-overlay').classList.remove('show');
+  await grantSlotUnlock(targetSlotIndex);
 }
 
-/* ============================================================ */
-/* 3. 結果區塊（固定 4 個）                                         */
-/* ============================================================ */
+async function grantSlotUnlock(slotIndex) {
+  mySlotsUnlocked = Math.max(mySlotsUnlocked, slotIndex);
+  try {
+    await supabaseClient.from('users').update({ quiz_slots_unlocked: mySlotsUnlocked }).eq('id', currentUser.id);
+  } catch (err) {
+    console.warn('更新額度失敗（不影響當前操作，但下次登入可能需要重新確認）:', err);
+  }
+  goCreateInSlot(slotIndex);
+}
+
+function showCreatorForm() {
+  document.getElementById('dashboard-view').classList.add('hidden');
+  document.getElementById('lock-view').classList.add('hidden');
+  document.getElementById('creator-view').classList.remove('hidden');
+  resultCount = MIN_RESULTS;
+  questionCount = 0;
+  document.getElementById('quiz-title').value = '';
+  document.getElementById('quiz-desc').value = '';
+  document.getElementById('questions-container').innerHTML = '';
+  initResultBlocks();
+  for (let i = 0; i < MIN_QUESTIONS; i++) addQuestion();
+  updateCharCount(document.getElementById('quiz-title'), 'title-count', TITLE_MAX);
+  updateCharCount(document.getElementById('quiz-desc'), 'desc-count', DESC_MAX);
+}
+
+function updateCharCount(el, countId, max) {
+  document.getElementById(countId).textContent = `${el.value.length} / ${max}`;
+}
+
 function initResultBlocks() {
+  renderResultBlocks();
+}
+
+function renderResultBlocks() {
   const container = document.getElementById('results-container');
+  const existingValues = Array.from(container.querySelectorAll('.result-block')).map(b => ({
+    name: b.querySelector('.result-name').value,
+    desc: b.querySelector('.result-desc').value,
+  }));
+
   container.innerHTML = '';
   for (let i = 1; i <= resultCount; i++) {
+    const prev = existingValues[i - 1] || { name: '', desc: '' };
     const block = document.createElement('div');
     block.className = 'result-block';
     block.innerHTML = `
-      <div class="result-block-title">結果 ${i}</div>
+      <div class="result-block-title">結果 ${i} ${i > MIN_RESULTS ? `<button type="button" onclick="removeResult(${i})" style="float:right;background:none;border:none;color:#b14a35;cursor:pointer;font-size:12px;">移除</button>` : ''}</div>
       <label class="field-label">結果名稱</label>
-      <input type="text" class="input-field result-name" placeholder="例如：貓系戀人" maxlength="30" />
+      <input type="text" class="input-field result-name" placeholder="例如：貓系戀人" maxlength="${TITLE_MAX}" value="${escapeAttr(prev.name)}" />
       <label class="field-label">結果敘述</label>
-      <textarea class="input-field result-desc" rows="2" placeholder="毒舌、有趣地描述這個結果的特質" maxlength="300"></textarea>
+      <textarea class="input-field result-desc" rows="2" placeholder="毒舌、有趣地描述這個結果的特質" maxlength="300">${escapeAttr(prev.desc)}</textarea>
     `;
     container.appendChild(block);
   }
+  updateResultButtonState();
+  syncAllOptionMultiselects();
 }
 
-/* ============================================================ */
-/* 4. 動態新增題目                                                   */
-/* ============================================================ */
+function addResult() {
+  if (resultCount >= MAX_RESULTS) return;
+  resultCount++;
+  renderResultBlocks();
+}
+
+function removeResult(idx) {
+  if (resultCount <= MIN_RESULTS) return;
+  resultCount--;
+  renderResultBlocks();
+}
+
+function updateResultButtonState() {
+  const btn = document.getElementById('btn-add-result');
+  btn.disabled = resultCount >= MAX_RESULTS;
+  btn.textContent = resultCount >= MAX_RESULTS ? `已達最多 ${MAX_RESULTS} 個結果` : '+ 新增結果';
+}
+
+function escapeAttr(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function syncAllOptionMultiselects() {
+  document.querySelectorAll('.opt-result-multiselect').forEach(wrap => {
+    const selected = JSON.parse(wrap.dataset.selected || '[]').filter(n => n <= resultCount);
+    renderMultiselectChips(wrap, selected);
+  });
+}
+
+function renderMultiselectChips(wrap, selected) {
+  wrap.dataset.selected = JSON.stringify(selected);
+  wrap.innerHTML = '';
+  for (let i = 1; i <= resultCount; i++) {
+    const chip = document.createElement('div');
+    const isSelected = selected.includes(i);
+    const isDisabled = !isSelected && selected.length >= MAX_RESULTS_PER_OPTION;
+    chip.className = 'opt-result-chip' + (isSelected ? ' selected' : '') + (isDisabled ? ' disabled' : '');
+    chip.textContent = String(i);
+    chip.onclick = () => toggleResultChip(wrap, i);
+    wrap.appendChild(chip);
+  }
+}
+
+function toggleResultChip(wrap, resultNum) {
+  let selected = JSON.parse(wrap.dataset.selected || '[]');
+  if (selected.includes(resultNum)) {
+    selected = selected.filter(n => n !== resultNum);
+  } else {
+    if (selected.length >= MAX_RESULTS_PER_OPTION) return;
+    selected.push(resultNum);
+  }
+  renderMultiselectChips(wrap, selected);
+}
+
 function addQuestion() {
   if (questionCount >= MAX_QUESTIONS) return;
   questionCount++;
@@ -353,25 +584,52 @@ function addQuestion() {
   const block = document.createElement('div');
   block.className = 'question-block';
   block.dataset.qindex = qIndex;
+
+  const optionsHtml = Array.from({ length: MIN_OPTIONS }, (_, idx) => buildOptionRowHtml(idx + 1)).join('');
+
   block.innerHTML = `
-    <button class="btn-remove-q" onclick="removeQuestion(this)">✕</button>
+    <button class="btn-remove-q" onclick="removeQuestion(this)" title="移除這題">✕</button>
     <div class="question-num">題目 ${qIndex}</div>
-    <input type="text" class="input-field q-text" placeholder="輸入題目文字" maxlength="100" />
-    ${[1,2,3,4].map(optNum => `
-      <div class="option-row">
-        <input type="text" class="input-field opt-text" placeholder="選項 ${optNum}" maxlength="60" />
-        <select class="opt-result-select">
-          <option value="1">加分給結果 1</option>
-          <option value="2">加分給結果 2</option>
-          <option value="3">加分給結果 3</option>
-          <option value="4">加分給結果 4</option>
-        </select>
-      </div>
-    `).join('')}
+    <input type="text" class="input-field q-text" placeholder="輸入題目文字" maxlength="${QTEXT_MAX}" oninput="updateQuestionCharCount(this)" />
+    <div class="char-count q-char-count">0 / ${QTEXT_MAX}</div>
+    <div class="options-wrap">${optionsHtml}</div>
+    <button type="button" class="btn-add-q btn-add-option" style="margin-bottom:0;padding:9px;font-size:12.5px;" onclick="addOptionToQuestion(this)">+ 新增選項</button>
   `;
   document.getElementById('questions-container').appendChild(block);
   renumberQuestions();
-  updateAddButtonState();
+  updateQuestionButtonState();
+}
+
+function buildOptionRowHtml(optNum) {
+  return `
+    <div class="option-row">
+      <input type="text" class="input-field opt-text" placeholder="選項 ${optNum}" maxlength="${OPTTEXT_MAX}" />
+      <div class="opt-result-multiselect" data-selected="[]"></div>
+    </div>
+  `;
+}
+
+function addOptionToQuestion(btn) {
+  const block = btn.closest('.question-block');
+  const optionsWrap = block.querySelector('.options-wrap');
+  const currentCount = optionsWrap.querySelectorAll('.option-row').length;
+  if (currentCount >= MAX_OPTIONS) {
+    alert(`每題最多 ${MAX_OPTIONS} 個選項`);
+    return;
+  }
+  const div = document.createElement('div');
+  div.innerHTML = buildOptionRowHtml(currentCount + 1);
+  const newRow = div.firstElementChild;
+  optionsWrap.appendChild(newRow);
+  renderMultiselectChips(newRow.querySelector('.opt-result-multiselect'), []);
+  updateRemoveOptionButtons(block);
+}
+
+function updateRemoveOptionButtons(block) {
+  const addBtn = block.querySelector('.btn-add-option');
+  const count = block.querySelectorAll('.option-row').length;
+  addBtn.disabled = count >= MAX_OPTIONS;
+  addBtn.textContent = count >= MAX_OPTIONS ? `已達最多 ${MAX_OPTIONS} 個選項` : '+ 新增選項';
 }
 
 function removeQuestion(btn) {
@@ -382,38 +640,43 @@ function removeQuestion(btn) {
   btn.closest('.question-block').remove();
   questionCount--;
   renumberQuestions();
-  updateAddButtonState();
+  updateQuestionButtonState();
 }
 
 function renumberQuestions() {
   const blocks = document.querySelectorAll('.question-block');
-  blocks.forEach((b, i) => {
-    b.querySelector('.question-num').textContent = `題目 ${i + 1}`;
-  });
+  blocks.forEach((b, i) => { b.querySelector('.question-num').textContent = `題目 ${i + 1}`; });
 }
 
-function updateAddButtonState() {
+function updateQuestionButtonState() {
   const btn = document.getElementById('btn-add-question');
   btn.disabled = questionCount >= MAX_QUESTIONS;
   btn.textContent = questionCount >= MAX_QUESTIONS ? `已達最多 ${MAX_QUESTIONS} 題` : '+ 新增題目';
 }
 
-/* ============================================================ */
-/* 5. XSS 防護：簡單文字過濾（移除危險字元，避免注入腳本）            */
-/* ============================================================ */
+function updateQuestionCharCount(input) {
+  const block = input.closest('.question-block');
+  block.querySelector('.q-char-count').textContent = `${input.value.length} / ${QTEXT_MAX}`;
+}
+
 function sanitizeText(str) {
   if (!str) return '';
   const div = document.createElement('div');
   div.textContent = str.trim();
-  return div.innerHTML; // 透過瀏覽器內建跳脫機制，移除 <script> 等危險標籤
+  return div.innerHTML;
 }
 
-/* ============================================================ */
-/* 6. 發布測驗：打包成 JSONB 寫入 Supabase                          */
-/* ============================================================ */
 async function publishQuiz() {
   const msgEl = document.getElementById('top-msg');
   msgEl.style.display = 'none';
+
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) {
+    showTopMsg('登入狀態已失效，請重新登入後再發布', 'error');
+    setTimeout(() => { window.location.href = 'index.html'; }, 1800);
+    return;
+  }
+  currentUser = session.user;
 
   const title = sanitizeText(document.getElementById('quiz-title').value);
   const desc = sanitizeText(document.getElementById('quiz-desc').value);
@@ -422,24 +685,29 @@ async function publishQuiz() {
     showTopMsg('請輸入測驗名稱', 'error');
     return;
   }
+  if (title.length > TITLE_MAX) {
+    showTopMsg(`測驗名稱不能超過 ${TITLE_MAX} 個字`, 'error');
+    return;
+  }
 
-  // 蒐集 4 個結果
   const resultBlocks = document.querySelectorAll('.result-block');
+  if (resultBlocks.length < MIN_RESULTS) {
+    showTopMsg(`至少需要設定 ${MIN_RESULTS} 個結果`, 'error');
+    return;
+  }
   const results = [];
   for (let i = 0; i < resultBlocks.length; i++) {
     const name = sanitizeText(resultBlocks[i].querySelector('.result-name').value);
     const rdesc = sanitizeText(resultBlocks[i].querySelector('.result-desc').value);
-    if (!name) {
-      showTopMsg(`請填寫結果 ${i + 1} 的名稱`, 'error');
-      return;
-    }
-    results.push({ id: String(i + 1), label: name, desc: rdesc || '（創作者沒有留下更多描述）' });
+    if (!name) { showTopMsg(`請填寫結果 ${i + 1} 的名稱`, 'error'); return; }
+    if (!rdesc) { showTopMsg(`請填寫結果 ${i + 1} 的敘述`, 'error'); return; }
+    if (name.length > TITLE_MAX) { showTopMsg(`結果 ${i + 1} 的名稱不能超過 ${TITLE_MAX} 個字`, 'error'); return; }
+    results.push({ id: String(i + 1), label: name, desc: rdesc });
   }
 
-  // 蒐集題目與選項
   const questionBlocks = document.querySelectorAll('.question-block');
   if (questionBlocks.length < MIN_QUESTIONS) {
-    showTopMsg(`至少需要 ${MIN_QUESTIONS} 題`, 'error');
+    showTopMsg(`題目數量不足，至少需要 ${MIN_QUESTIONS} 題`, 'error');
     return;
   }
 
@@ -449,21 +717,56 @@ async function publishQuiz() {
     const qText = sanitizeText(qb.querySelector('.q-text').value);
     if (!qText) {
       showTopMsg(`請填寫題目 ${i + 1} 的文字`, 'error');
+      qb.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    if (qText.length > QTEXT_MAX) {
+      showTopMsg(`題目 ${i + 1} 的文字不能超過 ${QTEXT_MAX} 個字`, 'error');
       return;
     }
 
     const optionRows = qb.querySelectorAll('.option-row');
+    if (optionRows.length < MIN_OPTIONS) {
+      showTopMsg(`題目 ${i + 1} 至少需要 ${MIN_OPTIONS} 個選項`, 'error');
+      return;
+    }
+
     const options = [];
+    const resultIdsUsedInThisQuestion = new Set();
+
     for (let j = 0; j < optionRows.length; j++) {
       const optText = sanitizeText(optionRows[j].querySelector('.opt-text').value);
-      const resultNum = optionRows[j].querySelector('.opt-result-select').value;
       if (!optText) {
         showTopMsg(`請填寫題目 ${i + 1} 的所有選項`, 'error');
+        qb.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
-      // UGC 測驗使用「標籤計次法」：每個選項直接對應到某一個結果 ID，選中就給該結果 +1 分
-      options.push({ id: String.fromCharCode(97 + j), text: optText, scores: { [resultNum]: 1 } });
+      if (optText.length > OPTTEXT_MAX) {
+        showTopMsg(`題目 ${i + 1} 的選項文字不能超過 ${OPTTEXT_MAX} 個字`, 'error');
+        return;
+      }
+
+      const selectedResults = JSON.parse(optionRows[j].querySelector('.opt-result-multiselect').dataset.selected || '[]');
+      if (selectedResults.length === 0) {
+        showTopMsg(`題目 ${i + 1} 的選項「${optText}」至少要選擇 1 個加分結果`, 'error');
+        qb.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      selectedResults.forEach(r => resultIdsUsedInThisQuestion.add(r));
+
+      const scores = {};
+      selectedResults.forEach(r => { scores[r] = 1; });
+      options.push({ id: String.fromCharCode(97 + j), text: optText, scores });
     }
+
+    if (resultIdsUsedInThisQuestion.size === 1) {
+      showTopMsg(`題目 ${i + 1} 的所有選項都加分給同一個結果，請至少分散到 2 個不同結果`, 'error');
+      qb.style.border = '1.5px solid #b14a35';
+      qb.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => { qb.style.border = ''; }, 3000);
+      return;
+    }
+
     questions.push({ id: i + 1, text: qText, options });
   }
 
@@ -474,10 +777,11 @@ async function publishQuiz() {
   try {
     const { data, error } = await supabaseClient.from('quizzes').insert({
       creator_id: currentUser.id,
+      slot_index: targetSlotIndex,
       title: title,
       description: desc || '一個由 QuizDrop 社群成員創作的心理測驗',
       is_official: false,
-      scoring_type: 'tag', // 標籤計次法，跟官方測驗的維度法（dimension）區分
+      scoring_type: 'tag',
       questions: questions,
       results: { scoring_note: '計算每個結果累積的分數，取最高分的結果（同分則隨機挑一個）', results: results },
       is_public: true,
@@ -487,7 +791,7 @@ async function publishQuiz() {
 
     showSuccessScreen(data.id);
   } catch (err) {
-    console.error('Publish error:', err);
+    console.error('Publish error:', err.message, err);
     showTopMsg('發布失敗：' + (err.message || '請再試一次'), 'error');
     btn.disabled = false;
     btn.textContent = '🚀 發布測驗';
@@ -507,7 +811,6 @@ function showSuccessScreen(quizId) {
   publishedQuizId = quizId;
   document.getElementById('creator-view').classList.add('hidden');
   document.getElementById('success-screen').style.display = 'block';
-
   const shareUrl = `${window.location.origin}/quiz.html?id=${quizId}`;
   document.getElementById('share-url-display').textContent = shareUrl;
 }
