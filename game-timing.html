@@ -61,9 +61,11 @@
   .board-screen-overlay {
     position: absolute; top: 12%; left: 25%; width: 70%; height: 26%; z-index: 2;
     display: flex; align-items: center; justify-content: center;
-    font-size: 9cqw; color: #fff; line-height: 1;
+    font-size: 9.9cqw; color: #fff; line-height: 1;
   }
   .board-screen-overlay { transform: translate(-12.67%, 25%); }
+  /* 線條風背景是白底，數字改用黑色才看得清楚；閃爍時依舊維持紅色（沿用 .flash 的設定，不受此覆蓋影響） */
+  .board-screen-overlay.style-manga .board-digit-overlay:not(.flash) { color: #1a1a1a; }
   .board-digit-overlay {
     display: inline-block; width: 1.1em; text-align: center;
   }
@@ -72,7 +74,7 @@
   .target-overlay {
     position: absolute; top: 63%; left: 3%; width: 36%; height: 18%; z-index: 2;
     display: flex; align-items: center; justify-content: center;
-    font-size: 5.78cqw; color: #d83b3b; line-height: 1;
+    font-size: 6.07cqw; color: #d83b3b; line-height: 1;
   }
   .target-overlay { transform: translate(12%, 23.5%); }
 
@@ -85,7 +87,7 @@
 
   .main-btn-overlay {
     position: absolute; bottom: 13%; right: 22.5%; width: 25%; height: 15%; z-index: 3;
-    border-radius: 50%; border: 4px solid #1a1a1a; font-size: 2.73cqw; font-weight: 900; color: #fff;
+    border-radius: 50%; border: 4px solid #1a1a1a; font-size: 3.14cqw; font-weight: 900; color: #fff;
     cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,0.3); transition: all .08s;
     transform: perspective(280px) rotateX(35deg);
   }
@@ -574,6 +576,7 @@ function applyStyleVisuals() {
   const assets = STYLE_ASSETS[currentStyle] || STYLE_ASSETS.default;
   document.querySelector('.game-stage-bg').src = assets.bg;
   document.getElementById('hand-img').src = assets.hand;
+  document.getElementById('board-screen-overlay').classList.toggle('style-manga', currentStyle === 'manga');
 }
 
 function checkUnlocks() {
