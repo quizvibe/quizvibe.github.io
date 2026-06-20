@@ -124,8 +124,8 @@
   <div class="game-sub">捏爆一整張，立刻刷新下一張，捏到爽為止！</div>
 
   <div class="stat-row">
-    <div class="stat-box"><b id="stat-total">0</b>累積捏爆</div>
-    <div class="stat-box"><b id="stat-fastest">--</b>最快手速(秒)</div>
+    <div class="stat-box"><b id="stat-total">0</b><span id="stat-total-label">累積捏爆</span></div>
+    <div class="stat-box"><b id="stat-fastest">--</b><span id="stat-fastest-label">最快手速(秒)</span></div>
   </div>
 
   <div class="bubble-grid" id="bubble-grid"></div>
@@ -315,15 +315,18 @@ async function saveGameResult(gameId, recordDetail) {
   } catch (err) { console.warn('Game result sync failed (non-blocking):', err); }
 }
 
-const STYLE_DEFS = [
-  { id: 'default', label: '🫧 透明泡泡', unlockCondition: null },
-  { id: 'fire', label: '🧨 發洩鞭炮版', unlockCondition: (p) => p.bubble.totalPopped >= 500, unlockText: '累積捏爆 500 個或看廣告解鎖' },
-];
+function getStyleDefs() {
+  const t = i18nBubble[currentLang];
+  return [
+    { id: 'default', label: t.styleDefault, unlockCondition: null },
+    { id: 'fire', label: t.styleFire, unlockCondition: (p) => p.bubble.totalPopped >= 500, unlockText: t.unlockFire },
+  ];
+}
 
 function renderStyleRow() {
   const progress = getProgress();
   const row = document.getElementById('style-row');
-  row.innerHTML = STYLE_DEFS.map(s => {
+  row.innerHTML = getStyleDefs().map(s => {
     const unlocked = progress.bubble.stylesUnlocked.includes(s.id);
     const cls = 'style-chip' + (s.id === currentStyle ? ' active' : '') + (!unlocked ? ' locked' : '');
     return `<button class="${cls}" onclick="onStyleClick('${s.id}')">${s.label} ${!unlocked ? '🔒' : ''}</button>`;
@@ -332,10 +335,11 @@ function renderStyleRow() {
 
 function onStyleClick(styleId) {
   const progress = getProgress();
-  const styleDef = STYLE_DEFS.find(s => s.id === styleId);
+  const t = i18nBubble[currentLang];
+  const styleDef = getStyleDefs().find(s => s.id === styleId);
   const unlocked = progress.bubble.stylesUnlocked.includes(styleId);
   if (unlocked) { switchToStyle(styleId); return; }
-  if (confirm(`此風格尚未解鎖（${styleDef.unlockText}）\n要看一段廣告直接解鎖嗎？`)) {
+  if (confirm(t.confirmUnlock(styleDef.unlockText))) {
     showAdUnlockModal(() => { unlockStyle('bubble', styleId); switchToStyle(styleId); renderStyleRow(); });
   }
 }
@@ -348,7 +352,7 @@ function switchToStyle(styleId) {
 
 function checkUnlocks() {
   const progress = getProgress();
-  STYLE_DEFS.forEach(s => {
+  getStyleDefs().forEach(s => {
     if (s.unlockCondition && s.unlockCondition(progress) && !progress.bubble.stylesUnlocked.includes(s.id)) {
       unlockStyle('bubble', s.id);
     }
@@ -358,8 +362,9 @@ function checkUnlocks() {
 
 function showProgressModal() {
   const p = getProgress().bubble;
-  const fastest = p.fastestSheetMs ? (p.fastestSheetMs / 1000).toFixed(2) + ' 秒' : '尚無紀錄';
-  alert(`📊 無限捏泡泡紙\n\n累積捏爆：${p.totalPopped} 個\n單張最快手速：${fastest}\n已解鎖風格：${p.stylesUnlocked.length} / ${STYLE_DEFS.length}`);
+  const t = i18nBubble[currentLang];
+  const fastest = p.fastestSheetMs ? (p.fastestSheetMs / 1000).toFixed(2) + t.secUnit : t.noFastest;
+  alert(t.progressModal(p.totalPopped, fastest, p.stylesUnlocked.length, getStyleDefs().length));
 }
 
 const initProgress = getProgress();
@@ -368,8 +373,6 @@ document.getElementById('stat-total').textContent = totalPoppedAllTime;
 if (initProgress.bubble.fastestSheetMs) {
   document.getElementById('stat-fastest').textContent = (initProgress.bubble.fastestSheetMs / 1000).toFixed(2);
 }
-renderGrid();
-renderStyleRow();
 
 window.addEventListener('beforeunload', () => {
   if (totalPoppedAllTime % 50 !== 0 && totalPoppedAllTime > 0) saveGameResult('bubble', { totalPopped: totalPoppedAllTime });
@@ -411,19 +414,44 @@ document.addEventListener('click', (e) => {
   }
 });
 function handleLogoutGames() {
-  if (confirm('要登出嗎？')) {
+  if (confirm(i18nBubble[currentLang].confirmLogout)) {
     supabaseClient.auth.signOut().then(() => { window.location.reload(); });
   }
 }
-initAuthUI();
 
 /* ---------------- 語言切換 ---------------- */
 const i18nBubble = {
-  zh: { gameTitle: '🫧 強迫症救星：無限捏泡泡紙', gameSub: '捏爆一整張，立刻刷新下一張，捏到爽為止！', back: '← 糞Game大廳', progress: '📊 本關進度', login: '登入', signup: '註冊', profile: '👤 個人頁面', logout: '🚪 登出' },
-  ja: { gameTitle: '🫧 プチプチ無限版', gameSub: '一枚を割り切ったら、すぐに新しいシートが出現！', back: '← ゲームロビー', progress: '📊 進捗確認', login: 'ログイン', signup: '登録', profile: '👤 プロフィール', logout: '🚪 ログアウト' },
-  en: { gameTitle: '🫧 Infinite Bubble Wrap', gameSub: 'Pop a full sheet and a fresh one appears instantly!', back: '← Game Lobby', progress: '📊 Progress', login: 'Log in', signup: 'Sign up', profile: '👤 Profile', logout: '🚪 Log out' },
+  zh: {
+    gameTitle: '🫧 強迫症救星：無限捏泡泡紙', gameSub: '捏爆一整張，立刻刷新下一張，捏到爽為止！',
+    back: '← 糞Game大廳', progress: '📊 本關進度', login: '登入', signup: '註冊', profile: '👤 個人頁面', logout: '🚪 登出',
+    statTotalLabel: '累積捏爆', statFastestLabel: '最快手速(秒)', sheetComplete: '🎉 一整張捏爆完畢！新的一張來了～',
+    styleDefault: '🫧 透明泡泡', styleFire: '🧨 發洩鞭炮版', unlockFire: '累積捏爆 500 個或看廣告解鎖',
+    confirmUnlock: (text) => `此風格尚未解鎖（${text}）\n要看一段廣告直接解鎖嗎？`, confirmLogout: '要登出嗎？',
+    progressModal: (total, fastest, unlocked, totalStyles) => `📊 無限捏泡泡紙\n\n累積捏爆：${total} 個\n單張最快手速：${fastest}\n已解鎖風格：${unlocked} / ${totalStyles}`,
+    noFastest: '尚無紀錄', secUnit: ' 秒',
+  },
+  ja: {
+    gameTitle: '🫧 プチプチ無限版', gameSub: '一枚を割り切ったら、すぐに新しいシートが出現！',
+    back: '← ゲームロビー', progress: '📊 進捗確認', login: 'ログイン', signup: '登録', profile: '👤 プロフィール', logout: '🚪 ログアウト',
+    statTotalLabel: '累計ポップ数', statFastestLabel: '最速タイム(秒)', sheetComplete: '🎉 1枚完了！新しいシートが登場！',
+    styleDefault: '🫧 透明バブル', styleFire: '🧨 爆竹バージョン', unlockFire: '累計500個か広告視聴でアンロック',
+    confirmUnlock: (text) => `このスタイルはまだアンロックされていません（${text}）\n広告を見てアンロックしますか？`, confirmLogout: 'ログアウトしますか？',
+    progressModal: (total, fastest, unlocked, totalStyles) => `📊 プチプチ無限版\n\n累計ポップ数：${total} 個\n最速タイム：${fastest}\nアンロック済みスタイル：${unlocked} / ${totalStyles}`,
+    noFastest: '記録なし', secUnit: '秒',
+  },
+  en: {
+    gameTitle: '🫧 Infinite Bubble Wrap', gameSub: 'Pop a full sheet and a fresh one appears instantly!',
+    back: '← Game Lobby', progress: '📊 Progress', login: 'Log in', signup: 'Sign up', profile: '👤 Profile', logout: '🚪 Log out',
+    statTotalLabel: 'Total Popped', statFastestLabel: 'Fastest (sec)', sheetComplete: '🎉 Sheet complete! A new one appears~',
+    styleDefault: '🫧 Classic Bubbles', styleFire: '🧨 Firecracker Mode', unlockFire: 'Unlock after 500 total pops or watch an ad',
+    confirmUnlock: (text) => `This style is locked (${text})\nWatch an ad to unlock it now?`, confirmLogout: 'Log out?',
+    progressModal: (total, fastest, unlocked, totalStyles) => `📊 Infinite Bubble Wrap\n\nTotal popped: ${total}\nFastest sheet: ${fastest}\nStyles unlocked: ${unlocked} / ${totalStyles}`,
+    noFastest: 'No record yet', secUnit: 's',
+  },
 };
+let currentLang = 'zh';
 function setLang(l) {
+  currentLang = l;
   document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === l));
   localStorage.setItem('quizdrop_lang', l);
   const t = i18nBubble[l];
@@ -437,11 +465,22 @@ function setLang(l) {
   if (signupBtn) signupBtn.textContent = t.signup;
   document.querySelector('#qt-dropdown button:not(.danger)').textContent = t.profile;
   document.querySelector('#qt-dropdown button.danger').textContent = t.logout;
+
+  document.getElementById('stat-total-label').textContent = t.statTotalLabel;
+  document.getElementById('stat-fastest-label').textContent = t.statFastestLabel;
+  document.getElementById('sheet-complete-banner').textContent = t.sheetComplete;
+  renderStyleRow();
 }
+
 (function initLangFromStorage() {
   const saved = localStorage.getItem('quizdrop_lang');
   if (saved && saved !== 'zh') setLang(saved);
 })();
+
+/* 所有初始化呼叫統一放在檔案最末端，確保 currentLang 等變數已宣告完畢 */
+renderGrid();
+renderStyleRow();
+initAuthUI();
 </script>
 </body>
 </html>
