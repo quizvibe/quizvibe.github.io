@@ -61,7 +61,7 @@
   .board-screen-overlay {
     position: absolute; top: 12%; left: 25%; width: 70%; height: 26%; z-index: 2;
     display: flex; align-items: center; justify-content: center;
-    font-size: 7.5cqw; color: #fff; line-height: 1;
+    font-size: 9cqw; color: #fff; line-height: 1;
   }
   .board-screen-overlay { transform: translate(-12.67%, 25%); }
   .board-digit-overlay {
@@ -72,7 +72,7 @@
   .target-overlay {
     position: absolute; top: 63%; left: 3%; width: 36%; height: 18%; z-index: 2;
     display: flex; align-items: center; justify-content: center;
-    font-size: 5.5cqw; color: #d83b3b; line-height: 1;
+    font-size: 5.78cqw; color: #d83b3b; line-height: 1;
   }
   .target-overlay { transform: translate(12%, 23.5%); }
 
@@ -85,7 +85,7 @@
 
   .main-btn-overlay {
     position: absolute; bottom: 13%; right: 22.5%; width: 25%; height: 15%; z-index: 3;
-    border-radius: 50%; border: 4px solid #1a1a1a; font-size: 2.6cqw; font-weight: 900; color: #fff;
+    border-radius: 50%; border: 4px solid #1a1a1a; font-size: 2.73cqw; font-weight: 900; color: #fff;
     cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,0.3); transition: all .08s;
     transform: perspective(280px) rotateX(35deg);
   }
@@ -557,10 +557,23 @@ function onStyleClick(styleId) {
   const t = i18nTiming[currentLang];
   const styleDef = getStyleDefs().find(s => s.id === styleId);
   const unlocked = progress.timing.stylesUnlocked.includes(styleId);
-  if (unlocked) { currentStyle = styleId; renderStyleRow(); return; }
+  if (unlocked) { currentStyle = styleId; applyStyleVisuals(); renderStyleRow(); return; }
   if (confirm(t.confirmUnlock(styleDef.unlockText))) {
-    showAdUnlockModal(() => { unlockStyle('timing', styleId); currentStyle = styleId; renderStyleRow(); });
+    showAdUnlockModal(() => { unlockStyle('timing', styleId); currentStyle = styleId; applyStyleVisuals(); renderStyleRow(); });
   }
+}
+
+// 風格與對應素材的對照表：背景圖、手部圖、衝擊特效圖（蠟筆/線條風目前沿用預設衝擊特效）
+const STYLE_ASSETS = {
+  default: { bg: 'game-bg.png', hand: 'hand-clean.png' },
+  manga: { bg: 'game-bg-manga.png', hand: 'hand-manga.png' },
+  crayon: { bg: 'game-bg-crayon.png', hand: 'hand-crayon.png' },
+};
+
+function applyStyleVisuals() {
+  const assets = STYLE_ASSETS[currentStyle] || STYLE_ASSETS.default;
+  document.querySelector('.game-stage-bg').src = assets.bg;
+  document.getElementById('hand-img').src = assets.hand;
 }
 
 function checkUnlocks() {
