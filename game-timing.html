@@ -575,10 +575,6 @@ function showProgressModal() {
   alert(t.progressModal(p.wins, p.plays, p.stylesUnlocked.length, getStyleDefs().length));
 }
 
-generateNewTarget();
-renderStyleRow();
-renderRecentList();
-
 /* ---------------- 登入狀態判斷 + 頭像顯示 ---------------- */
 async function initAuthUI() {
   const { data: { session } } = await supabaseClient.auth.getSession();
@@ -620,7 +616,6 @@ function handleLogoutGames() {
     supabaseClient.auth.signOut().then(() => { window.location.reload(); });
   }
 }
-initAuthUI();
 
 /* ---------------- 語言切換 ---------------- */
 const i18nTiming = {
@@ -704,6 +699,12 @@ function setLang(l) {
   const saved = localStorage.getItem('quizdrop_lang');
   if (saved && saved !== 'zh') setLang(saved);
 })();
+
+/* 所有初始化呼叫統一放在檔案最末端執行，確保 currentLang 等變數與所有函式都已宣告完畢，避免 ReferenceError 中斷整段 script */
+generateNewTarget();
+renderStyleRow();
+renderRecentList();
+initAuthUI();
 </script>
 
 </body>
