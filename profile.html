@@ -344,33 +344,37 @@ function setLang(l) {
   localStorage.setItem('quizdrop_lang', l);
 
   const t = i18nProfile[l];
-  document.getElementById('back-to-home-text').textContent = t.backToHome;
-  document.getElementById('login-required-title').textContent = t.loginRequiredTitle;
-  document.getElementById('login-required-desc').textContent = t.loginRequiredDesc;
-  document.getElementById('login-required-link').textContent = t.loginRequiredLink;
-  document.getElementById('label-nickname').textContent = t.labelNickname;
-  document.getElementById('label-email').textContent = t.labelEmail;
-  document.getElementById('save-btn').textContent = t.btnSave;
-  document.getElementById('btn-change-pw-text').textContent = t.btnChangePw;
-  document.getElementById('tab-quiz').textContent = t.tabQuiz;
-  document.getElementById('tab-game').textContent = t.tabGame;
-  document.getElementById('loading-text').textContent = t.loadingText;
-  document.getElementById('blackboard-trigger-text').textContent = t.blackboardTrigger;
-  document.getElementById('no-game-history-text').textContent = t.noGameHistory;
-  document.getElementById('btn-logout-text').textContent = t.btnLogout;
-  document.getElementById('blackboard-title-text').textContent = t.blackboardTitle;
-  document.getElementById('blackboard-close-text').textContent = t.blackboardClose;
-  document.getElementById('pw-modal-title').textContent = t.pwModalTitle;
-  document.getElementById('pw-modal-sub').textContent = t.pwModalSub;
-  document.getElementById('label-pw-old').textContent = t.labelPwOld;
-  document.getElementById('label-pw-new').textContent = t.labelPwNew;
-  document.getElementById('label-pw-new-confirm').textContent = t.labelPwNewConfirm;
-  document.getElementById('pw-confirm-title').textContent = t.pwConfirmTitle;
-  document.getElementById('pw-confirm-sub').textContent = t.pwConfirmSub;
-  document.getElementById('pw-cancel-text').textContent = t.pwCancel;
-  document.getElementById('pw-confirm-final-text').textContent = t.pwConfirmFinal;
-  document.getElementById('pw-success-title').textContent = t.pwSuccessTitle;
-  document.getElementById('pw-success-done-text').textContent = t.pwSuccessDone;
+  const setText = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
+  setText('back-to-home-text', t.backToHome);
+  setText('login-required-title', t.loginRequiredTitle);
+  setText('login-required-desc', t.loginRequiredDesc);
+  setText('login-required-link', t.loginRequiredLink);
+  setText('label-nickname', t.labelNickname);
+  setText('label-email', t.labelEmail);
+  setText('save-btn', t.btnSave);
+  setText('btn-change-pw-text', t.btnChangePw);
+  setText('tab-quiz', t.tabQuiz);
+  setText('tab-game', t.tabGame);
+  setText('loading-text', t.loadingText);
+  setText('blackboard-trigger-text', t.blackboardTrigger);
+  setText('no-game-history-text', t.noGameHistory);
+  setText('btn-logout-text', t.btnLogout);
+  setText('blackboard-title-text', t.blackboardTitle);
+  setText('blackboard-close-text', t.blackboardClose);
+  setText('pw-modal-title', t.pwModalTitle);
+  setText('pw-modal-sub', t.pwModalSub);
+  setText('label-pw-old', t.labelPwOld);
+  setText('label-pw-new', t.labelPwNew);
+  setText('label-pw-new-confirm', t.labelPwNewConfirm);
+  setText('pw-confirm-title', t.pwConfirmTitle);
+  setText('pw-confirm-sub', t.pwConfirmSub);
+  setText('pw-cancel-text', t.pwCancel);
+  setText('pw-confirm-final-text', t.pwConfirmFinal);
+  setText('pw-success-title', t.pwSuccessTitle);
+  setText('pw-success-done-text', t.pwSuccessDone);
 
   // 重新渲染依賴語言的動態內容（測驗紀錄的標題/結果本身不翻譯，但日期格式與空狀態文字要跟著語言切換）
   if (currentUser) {
