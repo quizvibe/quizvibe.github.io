@@ -53,6 +53,38 @@
   .btn-save:hover { opacity: 0.9; }
   .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
 
+  .btn-change-pw {
+    width: 100%; margin-top: 10px; padding: 12px 28px; border-radius: 99px; background: none;
+    color: #4a3f35; font-weight: 700; border: 1.5px solid #d9cbb3; cursor: pointer; font-size: 13.5px; transition: all .2s;
+  }
+  .btn-change-pw:hover { background: #f7f2e9; }
+
+  .btn-logout-bottom {
+    width: 100%; margin-top: 24px; padding: 14px; border-radius: 12px; background: none;
+    color: #b14a35; font-weight: 700; border: 1.5px solid #e0b8a8; cursor: pointer; font-size: 14px; transition: all .2s;
+  }
+  .btn-logout-bottom:hover { background: #f6e0d8; }
+
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(60,45,30,0.45); backdrop-filter: blur(4px);
+    z-index: 300; display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: #fffdf8; border-radius: 22px; padding: 32px 28px; max-width: 380px; width: 100%; position: relative; }
+  .modal-close { position: absolute; top: 16px; right: 16px; width: 30px; height: 30px; border-radius: 50%; background: #f1e9da; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #9c8f7e; }
+  .modal-title { font-size: 19px; font-weight: 900; margin-bottom: 4px; color: #4a3f35; }
+  .modal-sub { font-size: 13px; color: #9c8f7e; margin-bottom: 20px; }
+
+  .pw-field-wrap { position: relative; margin-bottom: 14px; }
+  .pw-field-wrap .input-field { margin-bottom: 0; padding-right: 46px; }
+  .pw-eye {
+    position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+    width: 36px; height: 36px; border: none; background: none; cursor: pointer;
+    font-size: 16px; opacity: 0.5; transition: opacity .2s; border-radius: 8px;
+  }
+  .pw-eye:hover { opacity: 1; background: #f1e9da; }
+  .pw-eye.showing { opacity: 0.9; }
+
   .save-msg { font-size: 13px; padding: 8px 0; display: none; }
   .save-msg.success { color: #2da44e; display: block; }
   .save-msg.error { color: #d83b3b; display: block; }
@@ -152,6 +184,7 @@
       <input type="text" class="input-field" id="email-display" disabled />
 
       <button class="btn-save" onclick="saveProfile()" id="save-btn">儲存變更</button>
+      <button class="btn-change-pw" onclick="openPasswordModal()">🔑 修改密碼</button>
       <div class="save-msg" id="save-msg"></div>
     </div>
 
@@ -179,6 +212,8 @@
       </div>
     </div>
 
+    <button class="btn-logout-bottom" onclick="handleProfileLogout()">🚪 登出</button>
+
   </div>
 
 </div>
@@ -188,6 +223,52 @@
     <div class="blackboard-title">📊 全站總任務黑板</div>
     <div id="blackboard-content"></div>
     <button class="blackboard-close" onclick="closeBlackboardModal()">關閉</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="password-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closePasswordModal()">✕</button>
+    <div id="pw-step-form">
+      <div class="modal-title">🔑 修改密碼</div>
+      <div class="modal-sub">請輸入目前密碼與新密碼</div>
+
+      <label class="field-label">目前密碼</label>
+      <div class="pw-field-wrap">
+        <input type="password" class="input-field" id="pw-old" />
+        <button type="button" class="pw-eye" onclick="togglePwVisibility('pw-old', this)">👁️</button>
+      </div>
+
+      <label class="field-label">新密碼（至少6位數）</label>
+      <div class="pw-field-wrap">
+        <input type="password" class="input-field" id="pw-new" />
+        <button type="button" class="pw-eye" onclick="togglePwVisibility('pw-new', this)">👁️</button>
+      </div>
+
+      <label class="field-label">再次輸入新密碼</label>
+      <div class="pw-field-wrap">
+        <input type="password" class="input-field" id="pw-new-confirm" />
+        <button type="button" class="pw-eye" onclick="togglePwVisibility('pw-new-confirm', this)">👁️</button>
+      </div>
+
+      <div class="form-msg" id="pw-form-msg"></div>
+      <button class="btn-save" id="pw-submit-btn" onclick="handlePasswordSubmit()">確認變更</button>
+    </div>
+
+    <div id="pw-step-confirm" class="hidden">
+      <div class="modal-title">⚠️ 確定要變更密碼嗎？</div>
+      <div class="modal-sub">變更後，下次登入請使用新密碼</div>
+      <div style="display:flex; gap:10px; margin-top:20px;">
+        <button class="btn-save" style="background:#f3f3f2; color:#1f1f1f;" onclick="cancelPasswordConfirm()">取消</button>
+        <button class="btn-save" onclick="finalizePasswordChange()">確定變更</button>
+      </div>
+    </div>
+
+    <div id="pw-step-success" class="hidden" style="text-align:center;">
+      <span style="font-size:48px; display:block; margin-bottom:12px;">✅</span>
+      <div class="modal-title">密碼已成功變更！</div>
+      <button class="btn-save" onclick="closePasswordModal()">完成</button>
+    </div>
   </div>
 </div>
 
@@ -407,6 +488,131 @@ function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+/* ============================================================ */
+/* 修改密碼流程：開啟Modal → 填寫表單 → 二次確認 → 完成              */
+/* ============================================================ */
+function openPasswordModal() {
+  document.getElementById('password-modal').classList.add('show');
+  document.getElementById('pw-step-form').classList.remove('hidden');
+  document.getElementById('pw-step-confirm').classList.add('hidden');
+  document.getElementById('pw-step-success').classList.add('hidden');
+  document.getElementById('pw-form-msg').style.display = 'none';
+}
+
+function closePasswordModal() {
+  document.getElementById('password-modal').classList.remove('show');
+  document.getElementById('pw-old').value = '';
+  document.getElementById('pw-new').value = '';
+  document.getElementById('pw-new-confirm').value = '';
+  // 重置密碼顯示狀態，避免下次打開時殘留「顯示中」的狀態
+  document.querySelectorAll('#password-modal .pw-field-wrap input').forEach(input => { input.type = 'password'; });
+  document.querySelectorAll('#password-modal .pw-eye').forEach(btn => { btn.textContent = '👁️'; btn.classList.remove('showing'); });
+}
+
+function togglePwVisibility(inputId, btn) {
+  const input = document.getElementById(inputId);
+  const showing = input.type === 'text';
+  const savedValue = input.value; // Chrome 強密碼自動填入後切換 type 有時會清空顯示，先保存值
+  input.type = showing ? 'password' : 'text';
+  if (input.value !== savedValue) {
+    input.value = savedValue;
+  }
+  btn.textContent = showing ? '👁️' : '🙈';
+  btn.classList.toggle('showing', !showing);
+}
+
+function showPwMsg(msg, type) {
+  const el = document.getElementById('pw-form-msg');
+  el.textContent = msg;
+  el.className = 'form-msg ' + type;
+  el.style.display = 'block';
+}
+
+let pendingNewPassword = null;
+let pendingOldPassword = null;
+
+async function handlePasswordSubmit() {
+  const oldPw = document.getElementById('pw-old').value;
+  const newPw = document.getElementById('pw-new').value;
+  const newPwConfirm = document.getElementById('pw-new-confirm').value;
+
+  if (!oldPw || !newPw || !newPwConfirm) {
+    showPwMsg('請填寫所有欄位', 'error');
+    return;
+  }
+  if (newPw.length < 6) {
+    showPwMsg('新密碼至少需要 6 個字元', 'error');
+    return;
+  }
+  if (newPw !== newPwConfirm) {
+    showPwMsg('兩次輸入的新密碼不一致，請再確認一次', 'error');
+    return;
+  }
+  if (newPw === oldPw) {
+    showPwMsg('新密碼不能跟目前密碼相同', 'error');
+    return;
+  }
+
+  // 先驗證舊密碼是否正確：用目前帳號的 email + 輸入的舊密碼重新登入測試
+  const btn = document.getElementById('pw-submit-btn');
+  btn.disabled = true;
+  btn.textContent = '驗證中...';
+
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    const { error: signInError } = await supabaseClient.auth.signInWithPassword({ email: user.email, password: oldPw });
+    if (signInError) {
+      showPwMsg('目前密碼輸入錯誤，請重新確認', 'error');
+      btn.disabled = false;
+      btn.textContent = '確認變更';
+      return;
+    }
+
+    // 舊密碼驗證通過，進入二次確認畫面
+    pendingNewPassword = newPw;
+    pendingOldPassword = oldPw;
+    document.getElementById('pw-step-form').classList.add('hidden');
+    document.getElementById('pw-step-confirm').classList.remove('hidden');
+  } catch (err) {
+    console.error('Password verify error:', err.message, err);
+    showPwMsg('驗證失敗，請再試一次', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '確認變更';
+  }
+}
+
+function cancelPasswordConfirm() {
+  document.getElementById('pw-step-confirm').classList.add('hidden');
+  document.getElementById('pw-step-form').classList.remove('hidden');
+}
+
+async function finalizePasswordChange() {
+  try {
+    const { error } = await supabaseClient.auth.updateUser({ password: pendingNewPassword });
+    if (error) throw error;
+
+    document.getElementById('pw-step-confirm').classList.add('hidden');
+    document.getElementById('pw-step-success').classList.remove('hidden');
+    pendingNewPassword = null;
+    pendingOldPassword = null;
+  } catch (err) {
+    console.error('Password update error:', err.message, err);
+    alert('密碼變更失敗：' + (err.message || '請再試一次'));
+    document.getElementById('pw-step-confirm').classList.add('hidden');
+    document.getElementById('pw-step-form').classList.remove('hidden');
+  }
+}
+
+/* ============================================================ */
+/* 登出（個人頁面底部）                                            */
+/* ============================================================ */
+function handleProfileLogout() {
+  if (confirm('要登出嗎？')) {
+    supabaseClient.auth.signOut().then(() => { window.location.href = 'index.html'; });
+  }
 }
 
 init();

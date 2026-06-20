@@ -306,7 +306,7 @@
     <div class="cat-chip" data-cat="2" onclick="filterCategory('work')">🧭 社畜生存戰</div>
     <div class="cat-chip" data-cat="3" onclick="filterCategory('edge')">🤝 隱居邊緣人</div>
     <div class="cat-chip" data-cat="4" onclick="filterCategory('soul')">⏳ 靈魂年齡鑑定</div>
-    <div class="cat-chip" data-cat="5" onclick="openCustomQuiz()">🚀 客製化</div>
+    <div class="cat-chip" data-cat="5" onclick="openCustomQuiz()" id="cat-chip-custom">🚀 客製化</div>
     <div class="cat-chip" data-cat="6" onclick="window.location.href='games.html'">🎮 糞Game</div>
   </div>
 </div>
@@ -453,6 +453,7 @@ const i18n = {
     toSignup: "立即註冊", toLogin: "直接登入",
     authErrorGeneric: "信箱或密碼不正確，請重新確認",
     authErrorNetwork: "連線發生問題，請再試一次",
+    customChip: "🚀 客製化",
   },
   ja: {
     tagline: "今日のあなたの答えを見つけよう — 数分でできる心理テスト",
@@ -466,6 +467,7 @@ const i18n = {
     toSignup: "今すぐ登録", toLogin: "ログインする",
     authErrorGeneric: "メールアドレスまたはパスワードが正しくありません",
     authErrorNetwork: "接続エラーが発生しました。もう一度お試しください",
+    customChip: "🚀 カスタム作成",
   },
   en: {
     tagline: "Find today's answer — a few minutes, a personality quiz",
@@ -479,6 +481,7 @@ const i18n = {
     toSignup: "Sign up now", toLogin: "Log in instead",
     authErrorGeneric: "Incorrect email or password. Please try again",
     authErrorNetwork: "A connection error occurred. Please try again",
+    customChip: "🚀 Create Your Own",
   }
 };
 let currentLang = 'zh';
@@ -497,6 +500,7 @@ function setLang(l) {
   if (searchPlaceholderEl) { searchPlaceholderEl.textContent = t.searchPlaceholder; }
   document.querySelector('.btn-login').textContent = t.login;
   document.querySelector('.btn-signup').textContent = t.signup;
+  document.getElementById('cat-chip-custom').textContent = t.customChip;
   renderQuizCards();
 
   // 如果登入 Modal 正開著，同步更新裡面的文字
