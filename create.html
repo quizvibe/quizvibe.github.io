@@ -13,7 +13,27 @@
 
   .topbar { height: 60px; background: #fffdf8; border-bottom: 1px solid #ece4d4; display: flex; align-items: center; padding: 0 20px; position: sticky; top: 0; z-index: 20; }
   .back-btn { color: #9c8f7e; font-size: 14px; text-decoration: none; display: flex; align-items: center; gap: 5px; }
-  .logo { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 18px; margin-left: auto; color: #4a3f35; }
+  .spacer { flex: 1; }
+
+  .qt-lang-pill { display: flex; gap: 3px; background: #f1e9da; border-radius: 10px; padding: 3px; }
+  .qt-lang-pill button { padding: 5px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; color: #9c8f7e; border: none; background: none; cursor: pointer; transition: all .2s; }
+  .qt-lang-pill button.active { background: #fffdf8; color: #a9633a; box-shadow: 0 1px 4px rgba(80,60,30,0.1); }
+
+  .qt-btn { padding: 7px 13px; border-radius: 4px; font-size: 12.5px; font-weight: 700; border: 1.5px solid #d9cbb3; background: #fffdf8; cursor: pointer; color: #4a3f35; }
+  .qt-btn.qt-signup { background: #4a3f35; color: #fff; border: none; }
+
+  .qt-user-wrap { position: relative; }
+  .qt-user-chip { display: flex; align-items: center; gap: 7px; background: #f1e9da; border-radius: 10px; padding: 5px 12px 5px 5px; cursor: pointer; font-size: 12.5px; font-weight: 600; color: #4a3f35; }
+  .qt-avatar { width: 24px; height: 24px; border-radius: 50%; background: #a9633a; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 800; }
+  .qt-dropdown {
+    position: absolute; top: 100%; right: 0; margin-top: 8px; background: #fffdf8;
+    border: 1px solid #ece4d4; border-radius: 12px; min-width: 160px;
+    box-shadow: 0 12px 32px -8px rgba(80,60,30,0.15); overflow: hidden; z-index: 200; display: none;
+  }
+  .qt-dropdown.show { display: block; }
+  .qt-dropdown button { width: 100%; text-align: left; padding: 12px 16px; background: none; border: none; color: #4a3f35; font-size: 13.5px; cursor: pointer; transition: background .15s; font-family: inherit; }
+  .qt-dropdown button:hover { background: #f7f2e9; }
+  .qt-dropdown button.danger { color: #b14a35; }
   .logo .drop { color: #a9633a; }
 
   .wrap { max-width: 680px; margin: 0 auto; padding: 36px 20px; }
@@ -166,8 +186,27 @@
 <body>
 
 <div class="topbar">
-  <a href="index.html" class="back-btn">← QuizDrop</a>
-  <div class="logo">Quiz<span class="drop">Drop</span></div>
+  <a href="index.html" class="back-btn" id="back-link">← QuizDrop</a>
+  <div class="spacer"></div>
+  <div class="qt-lang-pill">
+    <button class="active" onclick="setLang('zh')" data-lang-btn="zh">中</button>
+    <button onclick="setLang('ja')" data-lang-btn="ja">日</button>
+    <button onclick="setLang('en')" data-lang-btn="en">EN</button>
+  </div>
+  <div id="qt-auth-buttons" style="display:flex; gap:8px;">
+    <button class="qt-btn qt-login" onclick="window.location.href='index.html'">登入</button>
+    <button class="qt-btn qt-signup" onclick="window.location.href='index.html'">註冊</button>
+  </div>
+  <div id="qt-user-chip-wrap" class="hidden qt-user-wrap">
+    <div class="qt-user-chip" onclick="toggleUserDropdown()">
+      <div class="qt-avatar" id="qt-avatar-initial">U</div>
+      <span id="qt-username-display">用戶</span>
+    </div>
+    <div class="qt-dropdown" id="qt-dropdown">
+      <button onclick="window.location.href='profile.html'">👤 個人頁面</button>
+      <button class="danger" onclick="handleLogoutCreate()">🚪 登出</button>
+    </div>
+  </div>
 </div>
 
 <div class="wrap">
@@ -298,6 +337,7 @@ async function init() {
 
   if (!session) {
     document.getElementById('login-required-view').classList.remove('hidden');
+    setBackLink('home');
     return;
   }
   currentUser = session.user;
@@ -306,7 +346,6 @@ async function init() {
   await loadMyQuizzes();
   showDashboard();
 }
-init();
 
 async function loadUserSlots() {
   try {
@@ -336,6 +375,7 @@ function showDashboard() {
   document.getElementById('creator-view').classList.add('hidden');
   document.getElementById('success-screen').style.display = 'none';
   document.getElementById('dashboard-view').classList.remove('hidden');
+  setBackLink('home');
 
   document.getElementById('slot-count-text').textContent = `${mySlotsUnlocked} / ${MAX_SLOTS}`;
 
@@ -384,6 +424,7 @@ function goUnlockSlot(slotIndex) {
   targetSlotIndex = slotIndex;
   document.getElementById('dashboard-view').classList.add('hidden');
   document.getElementById('lock-view').classList.remove('hidden');
+  setBackLink('dashboard');
 
   const isAdSlot = slotIndex <= FREE_AD_UNLOCK_UNTIL;
   document.getElementById('lock-title').textContent = `解鎖第 ${slotIndex} 個創作額度`;
@@ -477,6 +518,7 @@ function showCreatorForm() {
   document.getElementById('dashboard-view').classList.add('hidden');
   document.getElementById('lock-view').classList.add('hidden');
   document.getElementById('creator-view').classList.remove('hidden');
+  setBackLink('dashboard');
   resultCount = MIN_RESULTS;
   questionCount = 0;
   document.getElementById('quiz-title').value = '';
@@ -825,6 +867,116 @@ function copyShareUrl() {
 function goToMyQuiz() {
   window.location.href = `quiz.html?id=${publishedQuizId}`;
 }
+
+/* ============================================================ */
+/* 左上角返回連結：依目前視圖動態切換行為                            */
+/* ============================================================ */
+function setBackLink(target) {
+  const link = document.getElementById('back-link');
+  const t = i18nCreate[currentLang];
+  if (target === 'dashboard') {
+    link.href = '#';
+    link.onclick = (e) => { e.preventDefault(); showDashboard(); };
+    link.textContent = t.backToDashboard;
+  } else {
+    link.removeAttribute('onclick');
+    link.onclick = null;
+    link.href = 'index.html';
+    link.textContent = t.backToHome;
+  }
+}
+
+/* ============================================================ */
+/* 登入狀態判斷 + 頭像顯示                                          */
+/* ============================================================ */
+async function initAuthUI() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session?.user) showLoggedInUI(session.user);
+  supabaseClient.auth.onAuthStateChange((event, newSession) => {
+    if (newSession?.user) {
+      showLoggedInUI(newSession.user);
+    } else {
+      document.getElementById('qt-auth-buttons').classList.remove('hidden');
+      document.getElementById('qt-user-chip-wrap').classList.add('hidden');
+    }
+  });
+}
+
+function showLoggedInUI(user) {
+  document.getElementById('qt-auth-buttons').classList.add('hidden');
+  document.getElementById('qt-user-chip-wrap').classList.remove('hidden');
+  const nickname = user.user_metadata?.nickname || user.email?.split('@')[0] || '用戶';
+  document.getElementById('qt-username-display').textContent = nickname;
+  document.getElementById('qt-avatar-initial').textContent = nickname.charAt(0).toUpperCase();
+}
+
+function toggleUserDropdown() {
+  document.getElementById('qt-dropdown').classList.toggle('show');
+}
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('qt-user-chip-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('qt-dropdown')?.classList.remove('show');
+  }
+});
+function handleLogoutCreate() {
+  if (confirm(i18nCreate[currentLang].confirmLogout)) {
+    supabaseClient.auth.signOut().then(() => { window.location.href = 'index.html'; });
+  }
+}
+
+/* ============================================================ */
+/* 語言切換                                                        */
+/* ============================================================ */
+const i18nCreate = {
+  zh: {
+    backToHome: '← QuizDrop', backToDashboard: '← 返回額度頁面',
+    login: '登入', signup: '註冊', profile: '👤 個人頁面', logout: '🚪 登出',
+    confirmLogout: '要登出嗎？',
+  },
+  ja: {
+    backToHome: '← QuizDrop', backToDashboard: '← クレジット画面へ戻る',
+    login: 'ログイン', signup: '登録', profile: '👤 プロフィール', logout: '🚪 ログアウト',
+    confirmLogout: 'ログアウトしますか？',
+  },
+  en: {
+    backToHome: '← QuizDrop', backToDashboard: '← Back to credits',
+    login: 'Log in', signup: 'Sign up', profile: '👤 Profile', logout: '🚪 Log out',
+    confirmLogout: 'Log out?',
+  },
+};
+let currentLang = 'zh';
+
+function setLang(l) {
+  currentLang = l;
+  document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === l));
+  localStorage.setItem('quizdrop_lang', l);
+  const t = i18nCreate[l];
+
+  const loginBtn = document.querySelector('.qt-login');
+  const signupBtn = document.querySelector('.qt-signup');
+  if (loginBtn) loginBtn.textContent = t.login;
+  if (signupBtn) signupBtn.textContent = t.signup;
+  const dropdown = document.getElementById('qt-dropdown');
+  if (dropdown) {
+    dropdown.querySelector('button:not(.danger)').textContent = t.profile;
+    dropdown.querySelector('button.danger').textContent = t.logout;
+  }
+
+  // 重新套用目前畫面對應的返回連結文字（不切換畫面本身，只更新文字語言）
+  const isOnDashboardFlow = !document.getElementById('dashboard-view').classList.contains('hidden')
+    || !document.getElementById('lock-view').classList.contains('hidden')
+    || !document.getElementById('creator-view').classList.contains('hidden');
+  setBackLink(isOnDashboardFlow ? 'dashboard' : 'home');
+}
+
+(function initLangFromStorage() {
+  const saved = localStorage.getItem('quizdrop_lang') || 'zh';
+  setLang(saved);
+})();
+
+initAuthUI();
+init(); // 必須放在最後執行，因為 init() 內部可能呼叫 setBackLink，而 setBackLink 依賴 currentLang 與 i18nCreate 已宣告完成
 </script>
 </body>
 </html>
