@@ -469,6 +469,7 @@ async function saveGameResult(gameId, recordDetail) {
 let lastResultText = '';
 
 function showResultPanel(diff, actual, isWin) {
+  const t = i18nTiming[currentLang];
   const targetStr = mode === 'easy' ? targetSeconds.toFixed(0) : targetSeconds.toFixed(2);
   const actualStr = actual.toFixed(2);
 
@@ -480,20 +481,23 @@ function showResultPanel(diff, actual, isWin) {
 
   let text;
   if (diff <= 0.05) {
-    text = '恭喜！你的大腦是瑞士瓦特製錶級人體時鐘！超越全網 99% 的通靈人類，快截圖去 Threads 逼你朋友下跪！';
+    text = t.resultPerfect;
   } else if (diff <= 0.3) {
-    text = `差一點！你的生物鐘慢/快了 ${diff.toFixed(2)} 秒。大概是今天冰美式喝不夠，或者單純是手抖。再試一次，你離神不遠了。`;
+    text = t.resultWin(diff.toFixed(2));
   } else {
-    text = `差太遠了吧！指定 ${targetStr} 秒你 ${actualStr} 秒就按？你的人生是不是也勝在速度？建議去檢查一下心律不整，快分享出去讓朋友笑你！`;
+    text = t.resultLose(targetStr, actualStr);
   }
   document.getElementById('result-text').textContent = text;
   lastResultText = `⏱️ QuizDrop黃金秒數挑戰\n目標：${targetStr}秒，我按了：${actualStr}秒\n${text}\n\n👉 來挑戰我：https://www.quizdrop.me/game-timing.html`;
   document.getElementById('result-panel').classList.add('show');
+  document.querySelector('.btn-copy-result').textContent = t.copyBtn;
 }
 
 function copyResultText() {
-  navigator.clipboard.writeText(lastResultText).then(() => alert('已複製！貼到 Threads 分享吧'));
+  const t = i18nTiming[currentLang];
+  navigator.clipboard.writeText(lastResultText).then(() => alert(t.copySuccess));
 }
+
 
 const RECENT_KEY = 'quizdrop_timing_recent';
 function pushRecentResult(target, actual, diff, isWin) {
@@ -507,32 +511,37 @@ function pushRecentResult(target, actual, diff, isWin) {
 function renderRecentList() {
   const recent = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
   const listEl = document.getElementById('recent-list');
+  const t = i18nTiming[currentLang];
+  document.querySelector('.recent-title').textContent = t.recentTitle;
   if (recent.length === 0) {
-    listEl.innerHTML = '<div style="font-size:12.5px;color:#bbb;">還沒有紀錄，快來挑戰第一次！</div>';
+    listEl.innerHTML = `<div style="font-size:12.5px;color:#bbb;">${t.recentEmpty}</div>`;
     return;
   }
   listEl.innerHTML = recent.map(r => {
     const targetStr = r.mode === 'easy' ? r.target.toFixed(0) : r.target.toFixed(2);
     return `
       <div class="recent-row">
-        <span>目標 ${targetStr}s → 按了 ${r.actual.toFixed(2)}s</span>
-        <span class="recent-diff ${r.isWin ? 'win' : 'lose'}">${r.isWin ? '✓' : '✗'} 差 ${r.diff.toFixed(2)}s</span>
+        <span>${t.recentRow(targetStr, r.actual.toFixed(2))}</span>
+        <span class="recent-diff ${r.isWin ? 'win' : 'lose'}">${r.isWin ? '✓' : '✗'} ${t.recentDiff(r.diff.toFixed(2))}</span>
       </div>
     `;
   }).join('');
 }
 
 let currentStyle = 'default';
-const STYLE_DEFS = [
-  { id: 'default', label: '🎌 標準風格', unlockCondition: null },
-  { id: 'manga', label: '📓 線條無色', unlockCondition: (p) => p.timing.wins >= 5, unlockText: '累積 5 次勝利解鎖' },
-  { id: 'crayon', label: '🖍️ 蠟筆塗鴉', unlockCondition: (p) => p.timing.plays >= 15, unlockText: '遊玩 15 次或看廣告解鎖' },
-];
+function getStyleDefs() {
+  const t = i18nTiming[currentLang];
+  return [
+    { id: 'default', label: t.styleDefault, unlockCondition: null },
+    { id: 'manga', label: t.styleManga, unlockCondition: (p) => p.timing.wins >= 5, unlockText: t.unlockManga },
+    { id: 'crayon', label: t.styleCrayon, unlockCondition: (p) => p.timing.plays >= 15, unlockText: t.unlockCrayon },
+  ];
+}
 
 function renderStyleRow() {
   const progress = getProgress();
   const row = document.getElementById('style-row');
-  row.innerHTML = STYLE_DEFS.map(s => {
+  row.innerHTML = getStyleDefs().map(s => {
     const unlocked = progress.timing.stylesUnlocked.includes(s.id);
     const cls = 'style-chip' + (s.id === currentStyle ? ' active' : '') + (!unlocked ? ' locked' : '');
     return `<button class="${cls}" onclick="onStyleClick('${s.id}')">${s.label} ${!unlocked ? '🔒' : ''}</button>`;
@@ -541,17 +550,18 @@ function renderStyleRow() {
 
 function onStyleClick(styleId) {
   const progress = getProgress();
-  const styleDef = STYLE_DEFS.find(s => s.id === styleId);
+  const t = i18nTiming[currentLang];
+  const styleDef = getStyleDefs().find(s => s.id === styleId);
   const unlocked = progress.timing.stylesUnlocked.includes(styleId);
   if (unlocked) { currentStyle = styleId; renderStyleRow(); return; }
-  if (confirm(`此風格尚未解鎖（${styleDef.unlockText}）\n要看一段廣告直接解鎖嗎？`)) {
+  if (confirm(t.confirmUnlock(styleDef.unlockText))) {
     showAdUnlockModal(() => { unlockStyle('timing', styleId); currentStyle = styleId; renderStyleRow(); });
   }
 }
 
 function checkUnlocks() {
   const progress = getProgress();
-  STYLE_DEFS.forEach(s => {
+  getStyleDefs().forEach(s => {
     if (s.unlockCondition && s.unlockCondition(progress) && !progress.timing.stylesUnlocked.includes(s.id)) {
       unlockStyle('timing', s.id);
     }
@@ -561,7 +571,8 @@ function checkUnlocks() {
 
 function showProgressModal() {
   const p = getProgress().timing;
-  alert(`📊 黃金秒數盲數挑戰\n\n累積勝利：${p.wins} 次\n累積遊玩：${p.plays} 次\n已解鎖風格：${p.stylesUnlocked.length} / ${STYLE_DEFS.length}`);
+  const t = i18nTiming[currentLang];
+  alert(t.progressModal(p.wins, p.plays, p.stylesUnlocked.length, getStyleDefs().length));
 }
 
 generateNewTarget();
@@ -604,7 +615,8 @@ document.addEventListener('click', (e) => {
   }
 });
 function handleLogoutGames() {
-  if (confirm('要登出嗎？')) {
+  const t = i18nTiming[currentLang];
+  if (confirm(t.confirmLogout)) {
     supabaseClient.auth.signOut().then(() => { window.location.reload(); });
   }
 }
@@ -612,11 +624,62 @@ initAuthUI();
 
 /* ---------------- 語言切換 ---------------- */
 const i18nTiming = {
-  zh: { gameTitle: '⏱️ 黃金秒數盲數挑戰', gameSub: '記住思考泡泡裡的目標秒數，3秒後畫面會隱藏，靠你的生物鐘盲數按停！', back: '← 糞Game大廳', progress: '📊 本關進度', login: '登入', signup: '註冊', profile: '👤 個人頁面', logout: '🚪 登出' },
-  ja: { gameTitle: '⏱️ タイムレース', gameSub: '吹き出しの目標秒数を覚えて、3秒後に画面が隠れます。体内時計で止めてみよう！', back: '← ゲームロビー', progress: '📊 進捗確認', login: 'ログイン', signup: '登録', profile: '👤 プロフィール', logout: '🚪 ログアウト' },
-  en: { gameTitle: '⏱️ Golden Second Challenge', gameSub: 'Remember the target seconds in the bubble — after 3 seconds the display hides. Stop using your internal clock!', back: '← Game Lobby', progress: '📊 Progress', login: 'Log in', signup: 'Sign up', profile: '👤 Profile', logout: '🚪 Log out' },
+  zh: {
+    gameTitle: '⏱️ 黃金秒數盲數挑戰', gameSub: '記住思考泡泡裡的目標秒數，3秒後畫面會隱藏，靠你的生物鐘盲數按停！',
+    back: '← 糞Game大廳', progress: '📊 本關進度', login: '登入', signup: '註冊', profile: '👤 個人頁面', logout: '🚪 登出',
+    modeEasy: 'EASY（猜整秒）', modeHard: 'HARD（猜到小數點）',
+    resultPerfect: '恭喜！你的大腦是瑞士瓦特製錶級人體時鐘！超越全網 99% 的通靈人類，快截圖去 Threads 逼你朋友下跪！',
+    resultWin: (diff) => `差一點！你的生物鐘慢/快了 ${diff} 秒。大概是今天冰美式喝不夠，或者單純是手抖。再試一次，你離神不遠了。`,
+    resultLose: (target, actual) => `差太遠了吧！指定 ${target} 秒你 ${actual} 秒就按？你的人生是不是也勝在速度？建議去檢查一下心律不整，快分享出去讓朋友笑你！`,
+    copyBtn: '📋 複製發Threads', copySuccess: '已複製！貼到 Threads 分享吧',
+    recentTitle: '📋 最近 5 次紀錄', recentEmpty: '還沒有紀錄，快來挑戰第一次！',
+    recentRow: (target, actual) => `目標 ${target}s → 按了 ${actual}s`, recentDiff: (diff) => `差 ${diff}s`,
+    styleDefault: '🎌 標準風格', styleManga: '📓 線條無色', styleCrayon: '🖍️ 蠟筆塗鴉',
+    unlockManga: '累積 5 次勝利解鎖', unlockCrayon: '遊玩 15 次或看廣告解鎖',
+    confirmUnlock: (text) => `此風格尚未解鎖（${text}）\n要看一段廣告直接解鎖嗎？`,
+    confirmLogout: '要登出嗎？',
+    progressModal: (wins, plays, unlocked, total) => `📊 黃金秒數盲數挑戰\n\n累積勝利：${wins} 次\n累積遊玩：${plays} 次\n已解鎖風格：${unlocked} / ${total}`,
+    btnStart: 'START', btnStop: 'STOP', btnAgain: 'AGAIN',
+  },
+  ja: {
+    gameTitle: '⏱️ タイムレース', gameSub: '吹き出しの目標秒数を覚えて、3秒後に画面が隠れます。体内時計で止めてみよう！',
+    back: '← ゲームロビー', progress: '📊 進捗確認', login: 'ログイン', signup: '登録', profile: '👤 プロフィール', logout: '🚪 ログアウト',
+    modeEasy: 'EASY（整数秒）', modeHard: 'HARD（小数点まで）',
+    resultPerfect: 'すごい！あなたの脳はスイス製の高級時計レベル！全世界の99%の人を超えました。スクショしてThreadsで自慢しよう！',
+    resultWin: (diff) => `惜しい！${diff}秒のズレがありました。今日はコーヒーが足りなかったのかも。もう一度チャレンジしてみよう！`,
+    resultLose: (target, actual) => `目標${target}秒に対して${actual}秒で押した？ちょっと心配なレベルかも。友達にシェアして笑ってもらおう！`,
+    copyBtn: '📋 コピーしてシェア', copySuccess: 'コピーしました！Threadsでシェアしよう',
+    recentTitle: '📋 直近5回の記録', recentEmpty: 'まだ記録がありません、挑戦してみよう！',
+    recentRow: (target, actual) => `目標 ${target}s → ${actual}s で押した`, recentDiff: (diff) => `差 ${diff}s`,
+    styleDefault: '🎌 標準スタイル', styleManga: '📓 モノクロ漫画風', styleCrayon: '🖍️ クレヨン風',
+    unlockManga: '5勝するとアンロック', unlockCrayon: '15回プレイか広告視聴でアンロック',
+    confirmUnlock: (text) => `このスタイルはまだアンロックされていません（${text}）\n広告を見てアンロックしますか？`,
+    confirmLogout: 'ログアウトしますか？',
+    progressModal: (wins, plays, unlocked, total) => `📊 タイムレース\n\n累計勝利：${wins} 回\n累計プレイ：${plays} 回\nアンロック済みスタイル：${unlocked} / ${total}`,
+    btnStart: 'START', btnStop: 'STOP', btnAgain: 'AGAIN',
+  },
+  en: {
+    gameTitle: '⏱️ Golden Second Challenge', gameSub: 'Remember the target seconds in the bubble — after 3 seconds the display hides. Stop using your internal clock!',
+    back: '← Game Lobby', progress: '📊 Progress', login: 'Log in', signup: 'Sign up', profile: '👤 Profile', logout: '🚪 Log out',
+    modeEasy: 'EASY (whole seconds)', modeHard: 'HARD (with decimals)',
+    resultPerfect: 'Amazing! Your brain is a Swiss-watch-grade human clock! You\'ve beaten 99% of the population. Screenshot this and brag on Threads!',
+    resultWin: (diff) => `So close! Your internal clock was off by ${diff} seconds. Maybe you need more coffee today. Try again, you're almost there!`,
+    resultLose: (target, actual) => `Way off! Target was ${target}s and you pressed at ${actual}s? Maybe get your heart rhythm checked. Share this and let your friends laugh!`,
+    copyBtn: '📋 Copy & Share', copySuccess: 'Copied! Paste it on Threads to share',
+    recentTitle: '📋 Last 5 Results', recentEmpty: 'No records yet, take your first challenge!',
+    recentRow: (target, actual) => `Target ${target}s → pressed at ${actual}s`, recentDiff: (diff) => `off by ${diff}s`,
+    styleDefault: '🎌 Default Style', styleManga: '📓 Manga Lines', styleCrayon: '🖍️ Crayon Doodle',
+    unlockManga: 'Unlock after 5 wins', unlockCrayon: 'Unlock after 15 plays or watch an ad',
+    confirmUnlock: (text) => `This style is locked (${text})\nWatch an ad to unlock it now?`,
+    confirmLogout: 'Log out?',
+    progressModal: (wins, plays, unlocked, total) => `📊 Golden Second Challenge\n\nTotal wins: ${wins}\nTotal plays: ${plays}\nStyles unlocked: ${unlocked} / ${total}`,
+    btnStart: 'START', btnStop: 'STOP', btnAgain: 'AGAIN',
+  },
 };
+let currentLang = 'zh';
+
 function setLang(l) {
+  currentLang = l;
   document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === l));
   localStorage.setItem('quizdrop_lang', l);
   const t = i18nTiming[l];
@@ -624,12 +687,18 @@ function setLang(l) {
   document.querySelector('.game-sub').textContent = t.gameSub;
   document.querySelector('.back').textContent = t.back;
   document.querySelector('.tb-btn').textContent = t.progress;
+  document.getElementById('mode-easy').textContent = t.modeEasy;
+  document.getElementById('mode-hard').textContent = t.modeHard;
   const loginBtn = document.querySelector('.qt-login');
   const signupBtn = document.querySelector('.qt-signup');
   if (loginBtn) loginBtn.textContent = t.login;
   if (signupBtn) signupBtn.textContent = t.signup;
   document.querySelector('#qt-dropdown button:not(.danger)').textContent = t.profile;
   document.querySelector('#qt-dropdown button.danger').textContent = t.logout;
+
+  // 重新渲染所有依賴語言的動態內容
+  renderRecentList();
+  renderStyleRow();
 }
 (function initLangFromStorage() {
   const saved = localStorage.getItem('quizdrop_lang');

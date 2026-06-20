@@ -25,11 +25,40 @@
   .quiz-topbar .back { color: var(--muted); font-size: 13px; text-decoration: none; display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
   .quiz-topbar .spacer { flex: 1; }
   .qt-btn { padding: 7px 16px; border-radius: 99px; font-weight: 700; font-size: 12.5px; cursor: pointer; border: none; }
+  .qt-lang-pill { display: flex; gap: 3px; background: #f6f6f6; border-radius: 99px; padding: 3px; }
+  .qt-lang-pill button { padding: 5px 10px; border-radius: 99px; font-size: 11.5px; font-weight: 600; color: var(--muted); border: none; background: none; cursor: pointer; transition: all .2s; }
+  .qt-lang-pill button.active { background: #fff; color: var(--accent); box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
   .qt-login { background: transparent; color: var(--text); border: 1.5px solid #ececec; }
   .qt-signup { background: linear-gradient(120deg,var(--accent),var(--accent2)); color: #fff; }
   .qt-user-chip { display: flex; align-items: center; gap: 7px; background: #f6f6f6; border-radius: 99px; padding: 5px 12px 5px 5px; cursor: pointer; font-size: 12.5px; font-weight: 600; }
   .qt-avatar { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(120deg,var(--accent),var(--accent2)); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 800; }
+  .qt-user-wrap { position: relative; }
+  .qt-dropdown {
+    position: absolute; top: 100%; right: 0; margin-top: 8px; background: #fff;
+    border: 1px solid #f0f0f0; border-radius: 14px; min-width: 160px;
+    box-shadow: 0 12px 32px -8px rgba(0,0,0,0.12); overflow: hidden; z-index: 200; display: none;
+  }
+  .qt-dropdown.show { display: block; }
+  .qt-dropdown button {
+    width: 100%; text-align: left; padding: 12px 16px; background: none; border: none;
+    color: var(--text); font-size: 13.5px; cursor: pointer; transition: background .15s; font-family: inherit;
+  }
+  .qt-dropdown button:hover { background: #f8f8f8; }
+  .qt-dropdown button.danger { color: #d83b3b; }
   body { padding-top: 80px; }
+
+  /* 底部固定廣告橫幅（手機版） */
+  .ad-banner-fixed {
+    position: fixed; bottom: 0; left: 0; right: 0; height: 50px;
+    background: rgba(255,255,255,0.96); backdrop-filter: blur(8px);
+    border-top: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: #bbb; z-index: 90; pointer-events: none;
+  }
+  body { padding-bottom: 60px; }
+  @media (min-width: 768px) {
+    .ad-banner-fixed { display: none; }
+    body { padding-bottom: 0; }
+  }
 
   .creator-badge { display: inline-flex; align-items: center; gap: 5px; background: #fff0f5; color: var(--accent); font-size: 11.5px; font-weight: 700; padding: 4px 12px; border-radius: 99px; margin-bottom: 14px; }
 
@@ -95,14 +124,23 @@
 <div class="quiz-topbar">
   <a href="index.html" class="back">← QuizDrop</a>
   <div class="spacer"></div>
+  <div class="qt-lang-pill">
+    <button class="active" onclick="setLang('zh')" data-lang-btn="zh">中</button>
+    <button onclick="setLang('ja')" data-lang-btn="ja">日</button>
+    <button onclick="setLang('en')" data-lang-btn="en">EN</button>
+  </div>
   <div id="qt-auth-buttons" style="display:flex; gap:8px;">
     <button class="qt-btn qt-login" onclick="window.location.href='index.html'">登入</button>
     <button class="qt-btn qt-signup" onclick="window.location.href='index.html'">註冊</button>
   </div>
-  <div id="qt-user-chip-wrap" class="hidden">
-    <div class="qt-user-chip" onclick="window.location.href='profile.html'">
+  <div id="qt-user-chip-wrap" class="hidden qt-user-wrap">
+    <div class="qt-user-chip" onclick="toggleUserDropdown()">
       <div class="qt-avatar" id="qt-avatar-initial">U</div>
       <span id="qt-username-display">用戶</span>
+    </div>
+    <div class="qt-dropdown" id="qt-dropdown">
+      <button onclick="window.location.href='profile.html'" id="qt-profile-btn">👤 個人頁面</button>
+      <button class="danger" onclick="handleQuizPageLogout()" id="qt-logout-btn">🚪 登出</button>
     </div>
   </div>
 </div>
@@ -118,7 +156,7 @@
   </div>
 
   <div id="start-screen">
-    <button class="btn-start" onclick="startQuiz()">開始測驗 →</button>
+    <button class="btn-start" onclick="startQuiz()" id="btn-start-text">開始測驗 →</button>
     <p class="notice" id="notice-text"></p>
   </div>
 
@@ -143,29 +181,117 @@
     <div class="save-status" id="save-status"></div>
     <div class="result-desc" id="r-desc"></div>
 
-    <p style="font-size:13px;color:#999;margin-bottom:12px;">分享你的結果</p>
+    <p style="font-size:13px;color:#999;margin-bottom:12px;" id="share-label-text">分享你的結果</p>
     <div class="share-grid">
       <button class="share-btn btn-twitter" onclick="shareTwitter()">𝕏 Twitter / X</button>
       <button class="share-btn btn-line" onclick="shareLine()">💬 LINE</button>
       <button class="share-btn btn-fb" onclick="shareFacebook()">📘 Facebook</button>
-      <button class="share-btn btn-copy" onclick="copyResult()">📋 複製</button>
+      <button class="share-btn btn-copy" onclick="copyResult()" id="btn-copy-text">📋 複製</button>
     </div>
-    <button class="btn-retry" onclick="retry()">再測一次</button>
+    <button class="btn-retry" onclick="retry()" id="btn-retry-text">再測一次</button>
 
     <div class="cta-make-own" id="cta-make-own">
-      想自己出一個這樣的測驗？<a href="create.html">立即創作 →</a>
+      <span id="cta-text-part">想自己出一個這樣的測驗？</span><a href="create.html" id="cta-link-text">立即創作 →</a>
     </div>
 
-    <div class="home-link"><a href="index.html">← 回 QuizDrop 首頁</a></div>
+    <div class="home-link"><a href="index.html" id="home-link-text">← 回 QuizDrop 首頁</a></div>
   </div>
 </div>
 
+
 <div class="toast" id="toast"></div>
+
+<!-- Google AdSense 固定橫幅預留位置（手機版顯示） -->
+<div class="ad-banner-fixed">廣告版位</div>
 
 <script>
 const SUPABASE_URL = 'https://xsflpzozgdgbtrtdzdlj.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzZmxwem96Z2RnYnRydGR6ZGxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTMyMzUsImV4cCI6MjA5NzE4OTIzNX0.Uyi5dYa73h0JJ9KwT2bP0C79wV_H-PoYneiR5xsbT6I';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ============================================================ */
+/* i18n：僅涵蓋介面文字，測驗題目/選項/結果維持創作者原始語言         */
+/* ============================================================ */
+const i18nQuiz = {
+  zh: {
+    login: '登入', signup: '註冊', profile: '👤 個人頁面', logout: '🚪 登出',
+    loading: '載入測驗中...', notFoundId: '找不到測驗 ID，請確認連結是否正確', notFoundQuiz: '找不到這個測驗，可能已被刪除或連結錯誤',
+    creatorBadge: '✨ 網友創作測驗', btnStart: '開始測驗 →', noticeText: (n) => `共 ${n} 題 · 結果僅供娛樂參考`,
+    unanswered: '⚠️ 請先選擇一個答案才能繼續', btnPrev: '← 上一題', btnNext: '查看結果 ✨', btnViewResult: '查看結果 ✨',
+    qNum: (i, n) => `問題 ${i} / ${n}`,
+    confirmLogout: '要登出嗎？', oldResultStatus: '📜 這是你重溫的舊測驗結果',
+    guestStatus: '🔓 登入後系統會自動保存你的測驗紀錄，現在是訪客模式',
+    savedStatus: '✅ 已自動保存到你的測驗紀錄', saveFailStatus: '⚠️ 結果保存失敗，但你還是可以看測驗結果',
+    shareLabel: '分享你的結果', btnCopy: '📋 複製', btnRetry: '再測一次',
+    ctaText: '想自己出一個這樣的測驗？', ctaLink: '立即創作 →', homeLink: '← 回 QuizDrop 首頁',
+    shareDefault: (label) => `🔮 我在 QuizDrop 測出「${label}」\n\n你也來測測看！`,
+    fbCopied: '結果已複製！貼到 Facebook 貼文裡分享吧 📋', copiedGeneric: '已複製！',
+  },
+  ja: {
+    login: 'ログイン', signup: '登録', profile: '👤 プロフィール', logout: '🚪 ログアウト',
+    loading: 'クイズを読み込み中...', notFoundId: 'クイズIDが見つかりません。リンクをご確認ください', notFoundQuiz: 'このクイズが見つかりません。削除されたか、リンクが間違っている可能性があります',
+    creatorBadge: '✨ ユーザー作成クイズ', btnStart: 'クイズを始める →', noticeText: (n) => `全 ${n} 問 · 結果はエンタメ目的です`,
+    unanswered: '⚠️ 先に答えを選んでください', btnPrev: '← 前の問題', btnNext: '結果を見る ✨', btnViewResult: '結果を見る ✨',
+    qNum: (i, n) => `問題 ${i} / ${n}`,
+    confirmLogout: 'ログアウトしますか？', oldResultStatus: '📜 これは以前の結果です',
+    guestStatus: '🔓 ログインすると結果が自動保存されます（現在ゲストモード）',
+    savedStatus: '✅ 結果が自動保存されました', saveFailStatus: '⚠️ 保存に失敗しましたが、結果は見れます',
+    shareLabel: '結果をシェア', btnCopy: '📋 コピー', btnRetry: 'もう一度',
+    ctaText: '自分でクイズを作ってみる？', ctaLink: '今すぐ作成 →', homeLink: '← QuizDropホームへ',
+    shareDefault: (label) => `🔮 QuizDropで「${label}」が出ました\n\nあなたもやってみよう！`,
+    fbCopied: 'コピーしました！Facebookの投稿に貼って共有しよう 📋', copiedGeneric: 'コピーしました！',
+  },
+  en: {
+    login: 'Log in', signup: 'Sign up', profile: '👤 Profile', logout: '🚪 Log out',
+    loading: 'Loading quiz...', notFoundId: 'Quiz ID not found, please check the link', notFoundQuiz: 'This quiz was not found — it may have been deleted or the link is incorrect',
+    creatorBadge: '✨ Community-created quiz', btnStart: 'Start Quiz →', noticeText: (n) => `${n} questions · For entertainment purposes only`,
+    unanswered: '⚠️ Please select an answer to continue', btnPrev: '← Previous', btnNext: 'See Results ✨', btnViewResult: 'See Results ✨',
+    qNum: (i, n) => `Question ${i} / ${n}`,
+    confirmLogout: 'Log out?', oldResultStatus: '📜 This is your saved past result',
+    guestStatus: '🔓 Log in and your results will be saved automatically — you\'re in guest mode now',
+    savedStatus: '✅ Automatically saved to your quiz history', saveFailStatus: '⚠️ Failed to save, but you can still view the result',
+    shareLabel: 'Share your result', btnCopy: '📋 Copy', btnRetry: 'Try Again',
+    ctaText: 'Want to create your own quiz like this?', ctaLink: 'Create now →', homeLink: '← Back to QuizDrop',
+    shareDefault: (label) => `🔮 I got "${label}" on QuizDrop\n\nTry it yourself!`,
+    fbCopied: 'Copied! Paste it into your Facebook post to share 📋', copiedGeneric: 'Copied!',
+  },
+};
+let currentLang = 'zh';
+
+function setLang(l) {
+  currentLang = l;
+  document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === l));
+  localStorage.setItem('quizdrop_lang', l);
+  const t = i18nQuiz[l];
+
+  const loginBtn = document.querySelector('.qt-login');
+  const signupBtn = document.querySelector('.qt-signup');
+  if (loginBtn) loginBtn.textContent = t.login;
+  if (signupBtn) signupBtn.textContent = t.signup;
+  document.getElementById('qt-profile-btn').textContent = t.profile;
+  document.getElementById('qt-logout-btn').textContent = t.logout;
+  document.getElementById('creator-badge').textContent = t.creatorBadge;
+  document.getElementById('btn-start-text').textContent = t.btnStart;
+  document.getElementById('unanswered-warning').textContent = t.unanswered;
+  document.getElementById('btn-prev').textContent = t.btnPrev;
+  document.getElementById('share-label-text').textContent = t.shareLabel;
+  document.getElementById('btn-copy-text').textContent = t.btnCopy;
+  document.getElementById('btn-retry-text').textContent = t.btnRetry;
+  document.getElementById('cta-text-part').textContent = t.ctaText;
+  document.getElementById('cta-link-text').textContent = t.ctaLink;
+  document.getElementById('home-link-text').textContent = t.homeLink;
+
+  // 若已經載入測驗，重新渲染題號/按鈕等依賴語言的動態內容
+  if (typeof qs !== 'undefined' && qs && qs.length > 0) {
+    if (document.getElementById('quiz-card') && !document.getElementById('quiz-card').classList.contains('hidden')) {
+      renderQ();
+    }
+  }
+  if (typeof quizData !== 'undefined' && quizData) {
+    document.getElementById('notice-text').textContent = t.noticeText(quizData.questions.length);
+  }
+}
+
 
 const urlParams = new URLSearchParams(window.location.search);
 const QUIZ_ID = urlParams.get('id');
@@ -181,7 +307,7 @@ let finalResult = null;
 
 async function loadQuiz() {
   if (!QUIZ_ID) {
-    document.getElementById('loading').textContent = '找不到測驗 ID，請確認連結是否正確';
+    document.getElementById('loading').textContent = i18nQuiz[currentLang].notFoundId;
     return;
   }
 
@@ -224,11 +350,31 @@ async function loadQuiz() {
       }
     }
   } catch (err) {
-    document.getElementById('loading').textContent = '找不到這個測驗，可能已被刪除或連結錯誤';
+    document.getElementById('loading').textContent = i18nQuiz[currentLang].notFoundQuiz;
     console.error(err);
   }
 }
 loadQuiz();
+
+function toggleUserDropdown() {
+  document.getElementById('qt-dropdown').classList.toggle('show');
+}
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('qt-user-chip-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('qt-dropdown')?.classList.remove('show');
+  }
+});
+function handleQuizPageLogout() {
+  if (confirm(i18nQuiz[currentLang].confirmLogout)) {
+    supabaseClient.auth.signOut().then(() => { window.location.href = 'index.html'; });
+  }
+}
+
+function isInAppWebView() {
+  const ua = navigator.userAgent || '';
+  return /Line\/|FBAN|FBAV|Instagram|Threads/i.test(ua);
+}
 
 async function updateTopbarAuthState() {
   if (!currentUser) return;
@@ -248,7 +394,7 @@ function showSavedResult(result) {
   document.getElementById('r-title').textContent = result.label;
   document.getElementById('r-desc').textContent = result.desc;
   const statusEl = document.getElementById('save-status');
-  statusEl.textContent = '📜 這是你重溫的舊測驗結果';
+  statusEl.textContent = i18nQuiz[currentLang].oldResultStatus;
   document.getElementById('result-card').style.display = 'block';
 }
 
@@ -283,7 +429,7 @@ function jumpTo(idx) {
 function renderQ() {
   const qs = quizData.questions;
   const q = qs[current];
-  document.getElementById('q-num').textContent = `問題 ${current + 1} / ${qs.length}`;
+  document.getElementById('q-num').textContent = i18nQuiz[currentLang].qNum(current + 1, qs.length);
   document.getElementById('q-text').textContent = q.text;
   document.getElementById('unanswered-warning').classList.remove('show');
 
@@ -302,7 +448,7 @@ function renderQ() {
   const nextBtn = document.getElementById('btn-next');
   if (isLast) {
     nextBtn.classList.remove('hidden');
-    nextBtn.textContent = '查看結果 ✨';
+    nextBtn.textContent = i18nQuiz[currentLang].btnViewResult;
   } else {
     nextBtn.classList.add('hidden');
   }
@@ -385,7 +531,7 @@ async function saveResultIfLoggedIn() {
   const statusEl = document.getElementById('save-status');
   if (!currentUser) {
     statusEl.className = 'save-status guest';
-    statusEl.textContent = '🔓 登入後系統會自動保存你的測驗紀錄，現在是訪客模式';
+    statusEl.textContent = i18nQuiz[currentLang].guestStatus;
     return;
   }
   try {
@@ -399,17 +545,17 @@ async function saveResultIfLoggedIn() {
     }, { onConflict: 'user_id,quiz_id' });
     if (error) throw error;
     statusEl.className = 'save-status';
-    statusEl.textContent = '✅ 已自動保存到你的測驗紀錄';
+    statusEl.textContent = i18nQuiz[currentLang].savedStatus;
   } catch (err) {
     statusEl.className = 'save-status guest';
-    statusEl.textContent = '⚠️ 結果保存失敗，但你還是可以看測驗結果';
+    statusEl.textContent = i18nQuiz[currentLang].saveFailStatus;
     console.error(err);
   }
 }
 
 function getShareText() {
   return {
-    text: `🔮 我在 QuizDrop 測出「${finalResult.label}」\n\n你也來測測看！`,
+    text: i18nQuiz[currentLang].shareDefault(finalResult.label),
     url: window.location.href.split('?')[0] + '?id=' + QUIZ_ID
   };
 }
@@ -423,16 +569,27 @@ function shareLine() {
 }
 function shareFacebook() {
   const { text, url } = getShareText();
+  const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
   navigator.clipboard.writeText(text + '\n' + url).then(() => {
-    showToast('結果已複製！貼到 Facebook 貼文裡分享吧 📋', 4000);
+    showToast(i18nQuiz[currentLang].fbCopied, 4000);
     setTimeout(() => {
-      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
+      if (isInAppWebView()) {
+        window.location.href = fbUrl;
+      } else {
+        window.open(fbUrl, '_blank', 'noopener,noreferrer');
+      }
     }, 1200);
+  }).catch(() => {
+    if (isInAppWebView()) {
+      window.location.href = fbUrl;
+    } else {
+      window.open(fbUrl, '_blank', 'noopener,noreferrer');
+    }
   });
 }
 function copyResult() {
   const { text, url } = getShareText();
-  navigator.clipboard.writeText(text + '\n' + url).then(() => showToast('已複製！'));
+  navigator.clipboard.writeText(text + '\n' + url).then(() => showToast(i18nQuiz[currentLang].copiedGeneric));
 }
 function showToast(msg, duration = 2500) {
   const t = document.getElementById('toast');
@@ -448,6 +605,11 @@ function retry() {
   document.getElementById('progress-wrap').classList.remove('hidden');
   renderQ();
 }
+
+(function initLangFromStorage() {
+  const saved = localStorage.getItem('quizdrop_lang');
+  if (saved && saved !== 'zh') setLang(saved);
+})();
 </script>
 </body>
 </html>
