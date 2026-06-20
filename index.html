@@ -82,7 +82,9 @@
     transition: box-shadow 0.2s;
   }
   .search-box:focus-within { box-shadow: 0 0 0 2px #d9cbb3; background: #fffdf8; }
-  .search-box input { background: none; border: none; outline: none; font-size: 14px; width: 100%; color: #4a3f35; }
+  .search-box input { background: none; border: none; outline: none; font-size: 14px; width: 100%; color: #4a3f35; -webkit-appearance: none; appearance: none; }
+  .search-box input::-webkit-search-cancel-button { -webkit-appearance: none; }
+
 
   .lang-pill { display: flex; gap: 4px; background: #f1e9da; border-radius: 10px; padding: 4px; }
   .lang-pill button { padding: 5px 10px; border-radius: 8px; font-size: 12.5px; font-weight: 600; color: #9c8f7e; border: none; background: none; cursor: pointer; transition: all .2s; }
@@ -148,6 +150,7 @@
   .quiz-card:hover { transform: translateY(-4px); box-shadow: 0 16px 32px -8px rgba(80,60,30,0.15); border-color: #a9633a; }
   .quiz-card .badge { display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:8px; margin-bottom:12px; }
   .quiz-card .qicon { font-size: 38px; margin-bottom: 10px; display:block; }
+  .quiz-card .qimg { width: 64px; height: 64px; object-fit: contain; margin-bottom: 10px; display: block; }
   .quiz-card h3 { font-size: 16px; font-weight: 800; line-height: 1.4; margin-bottom: 6px; color: #4a3f35; }
   .quiz-card p { font-size: 12.5px; color: #9c8f7e; line-height: 1.6; }
   .quiz-card .meta { display:flex; align-items:center; gap:6px; margin-top:14px; font-size:11.5px; color:#b5a890; }
@@ -161,11 +164,12 @@
   .cta-banner {
     background: #e8c9a0; border-radius: 20px; padding: 36px 30px;
     color: #4a3f35; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
-    margin-bottom: 50px; border: 2px solid #4a3f35;
+    margin-bottom: 50px; border: 2px solid #4a3f35; position: relative; overflow: hidden;
   }
   .cta-banner h3 { font-size: 20px; font-weight: 900; margin-bottom: 6px; }
   .cta-banner p { font-size: 13px; opacity: 0.85; }
-  .cta-btn { background: #4a3f35; color: #fff; font-weight: 800; padding: 12px 24px; border-radius: 4px; font-size: 14px; border: none; cursor: pointer; transition: transform .2s; }
+  .cta-wave-img { position: absolute; bottom: -6px; right: 130px; width: clamp(110px, 13vw, 160px); pointer-events: none; }
+  .cta-btn { background: #4a3f35; color: #fff; font-weight: 800; padding: 12px 24px; border-radius: 4px; font-size: 14px; border: none; cursor: pointer; transition: transform .2s; position: relative; z-index: 2; }
   .cta-btn:hover { transform: scale(1.04); }
 
   /* ===================== Auth Modal ===================== */
@@ -258,7 +262,7 @@
 
   <div class="search-box">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input type="text" id="search-input" name="quiz-search-query" autocomplete="off" placeholder="搜尋測驗，例如：戀愛、職場、邊緣人..." />
+    <input type="search" id="search-input" name="quiz-search-query" autocomplete="search" placeholder="搜尋測驗，例如：戀愛、職場、邊緣人..." />
   </div>
 
   <div class="ml-auto flex items-center gap-3">
@@ -315,7 +319,7 @@
       <h3>🚀 想創作自己的測驗嗎？</h3>
       <p>免費註冊即可建立第一個專屬測驗，更多名額看廣告或付費解鎖！</p>
     </div>
-    <img src="wave-character.png" alt="" style="width:90px; flex-shrink:0;">
+    <img src="wave-character.png" alt="" class="cta-wave-img">
     <button class="cta-btn" onclick="openCustomQuiz()">立即創作 →</button>
   </div>
 
@@ -510,11 +514,11 @@ function toggleSidebar() {
 /*  Quiz Cards (demo data — replace with Supabase fetch later)   */
 /* ============================================================ */
 const quizzes = [
-  { id: 'edge-1', cat: 'edge', badge: 'badge-edge', icon: '🙈', title: '【現代隱居邊緣人】社交疲勞與精神退化診斷', desc: '10題情境題，精準診斷你的社交能量與精神狀態', url: 'edge-quiz.html' },
-  { id: 'love-2', cat: 'love', badge: 'badge-love', icon: '💘', title: '【戀愛重症診斷】自毀傾向與暈船腦容量體檢', desc: '10題實戰情境，診斷你的暈船指數與吸渣體質', url: 'love-quiz-v2.html' },
-  { id: 'work-2', cat: 'work', badge: 'badge-work', icon: '🧭', title: '【職場生存戰】高功能瘋子定位測驗', desc: '10題職場實戰情境，找出你的辦公室人格分類', url: 'work-quiz-v2.html' },
-  { id: 'soul-3', cat: 'soul', badge: 'badge-soul', icon: '⏳', title: '【靈魂老化度】精神退化/老化指數檢測', desc: '10題深度檢測，看看你的靈魂究竟幾歲了', url: 'soul-aging-quiz.html' },
-  { id: 'edge-2', cat: 'edge', badge: 'badge-edge', icon: '🌌', title: '【全網瘋傳盲盒】平行宇宙反骨瘋狂指數', desc: '10題荒誕情境題，測出你深藏的瘋狂人格', url: 'wild-quiz.html' },
+  { id: 'edge-1', cat: 'edge', badge: 'badge-edge', icon: '🙈', img: 'card-edge.png', title: '【現代隱居邊緣人】社交疲勞與精神退化診斷', desc: '10題情境題，精準診斷你的社交能量與精神狀態', url: 'edge-quiz.html' },
+  { id: 'love-2', cat: 'love', badge: 'badge-love', icon: '💘', img: 'card-love.png', title: '【戀愛重症診斷】自毀傾向與暈船腦容量體檢', desc: '10題實戰情境，診斷你的暈船指數與吸渣體質', url: 'love-quiz-v2.html' },
+  { id: 'work-2', cat: 'work', badge: 'badge-work', icon: '🧭', img: 'card-work.png', title: '【職場生存戰】高功能瘋子定位測驗', desc: '10題職場實戰情境，找出你的辦公室人格分類', url: 'work-quiz-v2.html' },
+  { id: 'soul-3', cat: 'soul', badge: 'badge-soul', icon: '⏳', img: 'card-soul.png', title: '【靈魂老化度】精神退化/老化指數檢測', desc: '10題深度檢測，看看你的靈魂究竟幾歲了', url: 'soul-aging-quiz.html' },
+  { id: 'edge-2', cat: 'edge', badge: 'badge-edge', icon: '🌌', img: 'card-crazy.png', title: '【全網瘋傳盲盒】平行宇宙反骨瘋狂指數', desc: '10題荒誕情境題，測出你深藏的瘋狂人格', url: 'wild-quiz.html' },
 ];
 
 const catLabels = {
@@ -541,7 +545,7 @@ function renderQuizCards() {
   grid.innerHTML = list.map(q => `
     <div class="quiz-card" onclick="window.location.href='${q.url}'">
       <span class="badge ${q.badge}">${catLabels[q.cat][currentLang]}</span>
-      <span class="qicon">${q.icon}</span>
+      <img class="qimg" src="${q.img}" alt="" loading="lazy">
       <h3>${q.title}</h3>
       <p>${q.desc}</p>
     </div>
@@ -820,7 +824,7 @@ document.getElementById('search-input').addEventListener('input', (e) => {  cons
   grid.innerHTML = filtered.map(qz => `
     <div class="quiz-card" onclick="window.location.href='${qz.url}'">
       <span class="badge ${qz.badge}">${catLabels[qz.cat][currentLang]}</span>
-      <span class="qicon">${qz.icon}</span>
+      <img class="qimg" src="${qz.img}" alt="" loading="lazy">
       <h3>${qz.title}</h3>
       <p>${qz.desc}</p>
     </div>
