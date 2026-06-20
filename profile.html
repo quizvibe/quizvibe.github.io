@@ -459,17 +459,21 @@ function renderGameHistory() {
       recordText = t.bubbleRecord(progress.bubble.totalPopped) + fastest;
     }
     return `
-      <div class="game-history-item" onclick="window.location.href='${g.url}'">
-        <div class="ghi-left">
+      <div class="game-history-item" style="cursor:pointer;" onclick="goToGame('${g.url}')">
+        <div class="ghi-left" style="pointer-events:none;">
           <span>${g.emoji}</span>
           <span>${g.title}　｜　${t.latestRecord}：${recordText}</span>
         </div>
-        <span class="ghi-arrow">→</span>
+        <span class="ghi-arrow" style="pointer-events:none;">→</span>
       </div>
     `;
   }).join('');
 
   listEl.innerHTML = rows;
+}
+
+function goToGame(url) {
+  window.location.href = url;
 }
 
 function showBlackboardModal() {
