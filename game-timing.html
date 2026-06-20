@@ -51,7 +51,7 @@
   .game-title { font-size: 21px; font-weight: 900; margin-bottom: 4px; color: #4a3f35; }
   .game-sub { color: #9c8f7e; font-size: 13px; margin-bottom: 18px; line-height: 1.6; }
 
-  .game-stage { position: relative; width: 100%; aspect-ratio: 1 / 1; max-width: 480px; margin: 0 auto 24px; border-radius: 18px; overflow: hidden; }
+  .game-stage { position: relative; width: 100%; aspect-ratio: 1 / 1; max-width: 480px; margin: 0 auto 24px; border-radius: 18px; overflow: hidden; container-type: inline-size; }
   .game-stage-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; display: block; }
 
   .mode-row-overlay { position: absolute; top: 3%; right: 3%; display: flex; gap: 5px; z-index: 5; }
@@ -61,7 +61,7 @@
   .board-screen-overlay {
     position: absolute; top: 12%; left: 25%; width: 70%; height: 26%; z-index: 2;
     display: flex; align-items: center; justify-content: center;
-    font-size: 5.98vw; color: #fff; line-height: 1;
+    font-size: 5.98cqw; color: #fff; line-height: 1;
   }
   .board-screen-overlay { transform: translate(-12.67%, 25%); }
   .board-digit-overlay {
@@ -72,7 +72,7 @@
   .target-overlay {
     position: absolute; top: 63%; left: 3%; width: 36%; height: 18%; z-index: 2;
     display: flex; align-items: center; justify-content: center;
-    font-size: 4.3vw; color: #d83b3b; line-height: 1;
+    font-size: 4.3cqw; color: #d83b3b; line-height: 1;
   }
   .target-overlay { transform: translate(12%, 23.5%); }
 
@@ -85,7 +85,7 @@
 
   .main-btn-overlay {
     position: absolute; bottom: 13%; right: 22.5%; width: 25%; height: 15%; z-index: 3;
-    border-radius: 50%; border: 4px solid #1a1a1a; font-size: 2.6vw; font-weight: 900; color: #fff;
+    border-radius: 50%; border: 4px solid #1a1a1a; font-size: 2.6cqw; font-weight: 900; color: #fff;
     cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,0.3); transition: all .08s;
     transform: perspective(280px) rotateX(35deg);
   }
