@@ -61,7 +61,7 @@
   .board-screen-overlay {
     position: absolute; top: 12%; left: 25%; width: 70%; height: 26%; z-index: 2;
     display: flex; align-items: center; justify-content: center;
-    font-size: 5.98cqw; color: #fff; line-height: 1;
+    font-size: 7.5cqw; color: #fff; line-height: 1;
   }
   .board-screen-overlay { transform: translate(-12.67%, 25%); }
   .board-digit-overlay {
@@ -72,7 +72,7 @@
   .target-overlay {
     position: absolute; top: 63%; left: 3%; width: 36%; height: 18%; z-index: 2;
     display: flex; align-items: center; justify-content: center;
-    font-size: 4.3cqw; color: #d83b3b; line-height: 1;
+    font-size: 5.5cqw; color: #d83b3b; line-height: 1;
   }
   .target-overlay { transform: translate(12%, 23.5%); }
 
@@ -385,7 +385,7 @@ function updateTimerDisplay() {
 
   // 超過 11 秒自動視為失敗停止（上限防呆）
   if (elapsed >= 11) {
-    stopTiming();
+    stopTiming(true);
     return;
   }
 
@@ -416,7 +416,7 @@ function flashDigits() {
   setTimeout(() => digits.forEach(d => d.classList.remove('flash')), 150);
 }
 
-function stopTiming() {
+function stopTiming(isTimeout) {
   cancelAnimationFrame(timerInterval);
   const actual = getElapsed();
   gameState = 'finished';
@@ -440,9 +440,9 @@ function stopTiming() {
   saveProgress(progress);
   checkUnlocks();
 
-  showResultPanel(diff, actual, isWin);
+  showResultPanel(diff, actual, isWin, isTimeout);
   pushRecentResult(targetSeconds, actual, diff, isWin);
-  saveGameResult('timing', { target: targetSeconds, actual: Math.round(actual * 100) / 100, diff: Math.round(diff * 100) / 100, win: isWin, mode });
+  saveGameResult('timing', { target: targetSeconds, actual: Math.round(actual * 100) / 100, diff: Math.round(diff * 100) / 100, win: isWin, mode, timeout: !!isTimeout });
 }
 
 function resetForNewRound() {
@@ -469,8 +469,8 @@ async function saveGameResult(gameId, recordDetail) {
 let lastResultText = '';
 let lastResultData = null; // { diff, actual, isWin } — 用於語言切換時重新渲染結果面板
 
-function showResultPanel(diff, actual, isWin) {
-  lastResultData = { diff, actual, isWin };
+function showResultPanel(diff, actual, isWin, isTimeout) {
+  lastResultData = { diff, actual, isWin, isTimeout };
   const t = i18nTiming[currentLang];
   const targetStr = mode === 'easy' ? targetSeconds.toFixed(0) : targetSeconds.toFixed(2);
   const actualStr = actual.toFixed(2);
@@ -482,7 +482,9 @@ function showResultPanel(diff, actual, isWin) {
   diffEl.className = 'result-diff ' + (isWin ? 'win' : 'lose');
 
   let text;
-  if (diff <= 0.05) {
+  if (isTimeout) {
+    text = t.resultTimeout;
+  } else if (diff <= 0.05) {
     text = t.resultPerfect;
   } else if (diff <= 0.3) {
     text = t.resultWin(diff.toFixed(2));
@@ -626,6 +628,7 @@ const i18nTiming = {
     back: '← 糞Game大廳', progress: '📊 本關進度', login: '登入', signup: '註冊', profile: '👤 個人頁面', logout: '🚪 登出',
     modeEasy: 'EASY（猜整秒）', modeHard: 'HARD（猜到小數點）',
     resultPerfect: '恭喜！你的大腦是瑞士瓦特製錶級人體時鐘！超越全網 99% 的通靈人類，快截圖去 Threads 逼你朋友下跪！',
+    resultTimeout: '都超過時間了還在等什麼？連按都沒按，這波直接算你輸，醒醒，遊戲已經幫你結束了！',
     resultWin: (diff) => `差一點！你的生物鐘慢/快了 ${diff} 秒。大概是今天冰美式喝不夠，或者單純是手抖。再試一次，你離神不遠了。`,
     resultLose: (target, actual) => `差太遠了吧！指定 ${target} 秒你 ${actual} 秒就按？你的人生是不是也勝在速度？建議去檢查一下心律不整，快分享出去讓朋友笑你！`,
     shareTemplate: (target, actual, text) => `⏱️ QuizDrop黃金秒數挑戰\n目標：${target}秒，我按了：${actual}秒\n${text}\n\n👉 來挑戰我：https://www.quizdrop.me/game-timing.html`,
@@ -644,6 +647,7 @@ const i18nTiming = {
     back: '← ゲームロビー', progress: '📊 進捗確認', login: 'ログイン', signup: '登録', profile: '👤 プロフィール', logout: '🚪 ログアウト',
     modeEasy: 'EASY（整数秒）', modeHard: 'HARD（小数点まで）',
     resultPerfect: 'すごい！あなたの脳はスイス製の高級時計レベル！全世界の99%の人を超えました。スクショしてThreadsで自慢しよう！',
+    resultTimeout: '時間切れだよ！何を待ってたの？ボタンも押さずに、ゲームの方が先にあきらめちゃった！',
     resultWin: (diff) => `惜しい！${diff}秒のズレがありました。今日はコーヒーが足りなかったのかも。もう一度チャレンジしてみよう！`,
     resultLose: (target, actual) => `目標${target}秒に対して${actual}秒で押した？ちょっと心配なレベルかも。友達にシェアして笑ってもらおう！`,
     shareTemplate: (target, actual, text) => `⏱️ QuizDropタイムレース\n目標：${target}秒、結果：${actual}秒\n${text}\n\n👉 チャレンジしてみよう：https://www.quizdrop.me/game-timing.html`,
@@ -662,6 +666,7 @@ const i18nTiming = {
     back: '← Game Lobby', progress: '📊 Progress', login: 'Log in', signup: 'Sign up', profile: '👤 Profile', logout: '🚪 Log out',
     modeEasy: 'EASY (whole seconds)', modeHard: 'HARD (with decimals)',
     resultPerfect: 'Amazing! Your brain is a Swiss-watch-grade human clock! You\'ve beaten 99% of the population. Screenshot this and brag on Threads!',
+    resultTimeout: 'Time\'s up! What were you waiting for? You didn\'t even press the button — the game just gave up on you!',
     resultWin: (diff) => `So close! Your internal clock was off by ${diff} seconds. Maybe you need more coffee today. Try again, you're almost there!`,
     resultLose: (target, actual) => `Way off! Target was ${target}s and you pressed at ${actual}s? Maybe get your heart rhythm checked. Share this and let your friends laugh!`,
     shareTemplate: (target, actual, text) => `⏱️ QuizDrop Golden Second Challenge\nTarget: ${target}s, I pressed at: ${actual}s\n${text}\n\n👉 Challenge me: https://www.quizdrop.me/game-timing.html`,
@@ -702,7 +707,7 @@ function setLang(l) {
 
   // 若結果面板目前正在顯示，重新計算並渲染一次結果文字（含分享文案），確保跟上新語言
   if (lastResultData && document.getElementById('result-panel').classList.contains('show')) {
-    showResultPanel(lastResultData.diff, lastResultData.actual, lastResultData.isWin);
+    showResultPanel(lastResultData.diff, lastResultData.actual, lastResultData.isWin, lastResultData.isTimeout);
   }
 }
 (function initLangFromStorage() {
