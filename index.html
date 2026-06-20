@@ -84,6 +84,7 @@
   .search-box:focus-within { box-shadow: 0 0 0 2px #d9cbb3; background: #fffdf8; }
   .search-box input { background: none; border: none; outline: none; font-size: 14px; width: 100%; color: #4a3f35; -webkit-appearance: none; appearance: none; }
   .search-box input::-webkit-search-cancel-button { -webkit-appearance: none; }
+  .search-placeholder-text { font-size: 14px; color: #b0a690; cursor: text; }
 
 
   .lang-pill { display: flex; gap: 4px; background: #f1e9da; border-radius: 10px; padding: 4px; }
@@ -163,12 +164,13 @@
   /* CTA banner for custom quiz */
   .cta-banner {
     background: #e8c9a0; border-radius: 20px; padding: 36px 30px;
-    color: #4a3f35; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+    color: #4a3f35; display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
     margin-bottom: 50px; border: 2px solid #4a3f35; position: relative; overflow: hidden;
   }
+  .cta-banner > div { max-width: calc(100% - 160px); }
   .cta-banner h3 { font-size: 20px; font-weight: 900; margin-bottom: 6px; }
-  .cta-banner p { font-size: 13px; opacity: 0.85; }
-  .cta-wave-img { position: absolute; bottom: -6px; right: 130px; width: clamp(110px, 13vw, 160px); pointer-events: none; }
+  .cta-banner p { font-size: 13px; opacity: 0.85; margin-bottom: 16px; }
+  .cta-wave-img { position: absolute; bottom: -8px; right: 10px; width: clamp(140px, 17vw, 200px); pointer-events: none; }
   .cta-btn { background: #4a3f35; color: #fff; font-weight: 800; padding: 12px 24px; border-radius: 4px; font-size: 14px; border: none; cursor: pointer; transition: transform .2s; position: relative; z-index: 2; }
   .cta-btn:hover { transform: scale(1.04); }
 
@@ -260,9 +262,9 @@
     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
   </button>
 
-  <div class="search-box">
+  <div class="search-box" id="search-box-trigger" onclick="activateSearchInput()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input type="search" id="search-input" name="quiz-search-query" autocomplete="search" placeholder="搜尋測驗，例如：戀愛、職場、邊緣人..." />
+    <span class="search-placeholder-text" id="search-placeholder-text">搜尋測驗，例如：戀愛、職場、邊緣人...</span>
   </div>
 
   <div class="ml-auto flex items-center gap-3">
@@ -318,9 +320,9 @@
     <div>
       <h3>🚀 想創作自己的測驗嗎？</h3>
       <p>免費註冊即可建立第一個專屬測驗，更多名額看廣告或付費解鎖！</p>
+      <button class="cta-btn" onclick="openCustomQuiz()">立即創作 →</button>
     </div>
     <img src="wave-character.png" alt="" class="cta-wave-img">
-    <button class="cta-btn" onclick="openCustomQuiz()">立即創作 →</button>
   </div>
 
   <div class="section-title">🔥 熱門測驗</div>
@@ -489,7 +491,10 @@ function setLang(l) {
   const t = i18n[l];
   document.getElementById('hero-tagline').textContent = t.tagline;
   document.getElementById('sidebar-tagline').textContent = t.sidebarTagline;
-  document.getElementById('search-input').placeholder = t.searchPlaceholder;
+  const searchInputEl = document.getElementById('search-input');
+  const searchPlaceholderEl = document.getElementById('search-placeholder-text');
+  if (searchInputEl) { searchInputEl.placeholder = t.searchPlaceholder; }
+  if (searchPlaceholderEl) { searchPlaceholderEl.textContent = t.searchPlaceholder; }
   document.querySelector('.btn-login').textContent = t.login;
   document.querySelector('.btn-signup').textContent = t.signup;
   renderQuizCards();
@@ -815,7 +820,8 @@ async function submitFeedback() {
 }
 
 /* Search filter (簡單前端搜尋示範) */
-document.getElementById('search-input').addEventListener('input', (e) => {  const q = e.target.value.trim().toLowerCase();
+function handleSearchInput(e) {
+  const q = e.target.value.trim().toLowerCase();
   const grid = document.getElementById('quiz-grid');
   const filtered = quizzes.filter(qz =>
     qz.title.toLowerCase().includes(q) || qz.desc.toLowerCase().includes(q)
@@ -829,7 +835,23 @@ document.getElementById('search-input').addEventListener('input', (e) => {  cons
       <p>${qz.desc}</p>
     </div>
   `).join('') || '<p class="text-gray-400 text-sm col-span-full text-center py-10">沒有找到符合的測驗 🥲</p>';
-});
+}
+
+// 點擊搜尋框時才動態建立真正的 <input>，避免頁面載入時就存在輸入框讓瀏覽器誤判自動填入信箱
+function activateSearchInput() {
+  const trigger = document.getElementById('search-box-trigger');
+  if (document.getElementById('search-input')) return; // 已經啟用過，不重複建立
+
+  const placeholderText = document.getElementById('search-placeholder-text').textContent;
+  trigger.innerHTML = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="search" id="search-input" name="quiz-search-query-${Date.now()}" autocomplete="off" placeholder="${placeholderText}" />
+  `;
+  trigger.onclick = null; // 移除外層的點擊監聽，改由 input 本身接收輸入
+  const newInput = document.getElementById('search-input');
+  newInput.addEventListener('input', handleSearchInput);
+  newInput.focus();
+}
 
 /* 套用之前儲存的語言偏好 — 放在檔案最末端執行，確保所有變數與函式都已宣告完畢 */
 (function initLangFromStorage() {
