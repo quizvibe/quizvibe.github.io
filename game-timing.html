@@ -488,7 +488,7 @@ function showResultPanel(diff, actual, isWin) {
     text = t.resultLose(targetStr, actualStr);
   }
   document.getElementById('result-text').textContent = text;
-  lastResultText = `⏱️ QuizDrop黃金秒數挑戰\n目標：${targetStr}秒，我按了：${actualStr}秒\n${text}\n\n👉 來挑戰我：https://www.quizdrop.me/game-timing.html`;
+  lastResultText = t.shareTemplate(targetStr, actualStr, text);
   document.getElementById('result-panel').classList.add('show');
   document.querySelector('.btn-copy-result').textContent = t.copyBtn;
 }
@@ -626,6 +626,7 @@ const i18nTiming = {
     resultPerfect: '恭喜！你的大腦是瑞士瓦特製錶級人體時鐘！超越全網 99% 的通靈人類，快截圖去 Threads 逼你朋友下跪！',
     resultWin: (diff) => `差一點！你的生物鐘慢/快了 ${diff} 秒。大概是今天冰美式喝不夠，或者單純是手抖。再試一次，你離神不遠了。`,
     resultLose: (target, actual) => `差太遠了吧！指定 ${target} 秒你 ${actual} 秒就按？你的人生是不是也勝在速度？建議去檢查一下心律不整，快分享出去讓朋友笑你！`,
+    shareTemplate: (target, actual, text) => `⏱️ QuizDrop黃金秒數挑戰\n目標：${target}秒，我按了：${actual}秒\n${text}\n\n👉 來挑戰我：https://www.quizdrop.me/game-timing.html`,
     copyBtn: '📋 複製發Threads', copySuccess: '已複製！貼到 Threads 分享吧',
     recentTitle: '📋 最近 5 次紀錄', recentEmpty: '還沒有紀錄，快來挑戰第一次！',
     recentRow: (target, actual) => `目標 ${target}s → 按了 ${actual}s`, recentDiff: (diff) => `差 ${diff}s`,
@@ -643,6 +644,7 @@ const i18nTiming = {
     resultPerfect: 'すごい！あなたの脳はスイス製の高級時計レベル！全世界の99%の人を超えました。スクショしてThreadsで自慢しよう！',
     resultWin: (diff) => `惜しい！${diff}秒のズレがありました。今日はコーヒーが足りなかったのかも。もう一度チャレンジしてみよう！`,
     resultLose: (target, actual) => `目標${target}秒に対して${actual}秒で押した？ちょっと心配なレベルかも。友達にシェアして笑ってもらおう！`,
+    shareTemplate: (target, actual, text) => `⏱️ QuizDropタイムレース\n目標：${target}秒、結果：${actual}秒\n${text}\n\n👉 チャレンジしてみよう：https://www.quizdrop.me/game-timing.html`,
     copyBtn: '📋 コピーしてシェア', copySuccess: 'コピーしました！Threadsでシェアしよう',
     recentTitle: '📋 直近5回の記録', recentEmpty: 'まだ記録がありません、挑戦してみよう！',
     recentRow: (target, actual) => `目標 ${target}s → ${actual}s で押した`, recentDiff: (diff) => `差 ${diff}s`,
@@ -660,6 +662,7 @@ const i18nTiming = {
     resultPerfect: 'Amazing! Your brain is a Swiss-watch-grade human clock! You\'ve beaten 99% of the population. Screenshot this and brag on Threads!',
     resultWin: (diff) => `So close! Your internal clock was off by ${diff} seconds. Maybe you need more coffee today. Try again, you're almost there!`,
     resultLose: (target, actual) => `Way off! Target was ${target}s and you pressed at ${actual}s? Maybe get your heart rhythm checked. Share this and let your friends laugh!`,
+    shareTemplate: (target, actual, text) => `⏱️ QuizDrop Golden Second Challenge\nTarget: ${target}s, I pressed at: ${actual}s\n${text}\n\n👉 Challenge me: https://www.quizdrop.me/game-timing.html`,
     copyBtn: '📋 Copy & Share', copySuccess: 'Copied! Paste it on Threads to share',
     recentTitle: '📋 Last 5 Results', recentEmpty: 'No records yet, take your first challenge!',
     recentRow: (target, actual) => `Target ${target}s → pressed at ${actual}s`, recentDiff: (diff) => `off by ${diff}s`,
