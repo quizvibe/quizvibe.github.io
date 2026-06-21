@@ -563,20 +563,15 @@ function loadQuizDataIntoForm(quizData) {
   resultCount = Math.max(MIN_RESULTS, Math.min(MAX_RESULTS, resultsArr.length || MIN_RESULTS));
   const container = document.getElementById('results-container');
   container.innerHTML = '';
-  for (let i = 1; i <= resultCount; i++) {
-    const r = resultsArr[i - 1] || { label: '', desc: '' };
-    const block = document.createElement('div');
-    block.className = 'result-block';
-    block.innerHTML = `
-      <div class="result-block-title">結果 ${i} ${i > MIN_RESULTS ? `<button type="button" onclick="removeResult(${i})" style="float:right;background:none;border:none;color:#b14a35;cursor:pointer;font-size:12px;">移除</button>` : ''}</div>
-      <label class="field-label">結果名稱</label>
-      <input type="text" class="input-field result-name" placeholder="例如：貓系戀人" maxlength="${TITLE_MAX}" value="${escapeAttr(r.label)}" />
-      <label class="field-label">結果敘述</label>
-      <textarea class="input-field result-desc" rows="2" placeholder="毒舌、有趣地描述這個結果的特質" maxlength="300">${escapeAttr(r.desc)}</textarea>
-    `;
-    container.appendChild(block);
-  }
-  updateResultButtonState();
+  // 先建立空白的結果區塊（套用目前語言的標籤/placeholder），再把載入的實際內容填回對應欄位
+  renderResultBlocks();
+  const resultBlocks = document.querySelectorAll('.result-block');
+  resultsArr.forEach((r, i) => {
+    const block = resultBlocks[i];
+    if (!block) return;
+    block.querySelector('.result-name').value = r.label || '';
+    block.querySelector('.result-desc').value = r.desc || '';
+  });
 
   const questionsArr = quizData.questions || [];
   questionCount = 0;
