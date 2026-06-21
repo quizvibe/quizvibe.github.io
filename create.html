@@ -371,6 +371,7 @@ function showDashboard() {
   formDirty = false;
   editingQuizId = null;
 
+  const t = i18nCreate[currentLang];
   document.getElementById('slot-count-text').textContent = `${mySlotsUnlocked} / ${MAX_SLOTS}`;
 
   const dotsEl = document.getElementById('slot-dots');
@@ -390,24 +391,24 @@ function showDashboard() {
     if (!unlocked) {
       html += `
         <div class="slot-card slot-card-disabled">
-          <div class="slot-card-info"><span class="slot-card-empty">🔒 額度 ${i}（多人創作即將推出）</span></div>
-          <div class="slot-card-btns"><button class="primary" disabled>敬請期待</button></div>
+          <div class="slot-card-info"><span class="slot-card-empty">${t.slotComingSoon(i)}</span></div>
+          <div class="slot-card-btns"><button class="primary" disabled>${t.btnComingSoon}</button></div>
         </div>`;
     } else if (!quiz) {
       html += `
         <div class="slot-card">
-          <div class="slot-card-info"><span class="slot-card-empty">✨ 額度 ${i}：尚未建立測驗</span></div>
-          <div class="slot-card-btns"><button class="primary" onclick="goCreateInSlot(${i})">開始創作</button></div>
+          <div class="slot-card-info"><span class="slot-card-empty">${t.slotEmpty(i)}</span></div>
+          <div class="slot-card-btns"><button class="primary" onclick="goCreateInSlot(${i})">${t.btnStartCreate}</button></div>
         </div>`;
     } else {
       const isDraft = quiz.status === 'draft';
       html += `
         <div class="slot-card">
-          <div class="slot-card-info"><h4>${escapeAttr(quiz.title)} ${isDraft ? `<span class="draft-badge">${i18nCreate[currentLang].draftBadge}</span>` : ''}</h4><p>額度 ${i}</p></div>
+          <div class="slot-card-info"><h4>${escapeAttr(quiz.title)} ${isDraft ? `<span class="draft-badge">${t.draftBadge}</span>` : ''}</h4><p>${t.slotLabel(i)}</p></div>
           <div class="slot-card-btns">
-            ${!isDraft ? `<button onclick="window.location.href='quiz.html?id=${quiz.id}'">查看</button>` : ''}
-            <button class="primary" onclick="goEditQuiz(${i}, '${quiz.id}')">編輯</button>
-            <button class="danger" onclick="deleteAndRecreate(${i}, '${quiz.id}')">刪除</button>
+            ${!isDraft ? `<button onclick="window.location.href='quiz.html?id=${quiz.id}'">${t.btnView}</button>` : ''}
+            <button class="primary" onclick="goEditQuiz(${i}, '${quiz.id}')">${t.btnEdit}</button>
+            <button class="danger" onclick="deleteAndRecreate(${i}, '${quiz.id}')">${t.btnDelete}</button>
           </div>
         </div>`;
     }
@@ -962,7 +963,10 @@ async function publishQuiz() {
 
     let data, error;
     if (editingQuizId) {
-      ({ data, error } = await supabaseClient.from('quizzes').update(payload).eq('id', editingQuizId).select('id').single());
+      ({ data, error } = await supabaseClient.from('quizzes').update(payload).eq('id', editingQuizId).eq('creator_id', currentUser.id).select('id').single());
+      if (!error && !data) {
+        throw new Error('找不到對應的測驗資料，更新未生效，請重新整理頁面後再試一次');
+      }
     } else {
       ({ data, error } = await supabaseClient.from('quizzes').insert(payload).select('id').single());
     }
@@ -1018,7 +1022,11 @@ async function saveDraft() {
 
     let data, error;
     if (editingQuizId) {
-      ({ data, error } = await supabaseClient.from('quizzes').update(payload).eq('id', editingQuizId).select('id').single());
+      ({ data, error } = await supabaseClient.from('quizzes').update(payload).eq('id', editingQuizId).eq('creator_id', currentUser.id).select('id').single());
+      if (!error && !data) {
+        // update 沒有報錯，但也沒有任何資料列被實際更新（id 不存在、或 RLS 擋下），視為失敗，避免誤以為已儲存
+        throw new Error('找不到對應的測驗資料，更新未生效，請重新整理頁面後再試一次');
+      }
     } else {
       ({ data, error } = await supabaseClient.from('quizzes').insert(payload).select('id').single());
       if (!error && data) editingQuizId = data.id; // 草稿存完之後變成編輯模式，避免重複點儲存會建立多筆
@@ -1093,13 +1101,14 @@ function setBackLink(target) {
 }
 
 // 從創作表單返回額度頁面時，若有未儲存的變更要先確認，避免誤觸導致內容遺失
-function handleBackToDashboardClick() {
+async function handleBackToDashboardClick() {
   const inCreatorView = !document.getElementById('creator-view').classList.contains('hidden');
   if (inCreatorView && formDirty) {
     if (!confirm(i18nCreate[currentLang].leaveConfirm)) {
       return;
     }
   }
+  await loadMyQuizzes(); // 重新從資料庫抓取最新資料，避免顯示記憶體裡的舊版本
   showDashboard();
 }
 
@@ -1173,6 +1182,9 @@ const i18nCreate = {
     sectionResults: '🏆 設定結果（最少 4 個，最多 8 個）', btnAddResult: '+ 新增結果',
     sectionQuestions: '❓ 設計題目（最少 5 題，最多 10 題）', btnAddQuestion: '+ 新增題目',
     btnPublish: '🚀 發布測驗', btnSaveDraft: '💾 儲存草稿', draftBadge: '草稿',
+    slotComingSoon: (i) => `🔒 額度 ${i}（多人創作即將推出）`, btnComingSoon: '敬請期待',
+    slotEmpty: (i) => `✨ 額度 ${i}：尚未建立測驗`, btnStartCreate: '開始創作',
+    slotLabel: (i) => `額度 ${i}`, btnView: '查看', btnEdit: '編輯', btnDelete: '刪除',
     leaveConfirm: '你有尚未儲存的變更，離開將會遺失，確定要離開嗎？\n（可以先點「儲存草稿」再離開）',
     draftSaved: '✅ 草稿已儲存',
     resultLabel: (i) => `結果 ${i}`, removeBtn: '移除',
@@ -1197,6 +1209,9 @@ const i18nCreate = {
     sectionResults: '🏆 結果を設定（最低4つ、最大8つ）', btnAddResult: '+ 結果を追加',
     sectionQuestions: '❓ 質問を作成（最低5問、最大10問）', btnAddQuestion: '+ 質問を追加',
     btnPublish: '🚀 クイズを公開', btnSaveDraft: '💾 下書き保存', draftBadge: '下書き',
+    slotComingSoon: (i) => `🔒 枠 ${i}（複数作成機能は近日公開）`, btnComingSoon: 'お楽しみに',
+    slotEmpty: (i) => `✨ 枠 ${i}：まだクイズがありません`, btnStartCreate: '作成を始める',
+    slotLabel: (i) => `枠 ${i}`, btnView: '見る', btnEdit: '編集', btnDelete: '削除',
     leaveConfirm: '保存していない変更があります。このまま離れると失われます。\n（先に「下書き保存」をタップできます）',
     draftSaved: '✅ 下書きを保存しました',
     resultLabel: (i) => `結果 ${i}`, removeBtn: '削除',
@@ -1221,6 +1236,9 @@ const i18nCreate = {
     sectionResults: '🏆 Set up Results (4–8 results)', btnAddResult: '+ Add result',
     sectionQuestions: '❓ Design Questions (5–10 questions)', btnAddQuestion: '+ Add question',
     btnPublish: '🚀 Publish Quiz', btnSaveDraft: '💾 Save Draft', draftBadge: 'Draft',
+    slotComingSoon: (i) => `🔒 Slot ${i} (multi-quiz creation coming soon)`, btnComingSoon: 'Coming Soon',
+    slotEmpty: (i) => `✨ Slot ${i}: No quiz yet`, btnStartCreate: 'Start Creating',
+    slotLabel: (i) => `Slot ${i}`, btnView: 'View', btnEdit: 'Edit', btnDelete: 'Delete',
     leaveConfirm: 'You have unsaved changes that will be lost if you leave.\n(You can tap "Save Draft" first)',
     draftSaved: '✅ Draft saved',
     resultLabel: (i) => `Result ${i}`, removeBtn: 'Remove',
@@ -1295,6 +1313,11 @@ function setLang(l) {
   // 重新套用「題目區塊」「結果區塊」內部的標籤與 placeholder 文字（直接切換語言時必須補做這一步，
   // 否則只有重新整理頁面、讓 addQuestion/renderResultBlocks 重新執行才會套用新語言）
   retranslateDynamicFormContent();
+
+  // 若目前正在額度頁面，重新渲染讓卡片文字（敬請期待、開始創作、查看/編輯/刪除等）跟著新語言更新
+  if (!document.getElementById('dashboard-view').classList.contains('hidden')) {
+    showDashboard();
+  }
 }
 
 function retranslateDynamicFormContent() {
