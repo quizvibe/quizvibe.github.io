@@ -710,6 +710,7 @@ async function handleAuthSubmit() {
       if (error) throw error;
       closeAuthModal();
       updateUIForLoggedInUser(data.user);
+      redirectBackIfNeeded();
     }
   } catch (err) {
     console.error('Auth error:', err); // 保留原始錯誤供除錯，但不顯示給使用者
@@ -877,8 +878,20 @@ function activateSearchInput() {
   const authParam = params.get('auth');
   if (authParam === 'login' || authParam === 'signup') {
     openAuthModal(authParam);
+    // 記住是從哪個頁面跳轉過來要求登入的，登入成功後導回去，使用者不需要再手動點回遊戲頁面
+    if (document.referrer && document.referrer.includes(window.location.host)) {
+      sessionStorage.setItem('quizdrop_auth_return_url', document.referrer);
+    }
   }
 })();
+
+function redirectBackIfNeeded() {
+  const returnUrl = sessionStorage.getItem('quizdrop_auth_return_url');
+  if (returnUrl) {
+    sessionStorage.removeItem('quizdrop_auth_return_url');
+    window.location.href = returnUrl;
+  }
+}
 </script>
 </body>
 </html>

@@ -474,6 +474,7 @@ async function deleteAndRecreate(slotIndex, quizId) {
     if (error) throw error;
     myQuizzes = myQuizzes.filter(q => q.id !== quizId);
     targetSlotIndex = slotIndex;
+    editingQuizId = null;
     showCreatorForm();
   } catch (err) {
     alert('刪除失敗：' + err.message);
@@ -545,6 +546,7 @@ async function showCreatorForm(quizId) {
   document.getElementById('quiz-title').value = '';
   document.getElementById('quiz-desc').value = '';
   document.getElementById('questions-container').innerHTML = '';
+  document.getElementById('results-container').innerHTML = ''; // 必須先清空，否則 renderResultBlocks 會誤抓上一次編輯畫面殘留的舊資料
   initResultBlocks();
   for (let i = 0; i < MIN_QUESTIONS; i++) addQuestion();
   updateCharCount(document.getElementById('quiz-title'), 'title-count', TITLE_MAX);
@@ -633,6 +635,7 @@ function initResultBlocks() {
 
 function renderResultBlocks() {
   const container = document.getElementById('results-container');
+  const t = i18nCreate[currentLang];
   const existingValues = Array.from(container.querySelectorAll('.result-block')).map(b => ({
     name: b.querySelector('.result-name').value,
     desc: b.querySelector('.result-desc').value,
@@ -643,12 +646,13 @@ function renderResultBlocks() {
     const prev = existingValues[i - 1] || { name: '', desc: '' };
     const block = document.createElement('div');
     block.className = 'result-block';
+    block.dataset.resultIndex = i;
     block.innerHTML = `
-      <div class="result-block-title">結果 ${i} ${i > MIN_RESULTS ? `<button type="button" onclick="removeResult(${i})" style="float:right;background:none;border:none;color:#b14a35;cursor:pointer;font-size:12px;">移除</button>` : ''}</div>
-      <label class="field-label">結果名稱</label>
-      <input type="text" class="input-field result-name" placeholder="例如：貓系戀人" maxlength="${TITLE_MAX}" value="${escapeAttr(prev.name)}" />
-      <label class="field-label">結果敘述</label>
-      <textarea class="input-field result-desc" rows="2" placeholder="毒舌、有趣地描述這個結果的特質" maxlength="300">${escapeAttr(prev.desc)}</textarea>
+      <div class="result-block-title">${t.resultLabel(i)} ${resultCount > MIN_RESULTS ? `<button type="button" onclick="removeResultBlock(this)" style="float:right;background:none;border:none;color:#b14a35;cursor:pointer;font-size:12px;">${t.removeBtn}</button>` : ''}</div>
+      <label class="field-label">${t.labelResultName}</label>
+      <input type="text" class="input-field result-name" placeholder="${t.placeholderResultName}" maxlength="${TITLE_MAX}" value="${escapeAttr(prev.name)}" />
+      <label class="field-label">${t.labelResultDesc}</label>
+      <textarea class="input-field result-desc" rows="2" placeholder="${t.placeholderResultDesc}" maxlength="300">${escapeAttr(prev.desc)}</textarea>
     `;
     container.appendChild(block);
   }
@@ -662,16 +666,22 @@ function addResult() {
   renderResultBlocks();
 }
 
-function removeResult(idx) {
+// 直接刪除「使用者真正點擊的那一個」結果區塊，再依照畫面上實際剩餘的內容重新編號渲染，
+// 不再用固定的索引去猜，避免刪掉的永遠是最後一個而不是真正點擊的那個
+function removeResultBlock(btn) {
   if (resultCount <= MIN_RESULTS) return;
+  const blockToRemove = btn.closest('.result-block');
+  blockToRemove.remove();
   resultCount--;
   renderResultBlocks();
+  formDirty = true;
 }
 
 function updateResultButtonState() {
+  const t = i18nCreate[currentLang];
   const btn = document.getElementById('btn-add-result');
   btn.disabled = resultCount >= MAX_RESULTS;
-  btn.textContent = resultCount >= MAX_RESULTS ? `已達最多 ${MAX_RESULTS} 個結果` : '+ 新增結果';
+  btn.textContent = resultCount >= MAX_RESULTS ? t.maxResultsReached(MAX_RESULTS) : t.btnAddResult;
 }
 
 function escapeAttr(str) {
@@ -715,6 +725,7 @@ function addQuestion() {
   if (questionCount >= MAX_QUESTIONS) return;
   questionCount++;
   const qIndex = questionCount;
+  const t = i18nCreate[currentLang];
 
   const block = document.createElement('div');
   block.className = 'question-block';
@@ -723,12 +734,12 @@ function addQuestion() {
   const optionsHtml = Array.from({ length: MIN_OPTIONS }, (_, idx) => buildOptionRowHtml(idx + 1)).join('');
 
   block.innerHTML = `
-    <button class="btn-remove-q" onclick="removeQuestion(this)" title="移除這題">✕</button>
-    <div class="question-num">題目 ${qIndex}</div>
-    <input type="text" class="input-field q-text" placeholder="輸入題目文字" maxlength="${QTEXT_MAX}" oninput="updateQuestionCharCount(this)" />
+    <button class="btn-remove-q" onclick="removeQuestion(this)" title="${t.removeBtn}">✕</button>
+    <div class="question-num">${t.questionLabel(qIndex)}</div>
+    <input type="text" class="input-field q-text" placeholder="${t.placeholderQuestion}" maxlength="${QTEXT_MAX}" oninput="updateQuestionCharCount(this)" />
     <div class="char-count q-char-count">0 / ${QTEXT_MAX}</div>
     <div class="options-wrap">${optionsHtml}</div>
-    <button type="button" class="btn-add-q btn-add-option" style="margin-bottom:0;padding:9px;font-size:12.5px;" onclick="addOptionToQuestion(this)">+ 新增選項</button>
+    <button type="button" class="btn-add-q btn-add-option" style="margin-bottom:0;padding:9px;font-size:12.5px;" onclick="addOptionToQuestion(this)">${t.btnAddOption}</button>
   `;
   document.getElementById('questions-container').appendChild(block);
   // 新增題目時，預設帶的選項只有空殼容器，需要立即渲染加分結果的選擇 chip
@@ -738,9 +749,10 @@ function addQuestion() {
 }
 
 function buildOptionRowHtml(optNum) {
+  const t = i18nCreate[currentLang];
   return `
     <div class="option-row">
-      <input type="text" class="input-field opt-text" placeholder="選項 ${optNum}" maxlength="${OPTTEXT_MAX}" />
+      <input type="text" class="input-field opt-text" placeholder="${t.placeholderOption(optNum)}" maxlength="${OPTTEXT_MAX}" />
       <div class="opt-result-multiselect" data-selected="[]"></div>
     </div>
   `;
@@ -751,7 +763,7 @@ function addOptionToQuestion(btn) {
   const optionsWrap = block.querySelector('.options-wrap');
   const currentCount = optionsWrap.querySelectorAll('.option-row').length;
   if (currentCount >= MAX_OPTIONS) {
-    alert(`每題最多 ${MAX_OPTIONS} 個選項`);
+    alert(i18nCreate[currentLang].maxOptionsAlert(MAX_OPTIONS));
     return;
   }
   const div = document.createElement('div');
@@ -760,35 +772,40 @@ function addOptionToQuestion(btn) {
   optionsWrap.appendChild(newRow);
   renderMultiselectChips(newRow.querySelector('.opt-result-multiselect'), []);
   updateRemoveOptionButtons(block);
+  formDirty = true;
 }
 
 function updateRemoveOptionButtons(block) {
+  const t = i18nCreate[currentLang];
   const addBtn = block.querySelector('.btn-add-option');
   const count = block.querySelectorAll('.option-row').length;
   addBtn.disabled = count >= MAX_OPTIONS;
-  addBtn.textContent = count >= MAX_OPTIONS ? `已達最多 ${MAX_OPTIONS} 個選項` : '+ 新增選項';
+  addBtn.textContent = count >= MAX_OPTIONS ? t.maxOptionsReached(MAX_OPTIONS) : t.btnAddOption;
 }
 
 function removeQuestion(btn) {
   if (questionCount <= MIN_QUESTIONS) {
-    alert(`至少需要保留 ${MIN_QUESTIONS} 題`);
+    alert(i18nCreate[currentLang].minQuestionsAlert(MIN_QUESTIONS));
     return;
   }
   btn.closest('.question-block').remove();
   questionCount--;
   renumberQuestions();
   updateQuestionButtonState();
+  formDirty = true;
 }
 
 function renumberQuestions() {
+  const t = i18nCreate[currentLang];
   const blocks = document.querySelectorAll('.question-block');
-  blocks.forEach((b, i) => { b.querySelector('.question-num').textContent = `題目 ${i + 1}`; });
+  blocks.forEach((b, i) => { b.querySelector('.question-num').textContent = t.questionLabel(i + 1); });
 }
 
 function updateQuestionButtonState() {
+  const t = i18nCreate[currentLang];
   const btn = document.getElementById('btn-add-question');
   btn.disabled = questionCount >= MAX_QUESTIONS;
-  btn.textContent = questionCount >= MAX_QUESTIONS ? `已達最多 ${MAX_QUESTIONS} 題` : '+ 新增題目';
+  btn.textContent = questionCount >= MAX_QUESTIONS ? t.maxQuestionsReached(MAX_QUESTIONS) : t.btnAddQuestion;
 }
 
 function updateQuestionCharCount(input) {
@@ -957,6 +974,8 @@ async function publishQuiz() {
   } catch (err) {
     console.error('Publish error:', err.message, err);
     showTopMsg('發布失敗：' + (err.message || '請再試一次'), 'error');
+    highlightError(document.getElementById('top-msg'));
+    alert('發布失敗：' + (err.message || '請再試一次'));
     btn.disabled = false;
     btn.textContent = '🚀 發布測驗';
   }
@@ -1012,6 +1031,8 @@ async function saveDraft() {
   } catch (err) {
     console.error('Save draft error:', err.message, err);
     showTopMsg('儲存失敗：' + (err.message || '請再試一次'), 'error');
+    highlightError(document.getElementById('top-msg'));
+    alert('儲存失敗：' + (err.message || '請再試一次') + '\n\n（formDirty 不會被清除，請修正問題後再試一次儲存）');
   } finally {
     btn.disabled = false;
     btn.textContent = '💾 儲存草稿';
@@ -1154,6 +1175,15 @@ const i18nCreate = {
     btnPublish: '🚀 發布測驗', btnSaveDraft: '💾 儲存草稿', draftBadge: '草稿',
     leaveConfirm: '你有尚未儲存的變更，離開將會遺失，確定要離開嗎？\n（可以先點「儲存草稿」再離開）',
     draftSaved: '✅ 草稿已儲存',
+    resultLabel: (i) => `結果 ${i}`, removeBtn: '移除',
+    labelResultName: '結果名稱', labelResultDesc: '結果敘述',
+    placeholderResultName: '例如：貓系戀人', placeholderResultDesc: '毒舌、有趣地描述這個結果的特質',
+    questionLabel: (i) => `題目 ${i}`, placeholderQuestion: '輸入題目文字',
+    placeholderOption: (n) => `選項 ${n}`, btnAddOption: '+ 新增選項',
+    placeholderQuizTitle: '例如：你前世是什麼動物？', placeholderQuizDesc: '簡單介紹一下這個測驗在測什麼',
+    maxOptionsAlert: (n) => `每題最多 ${n} 個選項`, maxOptionsReached: (n) => `已達最多 ${n} 個選項`,
+    minQuestionsAlert: (n) => `至少需要保留 ${n} 題`, maxQuestionsReached: (n) => `已達最多 ${n} 題`,
+    maxResultsReached: (n) => `已達最多 ${n} 個結果`,
     successTitle: '測驗發布成功！', successDesc: '把這個連結分享給朋友，讓他們也來玩玩看',
     btnCopyUrl: '📋 複製連結', btnGoQuiz: '立即查看 →',
   },
@@ -1169,6 +1199,15 @@ const i18nCreate = {
     btnPublish: '🚀 クイズを公開', btnSaveDraft: '💾 下書き保存', draftBadge: '下書き',
     leaveConfirm: '保存していない変更があります。このまま離れると失われます。\n（先に「下書き保存」をタップできます）',
     draftSaved: '✅ 下書きを保存しました',
+    resultLabel: (i) => `結果 ${i}`, removeBtn: '削除',
+    labelResultName: '結果名', labelResultDesc: '結果の説明',
+    placeholderResultName: '例：猫系の恋人', placeholderResultDesc: '皮肉っぽく、面白くこの結果の特徴を説明してください',
+    questionLabel: (i) => `質問 ${i}`, placeholderQuestion: '質問文を入力',
+    placeholderOption: (n) => `選択肢 ${n}`, btnAddOption: '+ 選択肢を追加',
+    placeholderQuizTitle: '例：前世は何の動物？', placeholderQuizDesc: 'このクイズが何を測るのか簡単に説明してください',
+    maxOptionsAlert: (n) => `1問につき最大 ${n} つの選択肢`, maxOptionsReached: (n) => `最大 ${n} つに達しました`,
+    minQuestionsAlert: (n) => `最低 ${n} 問は必要です`, maxQuestionsReached: (n) => `最大 ${n} 問に達しました`,
+    maxResultsReached: (n) => `最大 ${n} 個に達しました`,
     successTitle: 'クイズの公開に成功しました！', successDesc: 'このリンクを友達に共有して遊んでもらおう',
     btnCopyUrl: '📋 リンクをコピー', btnGoQuiz: '今すぐ見る →',
   },
@@ -1184,6 +1223,15 @@ const i18nCreate = {
     btnPublish: '🚀 Publish Quiz', btnSaveDraft: '💾 Save Draft', draftBadge: 'Draft',
     leaveConfirm: 'You have unsaved changes that will be lost if you leave.\n(You can tap "Save Draft" first)',
     draftSaved: '✅ Draft saved',
+    resultLabel: (i) => `Result ${i}`, removeBtn: 'Remove',
+    labelResultName: 'Result name', labelResultDesc: 'Result description',
+    placeholderResultName: 'e.g. Cat-like lover', placeholderResultDesc: 'Describe this result in a witty, entertaining way',
+    questionLabel: (i) => `Question ${i}`, placeholderQuestion: 'Enter question text',
+    placeholderOption: (n) => `Option ${n}`, btnAddOption: '+ Add option',
+    placeholderQuizTitle: 'e.g. What animal were you in a past life?', placeholderQuizDesc: 'Briefly describe what this quiz measures',
+    maxOptionsAlert: (n) => `Maximum ${n} options per question`, maxOptionsReached: (n) => `Maximum ${n} reached`,
+    minQuestionsAlert: (n) => `At least ${n} questions are required`, maxQuestionsReached: (n) => `Maximum ${n} reached`,
+    maxResultsReached: (n) => `Maximum ${n} reached`,
     successTitle: 'Quiz published successfully!', successDesc: 'Share this link with friends so they can play too',
     btnCopyUrl: '📋 Copy link', btnGoQuiz: 'View now →',
   },
@@ -1225,6 +1273,8 @@ function setLang(l) {
   setText('section-title-basic', t.sectionBasic);
   setText('label-quiz-title', t.labelQuizTitle);
   setText('label-quiz-desc', t.labelQuizDesc);
+  setPlaceholder('quiz-title', t.placeholderQuizTitle);
+  setPlaceholder('quiz-desc', t.placeholderQuizDesc);
   setText('section-title-results', t.sectionResults);
   setText('btn-add-result', t.btnAddResult);
   setText('section-title-questions', t.sectionQuestions);
