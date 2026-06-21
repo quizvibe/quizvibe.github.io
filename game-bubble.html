@@ -135,7 +135,6 @@
   <div class="style-row" id="style-row"></div>
 </div>
 
-<div class="ad-banner-fixed-game">廣告版位</div>
 
 <script>
 const SUPABASE_URL = 'https://xsflpzozgdgbtrtdzdlj.supabase.co';
@@ -268,6 +267,7 @@ function popBubble(el, e) {
 
   if (totalPoppedAllTime % 50 === 0) {
     saveGameResult('bubble', { totalPopped: totalPoppedAllTime });
+    pushProgressToCloud();
   }
 
   if (poppedCount >= GRID_SIZE) {
@@ -380,18 +380,77 @@ window.addEventListener('beforeunload', () => {
 async function initAuthUI() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (session?.user) {
+    currentUser = session.user;
     showLoggedInUI(session.user);
+    await syncProgressOnLogin(session.user.id);
   }
   supabaseClient.auth.onAuthStateChange((event, newSession) => {
     if (newSession?.user) {
       showLoggedInUI(newSession.user);
       currentUser = newSession.user;
+      syncProgressOnLogin(newSession.user.id);
     } else {
       document.getElementById('qt-auth-buttons').classList.remove('hidden');
       document.getElementById('qt-user-chip-wrap').classList.add('hidden');
       currentUser = null;
     }
   });
+}
+
+function mergeProgress(localP, remoteP) {
+  if (!remoteP) return localP;
+  return {
+    timing: {
+      wins: Math.max(localP.timing.wins, remoteP.timing?.wins || 0),
+      plays: Math.max(localP.timing.plays, remoteP.timing?.plays || 0),
+      stylesUnlocked: Array.from(new Set([...(localP.timing.stylesUnlocked || []), ...(remoteP.timing?.stylesUnlocked || [])])),
+    },
+    chicken: {
+      hits: Math.max(localP.chicken.hits, remoteP.chicken?.hits || 0),
+      plays: Math.max(localP.chicken.plays, remoteP.chicken?.plays || 0),
+      stylesUnlocked: Array.from(new Set([...(localP.chicken.stylesUnlocked || []), ...(remoteP.chicken?.stylesUnlocked || [])])),
+    },
+    bubble: {
+      totalPopped: Math.max(localP.bubble.totalPopped, remoteP.bubble?.totalPopped || 0),
+      fastestSheetMs: minIgnoreNull(localP.bubble.fastestSheetMs, remoteP.bubble?.fastestSheetMs),
+      stylesUnlocked: Array.from(new Set([...(localP.bubble.stylesUnlocked || []), ...(remoteP.bubble?.stylesUnlocked || [])])),
+    },
+  };
+}
+
+function minIgnoreNull(a, b) {
+  if (a == null) return b ?? null;
+  if (b == null) return a;
+  return Math.min(a, b);
+}
+
+async function syncProgressOnLogin(userId) {
+  try {
+    const { data, error } = await supabaseClient.from('game_progress').select('progress_data').eq('user_id', userId).single();
+    const remoteP = (!error && data) ? data.progress_data : null;
+    const localP = getProgress();
+    const merged = mergeProgress(localP, remoteP);
+    saveProgress(merged);
+    await supabaseClient.from('game_progress').upsert({ user_id: userId, progress_data: merged, updated_at: new Date().toISOString() });
+    totalPoppedAllTime = merged.bubble.totalPopped;
+    document.getElementById('stat-total').textContent = totalPoppedAllTime;
+    if (merged.bubble.fastestSheetMs) {
+      document.getElementById('stat-fastest').textContent = (merged.bubble.fastestSheetMs / 1000).toFixed(2);
+    }
+    if (typeof renderStyleRow === 'function') renderStyleRow();
+  } catch (err) {
+    console.warn('進度同步失敗（不影響當前遊玩，僅本機進度可能未跨裝置更新）:', err);
+  }
+}
+
+async function pushProgressToCloud() {
+  if (!currentUser) return;
+  try {
+    const current = getProgress();
+    await supabaseClient.from('game_progress').upsert({ user_id: currentUser.id, progress_data: current, updated_at: new Date().toISOString() });
+  } catch (err) {
+    console.warn('進度雲端同步失敗（不影響本機遊玩）:', err);
+  }
 }
 
 async function showLoggedInUI(user) {
@@ -421,7 +480,10 @@ document.addEventListener('click', (e) => {
 });
 function handleLogoutGames() {
   if (confirm(i18nBubble[currentLang].confirmLogout)) {
-    supabaseClient.auth.signOut().then(() => { window.location.reload(); });
+    supabaseClient.auth.signOut().then(() => {
+      localStorage.removeItem('quizdrop_game_progress');
+      window.location.reload();
+    });
   }
 }
 

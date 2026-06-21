@@ -197,11 +197,7 @@
   </div>
 
   <div class="style-row" id="style-row"></div>
-
-  <div class="content-footer-slot">廣告版位</div>
 </div>
-
-<div class="ad-banner-fixed-game">廣告版位</div>
 
 <script>
 const SUPABASE_URL = 'https://xsflpzozgdgbtrtdzdlj.supabase.co';
@@ -441,6 +437,7 @@ function stopTiming(isTimeout) {
   if (isWin) progress.timing.wins++;
   saveProgress(progress);
   checkUnlocks();
+  pushProgressToCloud();
 
   showResultPanel(diff, actual, isWin, isTimeout);
   pushRecentResult(targetSeconds, actual, diff, isWin);
@@ -598,18 +595,76 @@ function showProgressModal() {
 async function initAuthUI() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (session?.user) {
+    currentUser = session.user;
     showLoggedInUI(session.user);
+    await syncProgressOnLogin(session.user.id);
   }
   supabaseClient.auth.onAuthStateChange((event, newSession) => {
     if (newSession?.user) {
       showLoggedInUI(newSession.user);
       currentUser = newSession.user;
+      syncProgressOnLogin(newSession.user.id);
     } else {
       document.getElementById('qt-auth-buttons').classList.remove('hidden');
       document.getElementById('qt-user-chip-wrap').classList.add('hidden');
       currentUser = null;
     }
   });
+}
+
+/* ---------------- 進度跨裝置同步：登入時合併 localStorage 與帳號資料 ---------------- */
+function mergeProgress(localP, remoteP) {
+  if (!remoteP) return localP;
+  const merged = {
+    timing: {
+      wins: Math.max(localP.timing.wins, remoteP.timing?.wins || 0),
+      plays: Math.max(localP.timing.plays, remoteP.timing?.plays || 0),
+      stylesUnlocked: Array.from(new Set([...(localP.timing.stylesUnlocked || []), ...(remoteP.timing?.stylesUnlocked || [])])),
+    },
+    chicken: {
+      hits: Math.max(localP.chicken.hits, remoteP.chicken?.hits || 0),
+      plays: Math.max(localP.chicken.plays, remoteP.chicken?.plays || 0),
+      stylesUnlocked: Array.from(new Set([...(localP.chicken.stylesUnlocked || []), ...(remoteP.chicken?.stylesUnlocked || [])])),
+    },
+    bubble: {
+      totalPopped: Math.max(localP.bubble.totalPopped, remoteP.bubble?.totalPopped || 0),
+      fastestSheetMs: minIgnoreNull(localP.bubble.fastestSheetMs, remoteP.bubble?.fastestSheetMs),
+      stylesUnlocked: Array.from(new Set([...(localP.bubble.stylesUnlocked || []), ...(remoteP.bubble?.stylesUnlocked || [])])),
+    },
+  };
+  return merged;
+}
+
+function minIgnoreNull(a, b) {
+  if (a == null) return b ?? null;
+  if (b == null) return a;
+  return Math.min(a, b);
+}
+
+async function syncProgressOnLogin(userId) {
+  try {
+    const { data, error } = await supabaseClient.from('game_progress').select('progress_data').eq('user_id', userId).single();
+    const remoteP = (!error && data) ? data.progress_data : null;
+    const localP = getProgress();
+    const merged = mergeProgress(localP, remoteP);
+    saveProgress(merged); // 更新本機顯示
+    await supabaseClient.from('game_progress').upsert({ user_id: userId, progress_data: merged, updated_at: new Date().toISOString() });
+    // 合併完成後重新渲染畫面上會用到進度的部分
+    if (typeof renderStyleRow === 'function') renderStyleRow();
+    if (typeof renderRecentList === 'function') renderRecentList();
+  } catch (err) {
+    console.warn('進度同步失敗（不影響當前遊玩，僅本機進度可能未跨裝置更新）:', err);
+  }
+}
+
+async function pushProgressToCloud() {
+  if (!currentUser) return; // 訪客模式不寫雲端，只寫 localStorage
+  try {
+    const current = getProgress();
+    await supabaseClient.from('game_progress').upsert({ user_id: currentUser.id, progress_data: current, updated_at: new Date().toISOString() });
+  } catch (err) {
+    console.warn('進度雲端同步失敗（不影響本機遊玩）:', err);
+  }
 }
 
 async function showLoggedInUI(user) {
@@ -640,7 +695,11 @@ document.addEventListener('click', (e) => {
 function handleLogoutGames() {
   const t = i18nTiming[currentLang];
   if (confirm(t.confirmLogout)) {
-    supabaseClient.auth.signOut().then(() => { window.location.reload(); });
+    supabaseClient.auth.signOut().then(() => {
+      // 已同步到帳號的進度可以安全清除本機資料，回到全新訪客狀態
+      localStorage.removeItem(PROGRESS_KEY);
+      window.location.reload();
+    });
   }
 }
 

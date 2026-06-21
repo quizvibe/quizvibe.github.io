@@ -215,14 +215,14 @@
 
   <div id="login-required-view" class="login-required hidden">
     <span class="emoji">🔒</span>
-    <h2>請先登入</h2>
-    <p>加入會員即可免費創作 1 個專屬心理測驗</p>
-    <a href="index.html">回首頁登入 →</a>
+    <h2 id="login-required-title">請先登入</h2>
+    <p id="login-required-desc">加入會員即可免費創作 1 個專屬心理測驗</p>
+    <a href="index.html" id="login-required-link">回首頁登入 →</a>
   </div>
 
   <div id="dashboard-view" class="hidden">
     <div class="slot-bar">
-      <div class="slot-bar-info">已解鎖 <b id="slot-count-text">1 / 10</b> 個創作額度</div>
+      <div class="slot-bar-info"><span id="slot-bar-prefix">已解鎖</span> <b id="slot-count-text">1 / 10</b> <span id="slot-bar-suffix">個創作額度</span></div>
       <div class="slot-dots" id="slot-dots"></div>
     </div>
     <div class="my-quizzes-list" id="my-quizzes-list"></div>
@@ -245,23 +245,23 @@
     <div class="form-msg" id="top-msg"></div>
 
     <div class="section-card">
-      <div class="section-title">📝 測驗基本資訊</div>
-      <label class="field-label">測驗名稱</label>
+      <div class="section-title" id="section-title-basic">📝 測驗基本資訊</div>
+      <label class="field-label" id="label-quiz-title">測驗名稱</label>
       <input type="text" class="input-field" id="quiz-title" placeholder="例如：你前世是什麼動物？" maxlength="30" oninput="updateCharCount(this, 'title-count', 30)" />
       <div class="char-count" id="title-count">0 / 30</div>
-      <label class="field-label">測驗簡介</label>
+      <label class="field-label" id="label-quiz-desc">測驗簡介</label>
       <textarea class="input-field" id="quiz-desc" rows="2" placeholder="簡單介紹一下這個測驗在測什麼" maxlength="100" oninput="updateCharCount(this, 'desc-count', 100)"></textarea>
       <div class="char-count" id="desc-count">0 / 100</div>
     </div>
 
     <div class="section-card">
-      <div class="section-title">🏆 設定結果（最少 4 個，最多 8 個）</div>
+      <div class="section-title" id="section-title-results">🏆 設定結果（最少 4 個，最多 8 個）</div>
       <div id="results-container"></div>
       <button class="btn-add-q" id="btn-add-result" onclick="addResult()">+ 新增結果</button>
     </div>
 
     <div class="section-card">
-      <div class="section-title">❓ 設計題目（最少 5 題，最多 10 題）</div>
+      <div class="section-title" id="section-title-questions">❓ 設計題目（最少 5 題，最多 10 題）</div>
       <div id="questions-container"></div>
       <button class="btn-add-q" id="btn-add-question" onclick="addQuestion()">+ 新增題目</button>
     </div>
@@ -271,35 +271,14 @@
 
   <div id="success-screen">
     <span class="success-emoji">🎉</span>
-    <h2>測驗發布成功！</h2>
-    <p style="color:#9c8f7e;font-size:14px;">把這個連結分享給朋友，讓他們也來玩玩看</p>
+    <h2 id="success-title">測驗發布成功！</h2>
+    <p style="color:#9c8f7e;font-size:14px;" id="success-desc">把這個連結分享給朋友，讓他們也來玩玩看</p>
     <div class="share-url-box" id="share-url-display"></div>
-    <button class="btn-copy-url" onclick="copyShareUrl()">📋 複製連結</button>
-    <button class="btn-go-quiz" onclick="goToMyQuiz()">立即查看 →</button>
+    <button class="btn-copy-url" onclick="copyShareUrl()" id="btn-copy-url-text">📋 複製連結</button>
+    <button class="btn-go-quiz" onclick="goToMyQuiz()" id="btn-go-quiz-text">立即查看 →</button>
   </div>
 
 </div>
-
-<div class="ad-overlay" id="ad-overlay">
-  <div class="ad-box">
-    <div class="ad-status" id="ad-status-title">廣告播放中...</div>
-    <div class="ad-placeholder">📺 模擬廣告</div>
-    <div class="ad-progress-bar"><div class="ad-progress-fill" id="ad-progress-fill"></div></div>
-    <div class="ad-status" id="ad-status">請耐心等待...</div>
-    <button class="btn-ad-next" id="btn-ad-next" onclick="onAdFinished()">完成解鎖 →</button>
-  </div>
-</div>
-
-<div class="ad-overlay" id="pay-overlay">
-  <div class="pay-box">
-    <h3>解鎖第 <span id="pay-slot-num"></span> 個創作額度</h3>
-    <p>第 6 個額度開始需要付費購買，購買後永久擁有，可重複編輯使用</p>
-    <div class="pay-price">NT$ 10</div>
-    <button class="btn-unlock" style="width:100%;" onclick="onPaymentConfirmed()">模擬付款完成 →</button>
-    <div class="pay-note">⚠️ 此為模擬付款流程，正式金流串接待後續開發</div>
-    <br>
-    <button class="back-btn" onclick="closePayOverlay()" style="border:none;background:none;cursor:pointer;">取消</button>
-  </div>
 </div>
 
 <script>
@@ -718,6 +697,7 @@ async function publishQuiz() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (!session) {
     showTopMsg('登入狀態已失效，請重新登入後再發布', 'error');
+    highlightError(document.getElementById('top-msg'));
     setTimeout(() => { window.location.href = 'index.html'; }, 1800);
     return;
   }
@@ -728,24 +708,27 @@ async function publishQuiz() {
 
   if (!title) {
     showTopMsg('請輸入測驗名稱', 'error');
+    highlightError(document.getElementById('quiz-title'));
     return;
   }
   if (title.length > TITLE_MAX) {
     showTopMsg(`測驗名稱不能超過 ${TITLE_MAX} 個字`, 'error');
+    highlightError(document.getElementById('quiz-title'));
     return;
   }
 
   const resultBlocks = document.querySelectorAll('.result-block');
   if (resultBlocks.length < MIN_RESULTS) {
     showTopMsg(`至少需要設定 ${MIN_RESULTS} 個結果`, 'error');
+    highlightError(document.getElementById('section-title-results'));
     return;
   }
   const results = [];
   for (let i = 0; i < resultBlocks.length; i++) {
     const name = sanitizeText(resultBlocks[i].querySelector('.result-name').value);
     const rdesc = sanitizeText(resultBlocks[i].querySelector('.result-desc').value);
-    if (!name) { showTopMsg(`請填寫結果 ${i + 1} 的名稱`, 'error'); return; }
-    if (!rdesc) { showTopMsg(`請填寫結果 ${i + 1} 的敘述`, 'error'); return; }
+    if (!name) { showTopMsg(`請填寫結果 ${i + 1} 的名稱`, 'error'); highlightError(resultBlocks[i]); return; }
+    if (!rdesc) { showTopMsg(`請填寫結果 ${i + 1} 的敘述`, 'error'); highlightError(resultBlocks[i]); return; }
     if (name.length > TITLE_MAX) { showTopMsg(`結果 ${i + 1} 的名稱不能超過 ${TITLE_MAX} 個字`, 'error'); return; }
     results.push({ id: String(i + 1), label: name, desc: rdesc });
   }
@@ -753,6 +736,7 @@ async function publishQuiz() {
   const questionBlocks = document.querySelectorAll('.question-block');
   if (questionBlocks.length < MIN_QUESTIONS) {
     showTopMsg(`題目數量不足，至少需要 ${MIN_QUESTIONS} 題`, 'error');
+    highlightError(document.getElementById('section-title-questions'));
     return;
   }
 
@@ -762,7 +746,7 @@ async function publishQuiz() {
     const qText = sanitizeText(qb.querySelector('.q-text').value);
     if (!qText) {
       showTopMsg(`請填寫題目 ${i + 1} 的文字`, 'error');
-      qb.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      highlightError(qb);
       return;
     }
     if (qText.length > QTEXT_MAX) {
@@ -783,18 +767,19 @@ async function publishQuiz() {
       const optText = sanitizeText(optionRows[j].querySelector('.opt-text').value);
       if (!optText) {
         showTopMsg(`請填寫題目 ${i + 1} 的所有選項`, 'error');
-        qb.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        highlightError(qb);
         return;
       }
       if (optText.length > OPTTEXT_MAX) {
         showTopMsg(`題目 ${i + 1} 的選項文字不能超過 ${OPTTEXT_MAX} 個字`, 'error');
+        highlightError(qb);
         return;
       }
 
       const selectedResults = JSON.parse(optionRows[j].querySelector('.opt-result-multiselect').dataset.selected || '[]');
       if (selectedResults.length === 0) {
         showTopMsg(`題目 ${i + 1} 的選項「${optText}」至少要選擇 1 個加分結果`, 'error');
-        qb.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        highlightError(qb);
         return;
       }
       selectedResults.forEach(r => resultIdsUsedInThisQuestion.add(r));
@@ -807,7 +792,7 @@ async function publishQuiz() {
     if (resultIdsUsedInThisQuestion.size === 1) {
       showTopMsg(`題目 ${i + 1} 的所有選項都加分給同一個結果，請至少分散到 2 個不同結果`, 'error');
       qb.style.border = '1.5px solid #b14a35';
-      qb.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      highlightError(qb);
       setTimeout(() => { qb.style.border = ''; }, 3000);
       return;
     }
@@ -847,7 +832,16 @@ function showTopMsg(text, type) {
   const msgEl = document.getElementById('top-msg');
   msgEl.textContent = text;
   msgEl.className = 'form-msg ' + type;
-  msgEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// 共用的「滾動到錯誤位置 + 紅框強調 3 秒」輔助函式，確保使用者能一眼看出問題在哪
+function highlightError(el) {
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const prevOutline = el.style.outline;
+  const prevOutlineOffset = el.style.outlineOffset;
+  el.style.outline = '2.5px solid #b14a35';
+  el.style.outlineOffset = '3px';
+  setTimeout(() => { el.style.outline = prevOutline; el.style.outlineOffset = prevOutlineOffset; }, 3000);
 }
 
 let publishedQuizId = null;
@@ -942,16 +936,40 @@ const i18nCreate = {
     backToHome: '← QuizDrop', backToDashboard: '← 返回額度頁面',
     login: '登入', signup: '註冊', profile: '👤 個人頁面', logout: '🚪 登出',
     confirmLogout: '要登出嗎？',
+    loginRequiredTitle: '請先登入', loginRequiredDesc: '加入會員即可免費創作 1 個專屬心理測驗', loginRequiredLink: '回首頁登入 →',
+    slotBarPrefix: '已解鎖', slotBarSuffix: '個創作額度',
+    sectionBasic: '📝 測驗基本資訊', labelQuizTitle: '測驗名稱', labelQuizDesc: '測驗簡介',
+    sectionResults: '🏆 設定結果（最少 4 個，最多 8 個）', btnAddResult: '+ 新增結果',
+    sectionQuestions: '❓ 設計題目（最少 5 題，最多 10 題）', btnAddQuestion: '+ 新增題目',
+    btnPublish: '🚀 發布測驗',
+    successTitle: '測驗發布成功！', successDesc: '把這個連結分享給朋友，讓他們也來玩玩看',
+    btnCopyUrl: '📋 複製連結', btnGoQuiz: '立即查看 →',
   },
   ja: {
     backToHome: '← QuizDrop', backToDashboard: '← クレジット画面へ戻る',
     login: 'ログイン', signup: '登録', profile: '👤 プロフィール', logout: '🚪 ログアウト',
     confirmLogout: 'ログアウトしますか？',
+    loginRequiredTitle: 'ログインが必要です', loginRequiredDesc: '会員登録すると無料でクイズを1つ作成できます', loginRequiredLink: 'ホームでログイン →',
+    slotBarPrefix: 'アンロック済み', slotBarSuffix: '個の作成枠',
+    sectionBasic: '📝 クイズの基本情報', labelQuizTitle: 'クイズ名', labelQuizDesc: 'クイズの説明',
+    sectionResults: '🏆 結果を設定（最低4つ、最大8つ）', btnAddResult: '+ 結果を追加',
+    sectionQuestions: '❓ 質問を作成（最低5問、最大10問）', btnAddQuestion: '+ 質問を追加',
+    btnPublish: '🚀 クイズを公開',
+    successTitle: 'クイズの公開に成功しました！', successDesc: 'このリンクを友達に共有して遊んでもらおう',
+    btnCopyUrl: '📋 リンクをコピー', btnGoQuiz: '今すぐ見る →',
   },
   en: {
     backToHome: '← QuizDrop', backToDashboard: '← Back to credits',
     login: 'Log in', signup: 'Sign up', profile: '👤 Profile', logout: '🚪 Log out',
     confirmLogout: 'Log out?',
+    loginRequiredTitle: 'Please log in', loginRequiredDesc: 'Sign up to create 1 free custom quiz', loginRequiredLink: 'Go to home & log in →',
+    slotBarPrefix: 'Unlocked', slotBarSuffix: 'creation slots',
+    sectionBasic: '📝 Quiz Basics', labelQuizTitle: 'Quiz title', labelQuizDesc: 'Quiz description',
+    sectionResults: '🏆 Set up Results (4–8 results)', btnAddResult: '+ Add result',
+    sectionQuestions: '❓ Design Questions (5–10 questions)', btnAddQuestion: '+ Add question',
+    btnPublish: '🚀 Publish Quiz',
+    successTitle: 'Quiz published successfully!', successDesc: 'Share this link with friends so they can play too',
+    btnCopyUrl: '📋 Copy link', btnGoQuiz: 'View now →',
   },
 };
 let currentLang = 'zh';
@@ -962,15 +980,44 @@ function setLang(l) {
   localStorage.setItem('quizdrop_lang', l);
   const t = i18nCreate[l];
 
+  const setText = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
+  const setPlaceholder = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.placeholder = text;
+  };
+
   const loginBtn = document.querySelector('.qt-login');
   const signupBtn = document.querySelector('.qt-signup');
   if (loginBtn) loginBtn.textContent = t.login;
   if (signupBtn) signupBtn.textContent = t.signup;
   const dropdown = document.getElementById('qt-dropdown');
   if (dropdown) {
-    dropdown.querySelector('button:not(.danger)').textContent = t.profile;
-    dropdown.querySelector('button.danger').textContent = t.logout;
+    const profileBtn = dropdown.querySelector('button:not(.danger)');
+    const logoutBtn = dropdown.querySelector('button.danger');
+    if (profileBtn) profileBtn.textContent = t.profile;
+    if (logoutBtn) logoutBtn.textContent = t.logout;
   }
+
+  setText('login-required-title', t.loginRequiredTitle);
+  setText('login-required-desc', t.loginRequiredDesc);
+  setText('login-required-link', t.loginRequiredLink);
+  setText('slot-bar-prefix', t.slotBarPrefix);
+  setText('slot-bar-suffix', t.slotBarSuffix);
+  setText('section-title-basic', t.sectionBasic);
+  setText('label-quiz-title', t.labelQuizTitle);
+  setText('label-quiz-desc', t.labelQuizDesc);
+  setText('section-title-results', t.sectionResults);
+  setText('btn-add-result', t.btnAddResult);
+  setText('section-title-questions', t.sectionQuestions);
+  setText('btn-add-question', t.btnAddQuestion);
+  setText('btn-publish', t.btnPublish);
+  setText('success-title', t.successTitle);
+  setText('success-desc', t.successDesc);
+  setText('btn-copy-url-text', t.btnCopyUrl);
+  setText('btn-go-quiz-text', t.btnGoQuiz);
 
   // 重新套用目前畫面對應的返回連結文字（不切換畫面本身，只更新文字語言）
   const isOnDashboardFlow = !document.getElementById('dashboard-view').classList.contains('hidden')
