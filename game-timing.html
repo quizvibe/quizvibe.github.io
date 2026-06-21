@@ -560,9 +560,8 @@ function onStyleClick(styleId) {
   const styleDef = getStyleDefs().find(s => s.id === styleId);
   const unlocked = progress.timing.stylesUnlocked.includes(styleId);
   if (unlocked) { currentStyle = styleId; applyStyleVisuals(); renderStyleRow(); return; }
-  if (confirm(t.confirmUnlock(styleDef.unlockText))) {
-    showAdUnlockModal(() => { unlockStyle('timing', styleId); currentStyle = styleId; applyStyleVisuals(); renderStyleRow(); });
-  }
+  // 風格解鎖條件由 checkUnlocks() 在每次遊玩結束後自動檢查並解鎖，這裡只誠實顯示尚未達成的提示，不提供任何假的廣告/付費解鎖捷徑
+  alert(t.lockedHint(styleDef.unlockText));
 }
 
 // 風格與對應素材的對照表：背景圖、手部圖、衝擊特效圖（蠟筆/線條風目前沿用預設衝擊特效）
@@ -660,8 +659,8 @@ const i18nTiming = {
     recentTitle: '📋 最近 5 次紀錄', recentEmpty: '還沒有紀錄，快來挑戰第一次！',
     recentRow: (target, actual) => `目標 ${target}s → 按了 ${actual}s`, recentDiff: (diff) => `差 ${diff}s`,
     styleDefault: '🎌 標準風格', styleManga: '📓 線條無色', styleCrayon: '🖍️ 蠟筆塗鴉',
-    unlockManga: '累積 5 次勝利解鎖', unlockCrayon: '遊玩 15 次或看廣告解鎖',
-    confirmUnlock: (text) => `此風格尚未解鎖（${text}）\n要看一段廣告直接解鎖嗎？`,
+    unlockManga: '累積 5 次勝利解鎖', unlockCrayon: '遊玩 15 次解鎖',
+    lockedHint: (text) => `此風格尚未解鎖（${text}），繼續挑戰就能解鎖喔！`,
     confirmLogout: '要登出嗎？',
     progressModal: (wins, plays, unlocked, total) => `📊 黃金秒數盲數挑戰\n\n累積勝利：${wins} 次\n累積遊玩：${plays} 次\n已解鎖風格：${unlocked} / ${total}`,
     btnStart: 'START', btnStop: 'STOP', btnAgain: 'AGAIN',
@@ -679,8 +678,8 @@ const i18nTiming = {
     recentTitle: '📋 直近5回の記録', recentEmpty: 'まだ記録がありません、挑戦してみよう！',
     recentRow: (target, actual) => `目標 ${target}s → ${actual}s で押した`, recentDiff: (diff) => `差 ${diff}s`,
     styleDefault: '🎌 標準スタイル', styleManga: '📓 モノクロ漫画風', styleCrayon: '🖍️ クレヨン風',
-    unlockManga: '5勝するとアンロック', unlockCrayon: '15回プレイか広告視聴でアンロック',
-    confirmUnlock: (text) => `このスタイルはまだアンロックされていません（${text}）\n広告を見てアンロックしますか？`,
+    unlockManga: '5勝するとアンロック', unlockCrayon: '15回プレイでアンロック',
+    lockedHint: (text) => `このスタイルはまだアンロックされていません（${text}）。挑戦を続けよう！`,
     confirmLogout: 'ログアウトしますか？',
     progressModal: (wins, plays, unlocked, total) => `📊 タイムレース\n\n累計勝利：${wins} 回\n累計プレイ：${plays} 回\nアンロック済みスタイル：${unlocked} / ${total}`,
     btnStart: 'START', btnStop: 'STOP', btnAgain: 'AGAIN',
@@ -698,8 +697,8 @@ const i18nTiming = {
     recentTitle: '📋 Last 5 Results', recentEmpty: 'No records yet, take your first challenge!',
     recentRow: (target, actual) => `Target ${target}s → pressed at ${actual}s`, recentDiff: (diff) => `off by ${diff}s`,
     styleDefault: '🎌 Default Style', styleManga: '📓 Manga Lines', styleCrayon: '🖍️ Crayon Doodle',
-    unlockManga: 'Unlock after 5 wins', unlockCrayon: 'Unlock after 15 plays or watch an ad',
-    confirmUnlock: (text) => `This style is locked (${text})\nWatch an ad to unlock it now?`,
+    unlockManga: 'Unlock after 5 wins', unlockCrayon: 'Unlock after 15 plays',
+    lockedHint: (text) => `This style is locked (${text}). Keep playing to unlock it!`,
     confirmLogout: 'Log out?',
     progressModal: (wins, plays, unlocked, total) => `📊 Golden Second Challenge\n\nTotal wins: ${wins}\nTotal plays: ${plays}\nStyles unlocked: ${unlocked} / ${total}`,
     btnStart: 'START', btnStop: 'STOP', btnAgain: 'AGAIN',

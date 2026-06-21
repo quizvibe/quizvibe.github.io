@@ -179,6 +179,8 @@
   .slot-card-empty { color: #b5a890; font-size: 13px; font-style: italic; }
   .slot-card-btns { display: flex; gap: 6px; flex-shrink: 0; }
   .slot-card-btns button { padding: 7px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; border: 1.5px solid #d9cbb3; background: #fffdf8; color: #6b5d4d; }
+  .slot-card-disabled { opacity: 0.55; }
+  .slot-card-disabled .slot-card-btns button { cursor: not-allowed; }
   .slot-card-btns button.danger { color: #b14a35; border-color: #e0b8a8; }
   .slot-card-btns button.primary { background: #4a3f35; color: #fff; border: none; }
 </style>
@@ -229,11 +231,11 @@
   <div id="lock-view" class="hidden">
     <div class="lock-card">
       <span class="lock-emoji" id="lock-emoji">🚀</span>
-      <h2 id="lock-title">解鎖下一個創作額度</h2>
-      <p id="lock-desc">看一段廣告，立即解鎖這個創作額度！</p>
-      <div class="price-tag" id="lock-price-tag">🎬 看 1 段廣告，免費解鎖</div>
+      <h2 id="lock-title">多人創作功能即將推出</h2>
+      <p id="lock-desc">敬請期待後續更新！</p>
+      <div class="price-tag" id="lock-price-tag">🚧 開發中</div>
       <br>
-      <button class="btn-unlock" id="btn-unlock-action" onclick="startUnlockFlow()">看廣告，立即解鎖 →</button>
+      <button class="btn-unlock" id="btn-unlock-action" disabled>敬請期待</button>
       <br><br>
       <button class="back-btn" onclick="showDashboard()" style="border:none;background:none;cursor:pointer;">← 返回</button>
     </div>
@@ -394,11 +396,10 @@ function showDashboard() {
     const unlocked = i <= mySlotsUnlocked;
 
     if (!unlocked) {
-      const isAdSlot = i <= FREE_AD_UNLOCK_UNTIL;
       html += `
-        <div class="slot-card">
-          <div class="slot-card-info"><span class="slot-card-empty">🔒 額度 ${i}（${isAdSlot ? '看廣告解鎖' : '付費解鎖 NT$10'}）</span></div>
-          <div class="slot-card-btns"><button class="primary" onclick="goUnlockSlot(${i})">解鎖</button></div>
+        <div class="slot-card slot-card-disabled">
+          <div class="slot-card-info"><span class="slot-card-empty">🔒 額度 ${i}（多人創作即將推出）</span></div>
+          <div class="slot-card-btns"><button class="primary" disabled>敬請期待</button></div>
         </div>`;
     } else if (!quiz) {
       html += `

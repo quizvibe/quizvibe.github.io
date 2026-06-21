@@ -304,9 +304,7 @@ function onStyleClick(styleId) {
   const styleDef = getStyleDefs().find(s => s.id === styleId);
   const unlocked = progress.chicken.stylesUnlocked.includes(styleId);
   if (unlocked) { switchToStyle(styleId); return; }
-  if (confirm(t.confirmUnlock(styleDef.unlockText))) {
-    showAdUnlockModal(() => { unlockStyle('chicken', styleId); switchToStyle(styleId); renderStyleRow(); });
-  }
+  alert(t.lockedHint(styleDef.unlockText));
 }
 
 function switchToStyle(styleId) {
@@ -391,8 +389,8 @@ const i18nChicken = {
     gameTitle: '🐔 社畜超度：尖叫雞進化論', gameSub: '瘋狂點擊牠，發洩你的社畜壓力！',
     back: '← 糞Game大廳', progress: '📊 本關進度', login: '登入', signup: '註冊', profile: '👤 個人頁面', logout: '🚪 登出',
     hitCounter: (n) => `${n} 暴擊`, styleDefault: '🐤 呆滯雞', styleMuscle: '💪 猛男爆衣版',
-    unlockMuscle: '累積暴擊 1000 次或看廣告解鎖',
-    confirmUnlock: (text) => `此風格尚未解鎖（${text}）\n要看一段廣告直接解鎖嗎？`,
+    unlockMuscle: '累積暴擊 1000 次解鎖',
+    lockedHint: (text) => `此風格尚未解鎖（${text}），繼續挑戰就能解鎖喔！`,
     confirmLogout: '要登出嗎？',
     progressModal: (hits, unlocked, total) => `📊 尖叫雞進化論\n\n累積暴擊：${hits} 次\n已解鎖風格：${unlocked} / ${total}`,
   },
@@ -400,8 +398,8 @@ const i18nChicken = {
     gameTitle: '🐔 叫び鶏の進化', gameSub: 'クリックしてストレスを発散しよう！',
     back: '← ゲームロビー', progress: '📊 進捗確認', login: 'ログイン', signup: '登録', profile: '👤 プロフィール', logout: '🚪 ログアウト',
     hitCounter: (n) => `${n} ヒット`, styleDefault: '🐤 ぼんやり鶏', styleMuscle: '💪 マッスル覚醒版',
-    unlockMuscle: '累計1000ヒットか広告視聴でアンロック',
-    confirmUnlock: (text) => `このスタイルはまだアンロックされていません（${text}）\n広告を見てアンロックしますか？`,
+    unlockMuscle: '累計1000ヒットでアンロック',
+    lockedHint: (text) => `このスタイルはまだアンロックされていません（${text}）。挑戦を続けよう！`,
     confirmLogout: 'ログアウトしますか？',
     progressModal: (hits, unlocked, total) => `📊 叫び鶏の進化\n\n累計ヒット：${hits} 回\nアンロック済みスタイル：${unlocked} / ${total}`,
   },
@@ -409,8 +407,8 @@ const i18nChicken = {
     gameTitle: '🐔 Screaming Chicken Evolution', gameSub: 'Click like crazy to release your stress!',
     back: '← Game Lobby', progress: '📊 Progress', login: 'Log in', signup: 'Sign up', profile: '👤 Profile', logout: '🚪 Log out',
     hitCounter: (n) => `${n} hits`, styleDefault: '🐤 Dazed Chicken', styleMuscle: '💪 Muscle Mode',
-    unlockMuscle: 'Unlock after 1000 total hits or watch an ad',
-    confirmUnlock: (text) => `This style is locked (${text})\nWatch an ad to unlock it now?`,
+    unlockMuscle: 'Unlock after 1000 total hits',
+    lockedHint: (text) => `This style is locked (${text}). Keep playing to unlock it!`,
     confirmLogout: 'Log out?',
     progressModal: (hits, unlocked, total) => `📊 Screaming Chicken Evolution\n\nTotal hits: ${hits}\nStyles unlocked: ${unlocked} / ${total}`,
   },
