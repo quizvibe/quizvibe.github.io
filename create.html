@@ -1291,6 +1291,48 @@ function setLang(l) {
     || !document.getElementById('lock-view').classList.contains('hidden')
     || !document.getElementById('creator-view').classList.contains('hidden');
   setBackLink(isOnDashboardFlow ? 'dashboard' : 'home');
+
+  // 重新套用「題目區塊」「結果區塊」內部的標籤與 placeholder 文字（直接切換語言時必須補做這一步，
+  // 否則只有重新整理頁面、讓 addQuestion/renderResultBlocks 重新執行才會套用新語言）
+  retranslateDynamicFormContent();
+}
+
+function retranslateDynamicFormContent() {
+  const t = i18nCreate[currentLang];
+
+  // 結果區塊：標題、label、placeholder（使用者已輸入的內容本身不動）
+  document.querySelectorAll('.result-block').forEach((block, idx) => {
+    const titleEl = block.querySelector('.result-block-title');
+    const removeBtnEl = titleEl?.querySelector('button');
+    if (titleEl) {
+      const removeBtnHtml = removeBtnEl ? `<button type="button" onclick="removeResultBlock(this)" style="float:right;background:none;border:none;color:#b14a35;cursor:pointer;font-size:12px;">${t.removeBtn}</button>` : '';
+      titleEl.innerHTML = `${t.resultLabel(idx + 1)} ${removeBtnHtml}`;
+    }
+    const nameLabel = block.querySelector('.field-label:nth-of-type(1)');
+    const labels = block.querySelectorAll('.field-label');
+    if (labels[0]) labels[0].textContent = t.labelResultName;
+    if (labels[1]) labels[1].textContent = t.labelResultDesc;
+    const nameInput = block.querySelector('.result-name');
+    const descInput = block.querySelector('.result-desc');
+    if (nameInput) nameInput.placeholder = t.placeholderResultName;
+    if (descInput) descInput.placeholder = t.placeholderResultDesc;
+  });
+  updateResultButtonState();
+
+  // 題目區塊：標題、移除按鈕、placeholder、選項 placeholder、新增選項按鈕
+  document.querySelectorAll('.question-block').forEach((block, idx) => {
+    const numEl = block.querySelector('.question-num');
+    if (numEl) numEl.textContent = t.questionLabel(idx + 1);
+    const removeBtnEl = block.querySelector('.btn-remove-q');
+    if (removeBtnEl) removeBtnEl.title = t.removeBtn;
+    const qTextEl = block.querySelector('.q-text');
+    if (qTextEl) qTextEl.placeholder = t.placeholderQuestion;
+    block.querySelectorAll('.opt-text').forEach((optInput, optIdx) => {
+      optInput.placeholder = t.placeholderOption(optIdx + 1);
+    });
+    updateRemoveOptionButtons(block);
+  });
+  updateQuestionButtonState();
 }
 
 (function initLangFromStorage() {
