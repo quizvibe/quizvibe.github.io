@@ -11,7 +11,7 @@
   body { background: #f7f2e9; color: #4a3f35; min-height: 100vh; padding-bottom: 60px; }
   .hidden { display: none !important; }
 
-  .topbar { height: 60px; background: #fffdf8; border-bottom: 1px solid #ece4d4; display: flex; align-items: center; padding: 0 20px; position: sticky; top: 0; z-index: 20; }
+  .topbar { height: 60px; background: #fffdf8; border-bottom: 1px solid #ece4d4; display: flex; align-items: center; padding: 0 20px; gap: 12px; position: sticky; top: 0; z-index: 20; }
   .back-btn { color: #9c8f7e; font-size: 14px; text-decoration: none; display: flex; align-items: center; gap: 5px; }
   .spacer { flex: 1; }
 
@@ -902,10 +902,18 @@ async function initAuthUI() {
   });
 }
 
-function showLoggedInUI(user) {
+async function showLoggedInUI(user) {
   document.getElementById('qt-auth-buttons').classList.add('hidden');
   document.getElementById('qt-user-chip-wrap').classList.remove('hidden');
-  const nickname = user.user_metadata?.nickname || user.email?.split('@')[0] || '用戶';
+
+  let nickname = user.email?.split('@')[0] || '用戶';
+  try {
+    const { data: userRow } = await supabaseClient.from('users').select('display_name').eq('id', user.id).single();
+    if (userRow?.display_name) nickname = userRow.display_name;
+  } catch (err) {
+    console.warn('讀取暱稱失敗，改用 email 帳號名顯示:', err);
+  }
+
   document.getElementById('qt-username-display').textContent = nickname;
   document.getElementById('qt-avatar-initial').textContent = nickname.charAt(0).toUpperCase();
 }
