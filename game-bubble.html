@@ -104,8 +104,8 @@
   </div>
   <button class="tb-btn" onclick="showProgressModal()">📊 本關進度</button>
   <div id="qt-auth-buttons" style="display:flex; gap:8px;">
-    <button class="qt-btn qt-login" onclick="window.location.href='index.html'">登入</button>
-    <button class="qt-btn qt-signup" onclick="window.location.href='index.html'">註冊</button>
+    <button class="qt-btn qt-login" onclick="window.location.href='index.html?auth=login'">登入</button>
+    <button class="qt-btn qt-signup" onclick="window.location.href='index.html?auth=signup'">註冊</button>
   </div>
   <div id="qt-user-chip-wrap" class="hidden qt-user-wrap">
     <div class="qt-user-chip" onclick="toggleUserDropdown()">
@@ -378,6 +378,14 @@ window.addEventListener('beforeunload', () => {
 
 /* ---------------- 登入狀態判斷 + 頭像顯示 ---------------- */
 async function initAuthUI() {
+  if (sessionStorage.getItem('quizdrop_just_logged_out') === '1') {
+    sessionStorage.removeItem('quizdrop_just_logged_out');
+    document.getElementById('qt-auth-buttons').classList.remove('hidden');
+    document.getElementById('qt-user-chip-wrap').classList.add('hidden');
+    currentUser = null;
+    return;
+  }
+
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (session?.user) {
     currentUser = session.user;
@@ -481,6 +489,7 @@ document.addEventListener('click', (e) => {
 function handleLogoutGames() {
   if (confirm(i18nBubble[currentLang].confirmLogout)) {
     supabaseClient.auth.signOut().then(() => {
+      sessionStorage.setItem('quizdrop_just_logged_out', '1');
       localStorage.removeItem('quizdrop_game_progress');
       window.location.reload();
     });

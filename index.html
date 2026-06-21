@@ -870,6 +870,15 @@ function activateSearchInput() {
   const saved = localStorage.getItem('quizdrop_lang') || 'zh';
   setLang(saved);
 })();
+
+// 從其他頁面（如遊戲頁、創作頁）導向過來要求登入時，網址帶 ?auth=login 可以直接彈出登入視窗，不需要使用者再多點一次
+(function checkAuthRedirect() {
+  const params = new URLSearchParams(window.location.search);
+  const authParam = params.get('auth');
+  if (authParam === 'login' || authParam === 'signup') {
+    openAuthModal(authParam);
+  }
+})();
 </script>
 </body>
 </html>

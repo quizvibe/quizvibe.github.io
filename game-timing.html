@@ -134,8 +134,8 @@
   </div>
   <button class="tb-btn" onclick="showProgressModal()">📊 本關進度</button>
   <div id="qt-auth-buttons" style="display:flex; gap:8px;">
-    <button class="qt-btn qt-login" onclick="window.location.href='index.html'">登入</button>
-    <button class="qt-btn qt-signup" onclick="window.location.href='index.html'">註冊</button>
+    <button class="qt-btn qt-login" onclick="window.location.href='index.html?auth=login'">登入</button>
+    <button class="qt-btn qt-signup" onclick="window.location.href='index.html?auth=signup'">註冊</button>
   </div>
   <div id="qt-user-chip-wrap" class="hidden qt-user-wrap">
     <div class="qt-user-chip" onclick="toggleUserDropdown()">
@@ -593,6 +593,16 @@ function showProgressModal() {
 
 /* ---------------- 登入狀態判斷 + 頭像顯示 ---------------- */
 async function initAuthUI() {
+  // 剛登出時可能因為 Supabase session 清除有些微延遲，重整後若誤判仍是登入狀態，會把雲端舊進度同步回來、蓋掉剛清空的 localStorage
+  // 用 sessionStorage 標記「剛登出」，這次頁面載入就完全跳過自動同步，下次重新登入才會正常同步
+  if (sessionStorage.getItem('quizdrop_just_logged_out') === '1') {
+    sessionStorage.removeItem('quizdrop_just_logged_out');
+    document.getElementById('qt-auth-buttons').classList.remove('hidden');
+    document.getElementById('qt-user-chip-wrap').classList.add('hidden');
+    currentUser = null;
+    return;
+  }
+
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (session?.user) {
     currentUser = session.user;
@@ -696,7 +706,7 @@ function handleLogoutGames() {
   const t = i18nTiming[currentLang];
   if (confirm(t.confirmLogout)) {
     supabaseClient.auth.signOut().then(() => {
-      // 已同步到帳號的進度可以安全清除本機資料，回到全新訪客狀態
+      sessionStorage.setItem('quizdrop_just_logged_out', '1');
       localStorage.removeItem(PROGRESS_KEY);
       window.location.reload();
     });

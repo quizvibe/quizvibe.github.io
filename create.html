@@ -132,8 +132,15 @@
   .btn-add-q:hover { background: #f7f2e9; }
   .btn-add-q:disabled { opacity: 0.4; cursor: not-allowed; }
 
+  .form-btn-row { display: flex; gap: 10px; }
+  .btn-save-draft {
+    flex: 1; padding: 16px; border-radius: 4px; background: #fffdf8; border: 1.5px solid #d9cbb3;
+    color: #4a3f35; font-weight: 800; font-size: 15px; cursor: pointer; transition: all .2s;
+  }
+  .btn-save-draft:hover { background: #f7f2e9; }
+  .btn-save-draft:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn-publish {
-    width: 100%; padding: 16px; border-radius: 4px; background: #4a3f35;
+    flex: 2; padding: 16px; border-radius: 4px; background: #4a3f35;
     color: #fff; font-weight: 800; font-size: 16px; border: none; cursor: pointer; transition: opacity .2s;
   }
   .btn-publish:hover { opacity: 0.9; }
@@ -175,6 +182,7 @@
   }
   .slot-card-info { flex: 1; min-width: 0; }
   .slot-card-info h4 { font-size: 14px; font-weight: 700; color: #4a3f35; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .draft-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 99px; background: #f1e9da; color: #a9633a; margin-left: 4px; vertical-align: middle; }
   .slot-card-info p { font-size: 11.5px; color: #b5a890; }
   .slot-card-empty { color: #b5a890; font-size: 13px; font-style: italic; }
   .slot-card-btns { display: flex; gap: 6px; flex-shrink: 0; }
@@ -196,8 +204,8 @@
     <button onclick="setLang('en')" data-lang-btn="en">EN</button>
   </div>
   <div id="qt-auth-buttons" style="display:flex; gap:8px;">
-    <button class="qt-btn qt-login" onclick="window.location.href='index.html'">登入</button>
-    <button class="qt-btn qt-signup" onclick="window.location.href='index.html'">註冊</button>
+    <button class="qt-btn qt-login" onclick="window.location.href='index.html?auth=login'">登入</button>
+    <button class="qt-btn qt-signup" onclick="window.location.href='index.html?auth=signup'">註冊</button>
   </div>
   <div id="qt-user-chip-wrap" class="hidden qt-user-wrap">
     <div class="qt-user-chip" onclick="toggleUserDropdown()">
@@ -266,7 +274,10 @@
       <button class="btn-add-q" id="btn-add-question" onclick="addQuestion()">+ 新增題目</button>
     </div>
 
-    <button class="btn-publish" id="btn-publish" onclick="publishQuiz()">🚀 發布測驗</button>
+    <div class="form-btn-row">
+      <button class="btn-save-draft" id="btn-save-draft" onclick="saveDraft()">💾 儲存草稿</button>
+      <button class="btn-publish" id="btn-publish" onclick="publishQuiz()">🚀 發布測驗</button>
+    </div>
   </div>
 
   <div id="success-screen">
@@ -341,7 +352,7 @@ async function loadUserSlots() {
 
 async function loadMyQuizzes() {
   try {
-    const { data, error } = await supabaseClient.from('quizzes').select('id, title, slot_index').eq('creator_id', currentUser.id).order('slot_index');
+    const { data, error } = await supabaseClient.from('quizzes').select('id, title, slot_index, status').eq('creator_id', currentUser.id).order('slot_index');
     if (error) throw error;
     myQuizzes = data || [];
   } catch (err) {
@@ -357,6 +368,8 @@ function showDashboard() {
   document.getElementById('success-screen').style.display = 'none';
   document.getElementById('dashboard-view').classList.remove('hidden');
   setBackLink('home');
+  formDirty = false;
+  editingQuizId = null;
 
   document.getElementById('slot-count-text').textContent = `${mySlotsUnlocked} / ${MAX_SLOTS}`;
 
@@ -387,12 +400,14 @@ function showDashboard() {
           <div class="slot-card-btns"><button class="primary" onclick="goCreateInSlot(${i})">開始創作</button></div>
         </div>`;
     } else {
+      const isDraft = quiz.status === 'draft';
       html += `
         <div class="slot-card">
-          <div class="slot-card-info"><h4>${escapeAttr(quiz.title)}</h4><p>額度 ${i}</p></div>
+          <div class="slot-card-info"><h4>${escapeAttr(quiz.title)} ${isDraft ? `<span class="draft-badge">${i18nCreate[currentLang].draftBadge}</span>` : ''}</h4><p>額度 ${i}</p></div>
           <div class="slot-card-btns">
-            <button onclick="window.location.href='quiz.html?id=${quiz.id}'">查看</button>
-            <button class="danger" onclick="deleteAndRecreate(${i}, '${quiz.id}')">刪除重建</button>
+            ${!isDraft ? `<button onclick="window.location.href='quiz.html?id=${quiz.id}'">查看</button>` : ''}
+            <button class="primary" onclick="goEditQuiz(${i}, '${quiz.id}')">編輯</button>
+            <button class="danger" onclick="deleteAndRecreate(${i}, '${quiz.id}')">刪除</button>
           </div>
         </div>`;
     }
@@ -437,9 +452,19 @@ async function onPaymentConfirmed() {
   await grantSlotUnlock(targetSlotIndex);
 }
 
+let editingQuizId = null; // null = 新建模式；有值 = 正在編輯這個已存在的測驗
+let formDirty = false; // 表單是否有未儲存的變更
+
 function goCreateInSlot(slotIndex) {
   targetSlotIndex = slotIndex;
+  editingQuizId = null;
   showCreatorForm();
+}
+
+function goEditQuiz(slotIndex, quizId) {
+  targetSlotIndex = slotIndex;
+  editingQuizId = quizId;
+  showCreatorForm(quizId);
 }
 
 async function deleteAndRecreate(slotIndex, quizId) {
@@ -494,11 +519,27 @@ async function grantSlotUnlock(slotIndex) {
   goCreateInSlot(slotIndex);
 }
 
-function showCreatorForm() {
+async function showCreatorForm(quizId) {
   document.getElementById('dashboard-view').classList.add('hidden');
   document.getElementById('lock-view').classList.add('hidden');
   document.getElementById('creator-view').classList.remove('hidden');
   setBackLink('dashboard');
+  formDirty = false;
+
+  if (quizId) {
+    // 編輯模式：從 Supabase 載入既有測驗資料填回表單
+    try {
+      const { data: quizData, error } = await supabaseClient.from('quizzes').select('*').eq('id', quizId).single();
+      if (error) throw error;
+      loadQuizDataIntoForm(quizData);
+      return;
+    } catch (err) {
+      console.error('載入測驗資料失敗:', err);
+      showTopMsg('載入測驗資料失敗，請再試一次', 'error');
+    }
+  }
+
+  // 新建模式：空白表單
   resultCount = MIN_RESULTS;
   questionCount = 0;
   document.getElementById('quiz-title').value = '';
@@ -508,6 +549,78 @@ function showCreatorForm() {
   for (let i = 0; i < MIN_QUESTIONS; i++) addQuestion();
   updateCharCount(document.getElementById('quiz-title'), 'title-count', TITLE_MAX);
   updateCharCount(document.getElementById('quiz-desc'), 'desc-count', DESC_MAX);
+  bindDirtyTracking();
+}
+
+function loadQuizDataIntoForm(quizData) {
+  document.getElementById('quiz-title').value = quizData.title || '';
+  document.getElementById('quiz-desc').value = quizData.description || '';
+
+  const resultsArr = quizData.results?.results || [];
+  resultCount = Math.max(MIN_RESULTS, Math.min(MAX_RESULTS, resultsArr.length || MIN_RESULTS));
+  const container = document.getElementById('results-container');
+  container.innerHTML = '';
+  for (let i = 1; i <= resultCount; i++) {
+    const r = resultsArr[i - 1] || { label: '', desc: '' };
+    const block = document.createElement('div');
+    block.className = 'result-block';
+    block.innerHTML = `
+      <div class="result-block-title">結果 ${i} ${i > MIN_RESULTS ? `<button type="button" onclick="removeResult(${i})" style="float:right;background:none;border:none;color:#b14a35;cursor:pointer;font-size:12px;">移除</button>` : ''}</div>
+      <label class="field-label">結果名稱</label>
+      <input type="text" class="input-field result-name" placeholder="例如：貓系戀人" maxlength="${TITLE_MAX}" value="${escapeAttr(r.label)}" />
+      <label class="field-label">結果敘述</label>
+      <textarea class="input-field result-desc" rows="2" placeholder="毒舌、有趣地描述這個結果的特質" maxlength="300">${escapeAttr(r.desc)}</textarea>
+    `;
+    container.appendChild(block);
+  }
+  updateResultButtonState();
+
+  const questionsArr = quizData.questions || [];
+  questionCount = 0;
+  document.getElementById('questions-container').innerHTML = '';
+  const targetQCount = Math.max(MIN_QUESTIONS, Math.min(MAX_QUESTIONS, questionsArr.length || MIN_QUESTIONS));
+  for (let i = 0; i < targetQCount; i++) addQuestion();
+
+  // 把載入的題目/選項資料填回剛建立好的 DOM 結構
+  const questionBlocks = document.querySelectorAll('.question-block');
+  questionsArr.forEach((q, qi) => {
+    const qb = questionBlocks[qi];
+    if (!qb) return;
+    qb.querySelector('.q-text').value = q.text || '';
+    updateQuestionCharCount(qb.querySelector('.q-text'));
+
+    const optionsWrap = qb.querySelector('.options-wrap');
+    optionsWrap.innerHTML = '';
+    (q.options || []).forEach((opt, oi) => {
+      const div = document.createElement('div');
+      div.innerHTML = buildOptionRowHtml(oi + 1);
+      const row = div.firstElementChild;
+      row.querySelector('.opt-text').value = opt.text || '';
+      const selectedResultIds = Object.keys(opt.scores || {}).map(Number);
+      optionsWrap.appendChild(row);
+      renderMultiselectChips(row.querySelector('.opt-result-multiselect'), selectedResultIds);
+    });
+    updateRemoveOptionButtons(qb);
+  });
+
+  updateCharCount(document.getElementById('quiz-title'), 'title-count', TITLE_MAX);
+  updateCharCount(document.getElementById('quiz-desc'), 'desc-count', DESC_MAX);
+  bindDirtyTracking();
+}
+
+// 監聽表單變更，標記為「有未儲存的修改」，供離開頁面前的警告使用
+function bindDirtyTracking() {
+  const formEl = document.getElementById('creator-view');
+  formEl.removeEventListener('input', markFormDirty);
+  formEl.removeEventListener('click', markFormDirtyOnClick);
+  formEl.addEventListener('input', markFormDirty);
+  formEl.addEventListener('click', markFormDirtyOnClick);
+  formDirty = false;
+}
+function markFormDirty() { formDirty = true; }
+function markFormDirtyOnClick(e) {
+  // 新增/移除題目或結果這類點擊操作也算變更
+  if (e.target.closest('.btn-add-q, .btn-remove-q, .opt-result-chip')) formDirty = true;
 }
 
 function updateCharCount(el, countId, max) {
@@ -690,6 +803,111 @@ function sanitizeText(str) {
   return div.innerHTML;
 }
 
+// 收集表單資料。skipStrictValidation=true 時用於草稿儲存（只要求標題，其餘不強制完整）
+// 回傳 { title, desc, results, questions } 或在驗證失敗時回傳 null（已自行顯示錯誤訊息）
+function collectFormData(skipStrictValidation) {
+  const title = sanitizeText(document.getElementById('quiz-title').value);
+  const desc = sanitizeText(document.getElementById('quiz-desc').value);
+
+  if (!title) {
+    showTopMsg('請輸入測驗名稱', 'error');
+    highlightError(document.getElementById('quiz-title'));
+    return null;
+  }
+  if (title.length > TITLE_MAX) {
+    showTopMsg(`測驗名稱不能超過 ${TITLE_MAX} 個字`, 'error');
+    highlightError(document.getElementById('quiz-title'));
+    return null;
+  }
+
+  const resultBlocks = document.querySelectorAll('.result-block');
+  if (!skipStrictValidation && resultBlocks.length < MIN_RESULTS) {
+    showTopMsg(`至少需要設定 ${MIN_RESULTS} 個結果`, 'error');
+    highlightError(document.getElementById('section-title-results'));
+    return null;
+  }
+  const results = [];
+  for (let i = 0; i < resultBlocks.length; i++) {
+    const name = sanitizeText(resultBlocks[i].querySelector('.result-name').value);
+    const rdesc = sanitizeText(resultBlocks[i].querySelector('.result-desc').value);
+    if (!skipStrictValidation) {
+      if (!name) { showTopMsg(`請填寫結果 ${i + 1} 的名稱`, 'error'); highlightError(resultBlocks[i]); return null; }
+      if (!rdesc) { showTopMsg(`請填寫結果 ${i + 1} 的敘述`, 'error'); highlightError(resultBlocks[i]); return null; }
+      if (name.length > TITLE_MAX) { showTopMsg(`結果 ${i + 1} 的名稱不能超過 ${TITLE_MAX} 個字`, 'error'); return null; }
+    }
+    results.push({ id: String(i + 1), label: name, desc: rdesc });
+  }
+
+  const questionBlocks = document.querySelectorAll('.question-block');
+  if (!skipStrictValidation && questionBlocks.length < MIN_QUESTIONS) {
+    showTopMsg(`題目數量不足，至少需要 ${MIN_QUESTIONS} 題`, 'error');
+    highlightError(document.getElementById('section-title-questions'));
+    return null;
+  }
+
+  const questions = [];
+  for (let i = 0; i < questionBlocks.length; i++) {
+    const qb = questionBlocks[i];
+    const qText = sanitizeText(qb.querySelector('.q-text').value);
+    if (!skipStrictValidation && !qText) {
+      showTopMsg(`請填寫題目 ${i + 1} 的文字`, 'error');
+      highlightError(qb);
+      return null;
+    }
+    if (qText.length > QTEXT_MAX) {
+      showTopMsg(`題目 ${i + 1} 的文字不能超過 ${QTEXT_MAX} 個字`, 'error');
+      return null;
+    }
+
+    const optionRows = qb.querySelectorAll('.option-row');
+    if (!skipStrictValidation && optionRows.length < MIN_OPTIONS) {
+      showTopMsg(`題目 ${i + 1} 至少需要 ${MIN_OPTIONS} 個選項`, 'error');
+      return null;
+    }
+
+    const options = [];
+    const resultIdsUsedInThisQuestion = new Set();
+
+    for (let j = 0; j < optionRows.length; j++) {
+      const optText = sanitizeText(optionRows[j].querySelector('.opt-text').value);
+      if (!skipStrictValidation && !optText) {
+        showTopMsg(`請填寫題目 ${i + 1} 的所有選項`, 'error');
+        highlightError(qb);
+        return null;
+      }
+      if (optText.length > OPTTEXT_MAX) {
+        showTopMsg(`題目 ${i + 1} 的選項文字不能超過 ${OPTTEXT_MAX} 個字`, 'error');
+        highlightError(qb);
+        return null;
+      }
+
+      const selectedResults = JSON.parse(optionRows[j].querySelector('.opt-result-multiselect').dataset.selected || '[]');
+      if (!skipStrictValidation && selectedResults.length === 0) {
+        showTopMsg(`題目 ${i + 1} 的選項「${optText}」至少要選擇 1 個加分結果`, 'error');
+        highlightError(qb);
+        return null;
+      }
+      selectedResults.forEach(r => resultIdsUsedInThisQuestion.add(r));
+
+      const scores = {};
+      selectedResults.forEach(r => { scores[r] = 1; });
+      options.push({ id: String.fromCharCode(97 + j), text: optText, scores });
+    }
+
+    if (!skipStrictValidation && resultIdsUsedInThisQuestion.size === 1) {
+      showTopMsg(`題目 ${i + 1} 的所有選項都加分給同一個結果，請至少分散到 2 個不同結果`, 'error');
+      qb.style.border = '1.5px solid #b14a35';
+      highlightError(qb);
+      setTimeout(() => { qb.style.border = ''; }, 3000);
+      return null;
+    }
+
+    questions.push({ id: i + 1, text: qText, options });
+  }
+
+  return { title, desc, results, questions };
+}
+
 async function publishQuiz() {
   const msgEl = document.getElementById('top-msg');
   msgEl.style.display = 'none';
@@ -703,109 +921,16 @@ async function publishQuiz() {
   }
   currentUser = session.user;
 
-  const title = sanitizeText(document.getElementById('quiz-title').value);
-  const desc = sanitizeText(document.getElementById('quiz-desc').value);
-
-  if (!title) {
-    showTopMsg('請輸入測驗名稱', 'error');
-    highlightError(document.getElementById('quiz-title'));
-    return;
-  }
-  if (title.length > TITLE_MAX) {
-    showTopMsg(`測驗名稱不能超過 ${TITLE_MAX} 個字`, 'error');
-    highlightError(document.getElementById('quiz-title'));
-    return;
-  }
-
-  const resultBlocks = document.querySelectorAll('.result-block');
-  if (resultBlocks.length < MIN_RESULTS) {
-    showTopMsg(`至少需要設定 ${MIN_RESULTS} 個結果`, 'error');
-    highlightError(document.getElementById('section-title-results'));
-    return;
-  }
-  const results = [];
-  for (let i = 0; i < resultBlocks.length; i++) {
-    const name = sanitizeText(resultBlocks[i].querySelector('.result-name').value);
-    const rdesc = sanitizeText(resultBlocks[i].querySelector('.result-desc').value);
-    if (!name) { showTopMsg(`請填寫結果 ${i + 1} 的名稱`, 'error'); highlightError(resultBlocks[i]); return; }
-    if (!rdesc) { showTopMsg(`請填寫結果 ${i + 1} 的敘述`, 'error'); highlightError(resultBlocks[i]); return; }
-    if (name.length > TITLE_MAX) { showTopMsg(`結果 ${i + 1} 的名稱不能超過 ${TITLE_MAX} 個字`, 'error'); return; }
-    results.push({ id: String(i + 1), label: name, desc: rdesc });
-  }
-
-  const questionBlocks = document.querySelectorAll('.question-block');
-  if (questionBlocks.length < MIN_QUESTIONS) {
-    showTopMsg(`題目數量不足，至少需要 ${MIN_QUESTIONS} 題`, 'error');
-    highlightError(document.getElementById('section-title-questions'));
-    return;
-  }
-
-  const questions = [];
-  for (let i = 0; i < questionBlocks.length; i++) {
-    const qb = questionBlocks[i];
-    const qText = sanitizeText(qb.querySelector('.q-text').value);
-    if (!qText) {
-      showTopMsg(`請填寫題目 ${i + 1} 的文字`, 'error');
-      highlightError(qb);
-      return;
-    }
-    if (qText.length > QTEXT_MAX) {
-      showTopMsg(`題目 ${i + 1} 的文字不能超過 ${QTEXT_MAX} 個字`, 'error');
-      return;
-    }
-
-    const optionRows = qb.querySelectorAll('.option-row');
-    if (optionRows.length < MIN_OPTIONS) {
-      showTopMsg(`題目 ${i + 1} 至少需要 ${MIN_OPTIONS} 個選項`, 'error');
-      return;
-    }
-
-    const options = [];
-    const resultIdsUsedInThisQuestion = new Set();
-
-    for (let j = 0; j < optionRows.length; j++) {
-      const optText = sanitizeText(optionRows[j].querySelector('.opt-text').value);
-      if (!optText) {
-        showTopMsg(`請填寫題目 ${i + 1} 的所有選項`, 'error');
-        highlightError(qb);
-        return;
-      }
-      if (optText.length > OPTTEXT_MAX) {
-        showTopMsg(`題目 ${i + 1} 的選項文字不能超過 ${OPTTEXT_MAX} 個字`, 'error');
-        highlightError(qb);
-        return;
-      }
-
-      const selectedResults = JSON.parse(optionRows[j].querySelector('.opt-result-multiselect').dataset.selected || '[]');
-      if (selectedResults.length === 0) {
-        showTopMsg(`題目 ${i + 1} 的選項「${optText}」至少要選擇 1 個加分結果`, 'error');
-        highlightError(qb);
-        return;
-      }
-      selectedResults.forEach(r => resultIdsUsedInThisQuestion.add(r));
-
-      const scores = {};
-      selectedResults.forEach(r => { scores[r] = 1; });
-      options.push({ id: String.fromCharCode(97 + j), text: optText, scores });
-    }
-
-    if (resultIdsUsedInThisQuestion.size === 1) {
-      showTopMsg(`題目 ${i + 1} 的所有選項都加分給同一個結果，請至少分散到 2 個不同結果`, 'error');
-      qb.style.border = '1.5px solid #b14a35';
-      highlightError(qb);
-      setTimeout(() => { qb.style.border = ''; }, 3000);
-      return;
-    }
-
-    questions.push({ id: i + 1, text: qText, options });
-  }
+  const formData = collectFormData(false); // 正式發布要求完整驗證
+  if (!formData) return;
+  const { title, desc, results, questions } = formData;
 
   const btn = document.getElementById('btn-publish');
   btn.disabled = true;
   btn.textContent = '發布中...';
 
   try {
-    const { data, error } = await supabaseClient.from('quizzes').insert({
+    const payload = {
       creator_id: currentUser.id,
       slot_index: targetSlotIndex,
       title: title,
@@ -815,16 +940,81 @@ async function publishQuiz() {
       questions: questions,
       results: { scoring_note: '計算每個結果累積的分數，取最高分的結果（同分則隨機挑一個）', results: results },
       is_public: true,
-    }).select('id').single();
+      status: 'published',
+    };
+
+    let data, error;
+    if (editingQuizId) {
+      ({ data, error } = await supabaseClient.from('quizzes').update(payload).eq('id', editingQuizId).select('id').single());
+    } else {
+      ({ data, error } = await supabaseClient.from('quizzes').insert(payload).select('id').single());
+    }
 
     if (error) throw error;
 
+    formDirty = false;
     showSuccessScreen(data.id);
   } catch (err) {
     console.error('Publish error:', err.message, err);
     showTopMsg('發布失敗：' + (err.message || '請再試一次'), 'error');
     btn.disabled = false;
     btn.textContent = '🚀 發布測驗';
+  }
+}
+
+async function saveDraft() {
+  const msgEl = document.getElementById('top-msg');
+  msgEl.style.display = 'none';
+
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) {
+    showTopMsg('登入狀態已失效，請重新登入後再儲存', 'error');
+    highlightError(document.getElementById('top-msg'));
+    setTimeout(() => { window.location.href = 'index.html'; }, 1800);
+    return;
+  }
+  currentUser = session.user;
+
+  const formData = collectFormData(true); // 草稿只要求標題，其他不強制完整
+  if (!formData) return;
+  const { title, desc, results, questions } = formData;
+
+  const btn = document.getElementById('btn-save-draft');
+  btn.disabled = true;
+  btn.textContent = '儲存中...';
+
+  try {
+    const payload = {
+      creator_id: currentUser.id,
+      slot_index: targetSlotIndex,
+      title: title,
+      description: desc || '',
+      is_official: false,
+      scoring_type: 'tag',
+      questions: questions,
+      results: { scoring_note: '計算每個結果累積的分數，取最高分的結果（同分則隨機挑一個）', results: results },
+      is_public: false,
+      status: 'draft',
+    };
+
+    let data, error;
+    if (editingQuizId) {
+      ({ data, error } = await supabaseClient.from('quizzes').update(payload).eq('id', editingQuizId).select('id').single());
+    } else {
+      ({ data, error } = await supabaseClient.from('quizzes').insert(payload).select('id').single());
+      if (!error && data) editingQuizId = data.id; // 草稿存完之後變成編輯模式，避免重複點儲存會建立多筆
+    }
+
+    if (error) throw error;
+
+    formDirty = false;
+    showTopMsg(i18nCreate[currentLang].draftSaved, 'success');
+  } catch (err) {
+    console.error('Save draft error:', err.message, err);
+    showTopMsg('儲存失敗：' + (err.message || '請再試一次'), 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '💾 儲存草稿';
   }
 }
 
@@ -871,7 +1061,7 @@ function setBackLink(target) {
   const t = i18nCreate[currentLang];
   if (target === 'dashboard') {
     link.href = '#';
-    link.onclick = (e) => { e.preventDefault(); showDashboard(); };
+    link.onclick = (e) => { e.preventDefault(); handleBackToDashboardClick(); };
     link.textContent = t.backToDashboard;
   } else {
     link.removeAttribute('onclick');
@@ -880,6 +1070,26 @@ function setBackLink(target) {
     link.textContent = t.backToHome;
   }
 }
+
+// 從創作表單返回額度頁面時，若有未儲存的變更要先確認，避免誤觸導致內容遺失
+function handleBackToDashboardClick() {
+  const inCreatorView = !document.getElementById('creator-view').classList.contains('hidden');
+  if (inCreatorView && formDirty) {
+    if (!confirm(i18nCreate[currentLang].leaveConfirm)) {
+      return;
+    }
+  }
+  showDashboard();
+}
+
+// 瀏覽器層級的離開警告（重新整理、關閉分頁、上一頁/下一頁），確保任何離開路徑都會被攔截
+window.addEventListener('beforeunload', (e) => {
+  const inCreatorView = !document.getElementById('creator-view').classList.contains('hidden');
+  if (inCreatorView && formDirty) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
 
 /* ============================================================ */
 /* 登入狀態判斷 + 頭像顯示                                          */
@@ -941,7 +1151,9 @@ const i18nCreate = {
     sectionBasic: '📝 測驗基本資訊', labelQuizTitle: '測驗名稱', labelQuizDesc: '測驗簡介',
     sectionResults: '🏆 設定結果（最少 4 個，最多 8 個）', btnAddResult: '+ 新增結果',
     sectionQuestions: '❓ 設計題目（最少 5 題，最多 10 題）', btnAddQuestion: '+ 新增題目',
-    btnPublish: '🚀 發布測驗',
+    btnPublish: '🚀 發布測驗', btnSaveDraft: '💾 儲存草稿', draftBadge: '草稿',
+    leaveConfirm: '你有尚未儲存的變更，離開將會遺失，確定要離開嗎？\n（可以先點「儲存草稿」再離開）',
+    draftSaved: '✅ 草稿已儲存',
     successTitle: '測驗發布成功！', successDesc: '把這個連結分享給朋友，讓他們也來玩玩看',
     btnCopyUrl: '📋 複製連結', btnGoQuiz: '立即查看 →',
   },
@@ -954,7 +1166,9 @@ const i18nCreate = {
     sectionBasic: '📝 クイズの基本情報', labelQuizTitle: 'クイズ名', labelQuizDesc: 'クイズの説明',
     sectionResults: '🏆 結果を設定（最低4つ、最大8つ）', btnAddResult: '+ 結果を追加',
     sectionQuestions: '❓ 質問を作成（最低5問、最大10問）', btnAddQuestion: '+ 質問を追加',
-    btnPublish: '🚀 クイズを公開',
+    btnPublish: '🚀 クイズを公開', btnSaveDraft: '💾 下書き保存', draftBadge: '下書き',
+    leaveConfirm: '保存していない変更があります。このまま離れると失われます。\n（先に「下書き保存」をタップできます）',
+    draftSaved: '✅ 下書きを保存しました',
     successTitle: 'クイズの公開に成功しました！', successDesc: 'このリンクを友達に共有して遊んでもらおう',
     btnCopyUrl: '📋 リンクをコピー', btnGoQuiz: '今すぐ見る →',
   },
@@ -967,7 +1181,9 @@ const i18nCreate = {
     sectionBasic: '📝 Quiz Basics', labelQuizTitle: 'Quiz title', labelQuizDesc: 'Quiz description',
     sectionResults: '🏆 Set up Results (4–8 results)', btnAddResult: '+ Add result',
     sectionQuestions: '❓ Design Questions (5–10 questions)', btnAddQuestion: '+ Add question',
-    btnPublish: '🚀 Publish Quiz',
+    btnPublish: '🚀 Publish Quiz', btnSaveDraft: '💾 Save Draft', draftBadge: 'Draft',
+    leaveConfirm: 'You have unsaved changes that will be lost if you leave.\n(You can tap "Save Draft" first)',
+    draftSaved: '✅ Draft saved',
     successTitle: 'Quiz published successfully!', successDesc: 'Share this link with friends so they can play too',
     btnCopyUrl: '📋 Copy link', btnGoQuiz: 'View now →',
   },
@@ -1014,6 +1230,7 @@ function setLang(l) {
   setText('section-title-questions', t.sectionQuestions);
   setText('btn-add-question', t.btnAddQuestion);
   setText('btn-publish', t.btnPublish);
+  setText('btn-save-draft', t.btnSaveDraft);
   setText('success-title', t.successTitle);
   setText('success-desc', t.successDesc);
   setText('btn-copy-url-text', t.btnCopyUrl);
