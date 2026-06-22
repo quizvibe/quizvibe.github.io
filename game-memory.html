@@ -114,13 +114,10 @@
   .memory-card .card-back::after { content: '?'; color: rgba(255,253,248,0.5); font-size: 40cqw; }
   .memory-card .card-front {
     background: #fffdf8; transform: rotateY(180deg); border: 1.5px solid #d9cbb3;
-    font-size: 30cqw;
+    display: flex; align-items: center; justify-content: center; gap: 0.08em;
   }
-  .memory-card .card-front .suit-tl, .memory-card .card-front .suit-br {
-    position: absolute; font-size: 13cqw; font-weight: 900; line-height: 1;
-  }
-  .memory-card .card-front .suit-tl { top: 6%; left: 8%; }
-  .memory-card .card-front .suit-br { bottom: 6%; right: 8%; transform: rotate(180deg); }
+  .memory-card .poker-rank { font-size: 26cqw; font-weight: 900; }
+  .memory-card .poker-suit { font-size: 30cqw; }
   .memory-card.matched .card-front { background: #f1e9da; border-color: #a9633a; }
   .memory-card.suit-red .card-front { color: #c4453a; }
   .memory-card.suit-black .card-front { color: #2a2a2a; }
@@ -459,9 +456,7 @@ function renderCardFaceHtml(card, idx) {
     <div class="memory-card ${suitClass}" data-idx="${idx}" onclick="onCardClick(${idx})">
       <div class="card-face card-back"></div>
       <div class="card-face card-front">
-        <span class="suit-tl">${card.rank}${card.suit}</span>
-        ${card.rank}
-        <span class="suit-br">${card.rank}${card.suit}</span>
+        <span class="poker-rank">${card.rank}</span><span class="poker-suit">${card.suit}</span>
       </div>
     </div>
   `;
