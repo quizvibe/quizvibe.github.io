@@ -88,15 +88,15 @@
   .board-wrap { position: relative; }
   #card-grid {
     display: grid; gap: 6px; max-height: 58vh; aspect-ratio: 1/1; margin: 0 auto;
-    container-type: inline-size;
   }
   .memory-card {
     position: relative; aspect-ratio: 1/1; cursor: pointer;
     transform-style: preserve-3d; transition: transform .3s; -webkit-transform-style: preserve-3d;
+    container-type: inline-size;
   }
   .memory-card.flipped { transform: rotateY(180deg); }
   .memory-card .card-face {
-    position: absolute; inset: 0; border-radius: 8cqw; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    position: absolute; inset: 0; border-radius: 16px; backface-visibility: hidden; -webkit-backface-visibility: hidden;
     display: flex; align-items: center; justify-content: center; font-weight: 900;
     box-shadow: 0 2px 6px -2px rgba(80,60,30,0.25);
   }
@@ -104,13 +104,13 @@
     background: linear-gradient(135deg, #4a3f35, #6b5d4d);
     background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.04) 0, rgba(255,255,255,0.04) 2px, transparent 2px, transparent 10px);
   }
-  .memory-card .card-back::after { content: '?'; color: rgba(255,253,248,0.5); font-size: 28cqw; }
+  .memory-card .card-back::after { content: '?'; color: rgba(255,253,248,0.5); font-size: 40cqw; }
   .memory-card .card-front {
     background: #fffdf8; transform: rotateY(180deg); border: 1.5px solid #d9cbb3;
-    font-size: 7.5cqw; position: relative;
+    font-size: 30cqw; position: relative;
   }
   .memory-card .card-front .suit-tl, .memory-card .card-front .suit-br {
-    position: absolute; font-size: 3.2cqw; font-weight: 900; line-height: 1;
+    position: absolute; font-size: 13cqw; font-weight: 900; line-height: 1;
   }
   .memory-card .card-front .suit-tl { top: 6%; left: 8%; }
   .memory-card .card-front .suit-br { bottom: 6%; right: 8%; transform: rotate(180deg); }
