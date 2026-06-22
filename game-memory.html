@@ -37,7 +37,7 @@
 
   .wrap { max-width: 560px; margin: 0 auto; padding: 18px 16px; }
 
-  #lobby-view { text-align: center; padding: 60px 20px; }
+  #theme-view { text-align: center; padding: 40px 20px; }
   .lobby-title { font-size: 26px; font-weight: 900; margin-bottom: 10px; }
   .lobby-sub { color: #9c8f7e; font-size: 14px; margin-bottom: 36px; }
   .btn-big-start {
@@ -48,6 +48,13 @@
 
   #difficulty-view { padding: 20px 0; }
   .diff-title { font-size: 19px; font-weight: 900; text-align: center; margin-bottom: 22px; }
+  .view-header { position: relative; margin-bottom: 22px; }
+  .view-header .diff-title { margin-bottom: 0; }
+  .btn-back-step {
+    position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+    background: none; border: none; color: #9c8f7e; font-size: 13px; font-weight: 700; cursor: pointer; padding: 4px 0;
+  }
+  .btn-back-step:hover { color: #a9633a; }
   .diff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .diff-card {
     background: #fffdf8; border: 1.5px solid #d9cbb3; border-radius: 14px; padding: 22px 16px;
@@ -87,7 +94,7 @@
 
   .board-wrap { position: relative; }
   #card-grid {
-    display: grid; gap: 6px; max-height: 58vh; aspect-ratio: 1/1; margin: 0 auto;
+    display: grid; gap: 6px; width: 100%; max-width: 58vh; max-height: 58vh; aspect-ratio: 1/1; margin: 0 auto;
   }
   .memory-card {
     position: relative; aspect-ratio: 1/1; cursor: pointer;
@@ -191,19 +198,17 @@
 
 <div class="wrap">
 
-  <div id="lobby-view">
+  <div id="theme-view">
     <div class="lobby-title" id="lobby-title-text">🃏 記憶力大挑戰</div>
     <p class="lobby-sub" id="lobby-sub-text">翻牌配對，考驗你的瞬間記憶力！</p>
-    <button class="btn-big-start" onclick="goToThemeSelect()" id="btn-lobby-start">開始遊戲</button>
-  </div>
-
-  <div id="theme-view" class="hidden">
-    <div class="diff-title" id="theme-title-text">選擇牌面</div>
     <div class="diff-grid" id="theme-grid"></div>
   </div>
 
   <div id="difficulty-view" class="hidden">
-    <div class="diff-title" id="diff-title-text">選擇難度</div>
+    <div class="view-header">
+      <button class="btn-back-step" onclick="goBackToThemeSelect()" id="btn-back-to-theme">← 上一頁</button>
+      <div class="diff-title" id="diff-title-text">選擇難度</div>
+    </div>
     <div class="diff-grid" id="diff-grid"></div>
   </div>
 
@@ -299,6 +304,7 @@ let soundEnabled = true;
 const SUITS = ['♠', '♥', '♦', '♣'];
 const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 function isRedSuit(suit) { return suit === '♥' || suit === '♦'; }
+function isUpperCase(ch) { return ch === ch.toUpperCase() && ch !== ch.toLowerCase(); }
 
 let cardTheme = 'poker'; // 'poker' 或 'letter'，由難度選擇畫面決定
 
@@ -356,17 +362,11 @@ function buildGameDeck(pairCount) {
   return fisherYatesShuffle(pairedCards);
 }
 
-function goToThemeSelect() {
-  document.getElementById('lobby-view').classList.add('hidden');
-  document.getElementById('theme-view').classList.remove('hidden');
-  renderThemeCards();
-}
-
 function renderThemeCards() {
   const t = i18nMemory[currentLang];
   const defs = [
-    { id: 'poker', emoji: '🃏' },
     { id: 'letter', emoji: '🔤' },
+    { id: 'poker', emoji: '🃏' },
   ];
   const grid = document.getElementById('theme-grid');
   grid.innerHTML = defs.map(d => `
@@ -385,10 +385,11 @@ function selectTheme(themeId) {
   renderDifficultyCards();
 }
 
-function goToDifficultySelect() {
-  document.getElementById('lobby-view').classList.add('hidden');
-  document.getElementById('difficulty-view').classList.remove('hidden');
-  renderDifficultyCards();
+// 在難度選擇畫面反悔想換牌面（撲克牌/字母），不需要繞回大廳，直接退回上一頁即可
+function goBackToThemeSelect() {
+  document.getElementById('difficulty-view').classList.add('hidden');
+  document.getElementById('theme-view').classList.remove('hidden');
+  renderThemeCards();
 }
 
 function renderDifficultyCards() {
@@ -1027,7 +1028,7 @@ function handleLogoutGames() {
 const i18nMemory = {
   zh: {
     back: '← 糞Game大廳', login: '登入', signup: '註冊', profile: '👤 個人頁面', logout: '🚪 登出', confirmLogout: '要登出嗎？',
-    lobbyTitle: '🃏 記憶力大挑戰', lobbySub: '翻牌配對，考驗你的瞬間記憶力！', btnLobbyStart: '開始遊戲',
+    lobbyTitle: '🃏 記憶力大挑戰', lobbySub: '翻牌配對，考驗你的瞬間記憶力！', btnBackStep: '← 上一頁',
     diffTitle: '選擇難度',
     diffName: { easy: '簡單', medium: '中等', hard: '困難', hardcore: '惡夢' },
     diffDesc: { easy: '4×4・8對', medium: '6×6・18對', hard: '8×8・32對', hardcore: '8×8・指令模式' },
@@ -1037,7 +1038,7 @@ const i18nMemory = {
     labelSteps: '步數', labelTime: '時間', labelBest: '最佳',
     memorizeLabel: '記住牌的位置！', btnSkipMemorize: '直接開戰 →', btnReadyStart: '點擊挑戰開始',
     btnBackLobby: '大廳', btnResetGame: '重來',
-    commandPrompt: (rank, suit) => `😈 現在請給我翻出 ${suit}${rank} ！`,
+    commandPrompt: (rank, suit) => suit ? `😈 現在請給我翻出 ${suit}${rank} ！` : `😈 現在請給我翻出${isUpperCase(rank) ? '大寫' : '小寫'} ${rank} ！`,
     praiseText: () => ['太強了吧！', '完全正確！繼續！', '不愧是你！'][Math.floor(Math.random() * 3)],
     mockText: () => ['哈？這也能翻錯？', '你眼睛是裝飾品嗎？', '再猜下去天都黑了'][Math.floor(Math.random() * 3)],
     resultTitle: '恭喜過關！', resultSteps: '步數', resultTime: '時間', newBest: '🏆 新紀錄！',
@@ -1045,7 +1046,7 @@ const i18nMemory = {
   },
   ja: {
     back: '← ゲームロビー', login: 'ログイン', signup: '登録', profile: '👤 プロフィール', logout: '🚪 ログアウト', confirmLogout: 'ログアウトしますか？',
-    lobbyTitle: '🃏 記憶力チャレンジ', lobbySub: 'カードをめくってペアを見つけよう！', btnLobbyStart: 'スタート',
+    lobbyTitle: '🃏 記憶力チャレンジ', lobbySub: 'カードをめくってペアを見つけよう！', btnBackStep: '← 戻る',
     diffTitle: '難易度を選択',
     diffName: { easy: 'かんたん', medium: 'ふつう', hard: 'むずかしい', hardcore: '悪夢' },
     diffDesc: { easy: '4×4・8組', medium: '6×6・18組', hard: '8×8・32組', hardcore: '8×8・指令モード' },
@@ -1055,7 +1056,7 @@ const i18nMemory = {
     labelSteps: '手数', labelTime: '時間', labelBest: 'ベスト',
     memorizeLabel: 'カードの位置を覚えよう！', btnSkipMemorize: 'スキップ →', btnReadyStart: 'タップしてスタート',
     btnBackLobby: 'ロビー', btnResetGame: 'リセット',
-    commandPrompt: (rank, suit) => `😈 ${suit}${rank} をめくってみろ！`,
+    commandPrompt: (rank, suit) => suit ? `😈 ${suit}${rank} をめくってみろ！` : `😈 ${isUpperCase(rank) ? '大文字の' : '小文字の'} ${rank} をめくってみろ！`,
     praiseText: () => ['すごいじゃないか！', '正解！その調子！', 'やるな！'][Math.floor(Math.random() * 3)],
     mockText: () => ['はぁ？それも間違えるの？', '目は飾りか？', 'まだまだだな'][Math.floor(Math.random() * 3)],
     resultTitle: 'クリア！', resultSteps: '手数', resultTime: '時間', newBest: '🏆 新記録！',
@@ -1063,7 +1064,7 @@ const i18nMemory = {
   },
   en: {
     back: '← Game Lobby', login: 'Log in', signup: 'Sign up', profile: '👤 Profile', logout: '🚪 Log out', confirmLogout: 'Log out?',
-    lobbyTitle: '🃏 Memory Match Challenge', lobbySub: 'Flip cards and find pairs to test your memory!', btnLobbyStart: 'Start Game',
+    lobbyTitle: '🃏 Memory Match Challenge', lobbySub: 'Flip cards and find pairs to test your memory!', btnBackStep: '← Back',
     diffTitle: 'Select Difficulty',
     diffName: { easy: 'Easy', medium: 'Medium', hard: 'Hard', hardcore: 'Nightmare' },
     diffDesc: { easy: '4×4・8 pairs', medium: '6×6・18 pairs', hard: '8×8・32 pairs', hardcore: '8×8・Command mode' },
@@ -1073,7 +1074,7 @@ const i18nMemory = {
     labelSteps: 'Steps', labelTime: 'Time', labelBest: 'Best',
     memorizeLabel: 'Memorize the card positions!', btnSkipMemorize: 'Skip →', btnReadyStart: 'Tap to start',
     btnBackLobby: 'Lobby', btnResetGame: 'Reset',
-    commandPrompt: (rank, suit) => `😈 Flip me the ${rank}${suit} !`,
+    commandPrompt: (rank, suit) => suit ? `😈 Flip me the ${rank}${suit} !` : `😈 Flip me the ${isUpperCase(rank) ? 'uppercase' : 'lowercase'} letter ${rank.toUpperCase()} !`,
     praiseText: () => ['Nice one!', 'Correct! Keep going!', "You're good at this!"][Math.floor(Math.random() * 3)],
     mockText: () => ['Seriously? You missed that?', 'Are your eyes just for decoration?', "At this rate we'll be here forever"][Math.floor(Math.random() * 3)],
     resultTitle: 'You won!', resultSteps: 'Steps', resultTime: 'Time', newBest: '🏆 New record!',
@@ -1105,7 +1106,7 @@ function setLang(l) {
 
   setText('lobby-title-text', t.lobbyTitle);
   setText('lobby-sub-text', t.lobbySub);
-  setText('btn-lobby-start', t.btnLobbyStart);
+  setText('btn-back-to-theme', t.btnBackStep);
   setText('diff-title-text', t.diffTitle);
   setText('theme-title-text', t.themeTitle);
   setText('label-steps', t.labelSteps);
