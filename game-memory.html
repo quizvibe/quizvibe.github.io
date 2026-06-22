@@ -117,6 +117,8 @@
   .memory-card.matched .card-front { background: #f1e9da; border-color: #a9633a; }
   .memory-card.suit-red .card-front { color: #c4453a; }
   .memory-card.suit-black .card-front { color: #2a2a2a; }
+  .memory-card.theme-letter .card-front { color: #a9633a; font-size: 32cqw; }
+  .memory-card.theme-letter.matched .card-front { color: #6b8a4a; }
 
   #ready-overlay {
     position: absolute; inset: 0; background: rgba(60,45,30,0.55); backdrop-filter: blur(2px);
@@ -192,7 +194,12 @@
   <div id="lobby-view">
     <div class="lobby-title" id="lobby-title-text">🃏 記憶力大挑戰</div>
     <p class="lobby-sub" id="lobby-sub-text">翻牌配對，考驗你的瞬間記憶力！</p>
-    <button class="btn-big-start" onclick="goToDifficultySelect()" id="btn-lobby-start">開始遊戲</button>
+    <button class="btn-big-start" onclick="goToThemeSelect()" id="btn-lobby-start">開始遊戲</button>
+  </div>
+
+  <div id="theme-view" class="hidden">
+    <div class="diff-title" id="theme-title-text">選擇牌面</div>
+    <div class="diff-grid" id="theme-grid"></div>
   </div>
 
   <div id="difficulty-view" class="hidden">
@@ -293,6 +300,8 @@ const SUITS = ['♠', '♥', '♦', '♣'];
 const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 function isRedSuit(suit) { return suit === '♥' || suit === '♦'; }
 
+let cardTheme = 'poker'; // 'poker' 或 'letter'，由難度選擇畫面決定
+
 function buildFullDeck() {
   const deck = [];
   let id = 1;
@@ -301,7 +310,15 @@ function buildFullDeck() {
       deck.push({ id: id++, suit, rank });
     }
   }
-  return deck;
+  return deck; // 52 種不重複的花色+點數組合
+}
+
+// 字母牌組：A-Z 共26個，若該難度所需配對數超過26（困難/惡夢的32對），
+// 補上 a-z 小寫26個湊滿52種，跟撲克牌52種組合對等，完全不需要重複使用同一個字母
+function buildLetterDeck() {
+  const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map((ch, i) => ({ id: i + 1, suit: null, rank: ch }));
+  const lower = 'abcdefghijklmnopqrstuvwxyz'.split('').map((ch, i) => ({ id: i + 27, suit: null, rank: ch }));
+  return { upper, lower };
 }
 
 function fisherYatesShuffle(arr) {
@@ -314,6 +331,20 @@ function fisherYatesShuffle(arr) {
 }
 
 function buildGameDeck(pairCount) {
+  if (cardTheme === 'letter') {
+    const { upper, lower } = buildLetterDeck();
+    // 26個大寫字母足夠時只用大寫；超過26對才加入小寫補足
+    const pool = pairCount <= upper.length ? upper : upper.concat(lower);
+    const sampled = fisherYatesShuffle(pool).slice(0, pairCount);
+    const pairedCards = [];
+    let uidCounter = 1;
+    sampled.forEach(card => {
+      pairedCards.push({ uid: uidCounter++, suit: null, rank: card.rank, matched: false });
+      pairedCards.push({ uid: uidCounter++, suit: null, rank: card.rank, matched: false });
+    });
+    return fisherYatesShuffle(pairedCards);
+  }
+
   const fullDeck = buildFullDeck();
   const sampled = fisherYatesShuffle(fullDeck).slice(0, pairCount);
   const pairedCards = [];
@@ -323,6 +354,35 @@ function buildGameDeck(pairCount) {
     pairedCards.push({ uid: uidCounter++, suit: card.suit, rank: card.rank, matched: false });
   });
   return fisherYatesShuffle(pairedCards);
+}
+
+function goToThemeSelect() {
+  document.getElementById('lobby-view').classList.add('hidden');
+  document.getElementById('theme-view').classList.remove('hidden');
+  renderThemeCards();
+}
+
+function renderThemeCards() {
+  const t = i18nMemory[currentLang];
+  const defs = [
+    { id: 'poker', emoji: '🃏' },
+    { id: 'letter', emoji: '🔤' },
+  ];
+  const grid = document.getElementById('theme-grid');
+  grid.innerHTML = defs.map(d => `
+    <div class="diff-card" onclick="selectTheme('${d.id}')">
+      <span class="diff-emoji">${d.emoji}</span>
+      <div class="diff-name">${t.themeName[d.id]}</div>
+      <div class="diff-desc">${t.themeDesc[d.id]}</div>
+    </div>
+  `).join('');
+}
+
+function selectTheme(themeId) {
+  cardTheme = themeId;
+  document.getElementById('theme-view').classList.add('hidden');
+  document.getElementById('difficulty-view').classList.remove('hidden');
+  renderDifficultyCards();
 }
 
 function goToDifficultySelect() {
@@ -384,22 +444,33 @@ function enterPreparePhase() {
   document.getElementById('ready-overlay').classList.add('show');
 }
 
+function renderCardFaceHtml(card, idx) {
+  if (cardTheme === 'letter') {
+    return `
+      <div class="memory-card theme-letter" data-idx="${idx}" onclick="onCardClick(${idx})">
+        <div class="card-face card-back"></div>
+        <div class="card-face card-front">${card.rank}</div>
+      </div>
+    `;
+  }
+  const suitClass = isRedSuit(card.suit) ? 'suit-red' : 'suit-black';
+  return `
+    <div class="memory-card ${suitClass}" data-idx="${idx}" onclick="onCardClick(${idx})">
+      <div class="card-face card-back"></div>
+      <div class="card-face card-front">
+        <span class="suit-tl">${card.rank}${card.suit}</span>
+        ${card.rank}
+        <span class="suit-br">${card.rank}${card.suit}</span>
+      </div>
+    </div>
+  `;
+}
+
 function renderCardGrid(gridSize) {
   const grid = document.getElementById('card-grid');
   grid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
-  grid.innerHTML = cards.map((card, idx) => {
-    const suitClass = isRedSuit(card.suit) ? 'suit-red' : 'suit-black';
-    return `
-      <div class="memory-card ${suitClass}" data-idx="${idx}" onclick="onCardClick(${idx})">
-        <div class="card-face card-back"></div>
-        <div class="card-face card-front">
-          <span class="suit-tl">${card.rank}${card.suit}</span>
-          ${card.rank}
-          <span class="suit-br">${card.rank}${card.suit}</span>
-        </div>
-      </div>
-    `;
-  }).join('');
+  grid.style.gridTemplateRows = `repeat(${gridSize}, 1fr)`;
+  grid.innerHTML = cards.map((card, idx) => renderCardFaceHtml(card, idx)).join('');
 }
 
 function setStatusBarDisabled(disabled) {
@@ -732,7 +803,8 @@ function handleBackToLobbyForce() {
   elapsedSec = 0;
   setTimeout(() => {
     document.getElementById('game-view').classList.add('hidden');
-    document.getElementById('lobby-view').classList.remove('hidden');
+    document.getElementById('difficulty-view').classList.remove('hidden');
+    renderDifficultyCards();
   }, 0);
 }
 
@@ -959,6 +1031,8 @@ const i18nMemory = {
     diffTitle: '選擇難度',
     diffName: { easy: '簡單', medium: '中等', hard: '困難', hardcore: '惡夢' },
     diffDesc: { easy: '4×4・8對', medium: '6×6・18對', hard: '8×8・32對', hardcore: '8×8・指令模式' },
+    themeTitle: '選擇牌面', themeName: { poker: '撲克牌版', letter: '字母版' },
+    themeDesc: { poker: '比較有挑戰性', letter: '比較簡單好記' },
     bestRecord: '最佳紀錄',
     labelSteps: '步數', labelTime: '時間', labelBest: '最佳',
     memorizeLabel: '記住牌的位置！', btnSkipMemorize: '直接開戰 →', btnReadyStart: '點擊挑戰開始',
@@ -975,6 +1049,8 @@ const i18nMemory = {
     diffTitle: '難易度を選択',
     diffName: { easy: 'かんたん', medium: 'ふつう', hard: 'むずかしい', hardcore: '悪夢' },
     diffDesc: { easy: '4×4・8組', medium: '6×6・18組', hard: '8×8・32組', hardcore: '8×8・指令モード' },
+    themeTitle: '牌面を選択', themeName: { poker: 'トランプ版', letter: 'アルファベット版' },
+    themeDesc: { poker: 'より難しい', letter: 'より簡単で覚えやすい' },
     bestRecord: 'ベスト記録',
     labelSteps: '手数', labelTime: '時間', labelBest: 'ベスト',
     memorizeLabel: 'カードの位置を覚えよう！', btnSkipMemorize: 'スキップ →', btnReadyStart: 'タップしてスタート',
@@ -991,6 +1067,8 @@ const i18nMemory = {
     diffTitle: 'Select Difficulty',
     diffName: { easy: 'Easy', medium: 'Medium', hard: 'Hard', hardcore: 'Nightmare' },
     diffDesc: { easy: '4×4・8 pairs', medium: '6×6・18 pairs', hard: '8×8・32 pairs', hardcore: '8×8・Command mode' },
+    themeTitle: 'Choose Card Style', themeName: { poker: 'Poker Cards', letter: 'Letters' },
+    themeDesc: { poker: 'More challenging', letter: 'Easier to remember' },
     bestRecord: 'Best',
     labelSteps: 'Steps', labelTime: 'Time', labelBest: 'Best',
     memorizeLabel: 'Memorize the card positions!', btnSkipMemorize: 'Skip →', btnReadyStart: 'Tap to start',
@@ -1029,6 +1107,7 @@ function setLang(l) {
   setText('lobby-sub-text', t.lobbySub);
   setText('btn-lobby-start', t.btnLobbyStart);
   setText('diff-title-text', t.diffTitle);
+  setText('theme-title-text', t.themeTitle);
   setText('label-steps', t.labelSteps);
   setText('label-time', t.labelTime);
   setText('label-best', t.labelBest);
@@ -1045,6 +1124,9 @@ function setLang(l) {
   setText('btn-result-lobby-text', t.btnResultLobby);
   setText('btn-result-again-text', t.btnResultAgain);
 
+  if (!document.getElementById('theme-view').classList.contains('hidden')) {
+    renderThemeCards();
+  }
   if (!document.getElementById('difficulty-view').classList.contains('hidden')) {
     renderDifficultyCards();
   }
