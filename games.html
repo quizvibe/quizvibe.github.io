@@ -96,6 +96,7 @@ const GAMES_LIST = [
   { id: 'timing', title: '黃金秒數盲數挑戰', desc: '考驗你的生物鐘，盲數到目標秒數', emoji: '⏱️', url: 'game-timing.html' },
   { id: 'chicken', title: '社畜超度：尖叫雞進化論', desc: '瘋狂點擊洩憤，累積你的暴擊次數', emoji: '🐔', url: 'game-chicken.html' },
   { id: 'bubble', title: '強迫症救星：無限捏泡泡紙', desc: '捏到爽為止，比比看誰手速最快', emoji: '🫧', url: 'game-bubble.html' },
+  { id: 'memory', title: '記憶力大挑戰', desc: '翻牌配對，挑戰惡夢難度的指令模式', emoji: '🃏', url: 'game-memory.html' },
 ];
 
 document.getElementById('game-grid').innerHTML = GAMES_LIST.map(g => `
@@ -162,6 +163,7 @@ const i18n = {
       { title: '黃金秒數盲數挑戰', desc: '考驗你的生物鐘，盲數到目標秒數' },
       { title: '社畜超度：尖叫雞進化論', desc: '瘋狂點擊洩憤，累積你的暴擊次數' },
       { title: '強迫症救星：無限捏泡泡紙', desc: '捏到爽為止，比比看誰手速最快' },
+      { title: '記憶力大挑戰', desc: '翻牌配對，挑戰惡夢難度的指令模式' },
     ]
   },
   ja: { heroTitle: '🎮 ストレス解消ゲーム', heroSub: 'スカッとするまで遊ぼう', back: '← QuizDrop', login: 'ログイン', signup: '登録', profile: '👤 プロフィール', logout: '🚪 ログアウト', confirmLogout: 'ログアウトしますか？',
@@ -169,6 +171,7 @@ const i18n = {
       { title: 'タイムレース', desc: '体内時計を試そう、目標の秒数で止めよう' },
       { title: '叫び鶏の進化', desc: 'クリックしてストレス発散、累計ヒット数を記録' },
       { title: 'プチプチ無限版', desc: '一枚を割り切ったら新しいシートが出現' },
+      { title: '記憶力チャレンジ', desc: 'カードをめくってペアを探そう、悪夢モードに挑戦' },
     ]
   },
   en: { heroTitle: '🎮 Stress Relief Games', heroSub: 'Play until you feel better', back: '← QuizDrop', login: 'Log in', signup: 'Sign up', profile: '👤 Profile', logout: '🚪 Log out', confirmLogout: 'Log out?',
@@ -176,6 +179,7 @@ const i18n = {
       { title: 'Golden Second Challenge', desc: 'Test your internal clock, stop at the target second' },
       { title: 'Screaming Chicken Evolution', desc: 'Click to release stress, rack up your hit count' },
       { title: 'Infinite Bubble Wrap', desc: 'Pop a full sheet and a fresh one appears instantly' },
+      { title: 'Memory Match Challenge', desc: 'Flip cards and find pairs, try the nightmare command mode' },
     ]
   },
 };

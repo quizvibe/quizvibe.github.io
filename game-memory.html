@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>記憶力大挑戰 - QuizDrop</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@700;900&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans TC', sans-serif; }
+  body { background: #f7f2e9; color: #4a3f35; min-height: 100vh; padding-bottom: 60px; overflow-x: hidden; }
+  .hidden { display: none !important; }
+
+  .topbar { height: 58px; background: #fffdf8; border-bottom: 1px solid #ece4d4; display: flex; align-items: center; padding: 0 16px; gap: 12px; position: sticky; top: 0; z-index: 50; }
+  .back { color: #9c8f7e; font-size: 13px; text-decoration: none; }
+  .spacer { flex: 1; }
+
+  .qt-lang-pill { display: flex; gap: 3px; background: #f1e9da; border-radius: 10px; padding: 3px; }
+  .qt-lang-pill button { padding: 4px 9px; border-radius: 8px; font-size: 11.5px; font-weight: 600; color: #9c8f7e; border: none; background: none; cursor: pointer; transition: all .2s; }
+  .qt-lang-pill button.active { background: #fffdf8; color: #a9633a; box-shadow: 0 1px 4px rgba(80,60,30,0.1); }
+
+  .qt-btn { padding: 7px 13px; border-radius: 4px; font-size: 12.5px; font-weight: 700; border: 1.5px solid #d9cbb3; background: #fffdf8; cursor: pointer; color: #4a3f35; }
+  .qt-btn.qt-signup { background: #4a3f35; color: #fff; border: none; }
+
+  .qt-user-wrap { position: relative; }
+  .qt-user-chip { display: flex; align-items: center; gap: 7px; background: #f1e9da; border-radius: 10px; padding: 5px 12px 5px 5px; cursor: pointer; font-size: 12.5px; font-weight: 600; color: #4a3f35; }
+  .qt-avatar { width: 24px; height: 24px; border-radius: 50%; background: #a9633a; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 800; }
+  .qt-dropdown {
+    position: absolute; top: 100%; right: 0; margin-top: 8px; background: #fffdf8;
+    border: 1px solid #ece4d4; border-radius: 12px; min-width: 160px;
+    box-shadow: 0 12px 32px -8px rgba(80,60,30,0.15); overflow: hidden; z-index: 200; display: none;
+  }
+  .qt-dropdown.show { display: block; }
+  .qt-dropdown button { width: 100%; text-align: left; padding: 12px 16px; background: none; border: none; color: #4a3f35; font-size: 13.5px; cursor: pointer; transition: background .15s; font-family: inherit; }
+  .qt-dropdown button:hover { background: #f7f2e9; }
+  .qt-dropdown button.danger { color: #b14a35; }
+
+  .wrap { max-width: 560px; margin: 0 auto; padding: 18px 16px; }
+
+  #lobby-view { text-align: center; padding: 60px 20px; }
+  .lobby-title { font-size: 26px; font-weight: 900; margin-bottom: 10px; }
+  .lobby-sub { color: #9c8f7e; font-size: 14px; margin-bottom: 36px; }
+  .btn-big-start {
+    padding: 18px 48px; border-radius: 4px; background: #4a3f35; color: #fff;
+    font-weight: 800; font-size: 17px; border: none; cursor: pointer; transition: opacity .2s;
+  }
+  .btn-big-start:hover { opacity: 0.9; }
+
+  #difficulty-view { padding: 20px 0; }
+  .diff-title { font-size: 19px; font-weight: 900; text-align: center; margin-bottom: 22px; }
+  .diff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .diff-card {
+    background: #fffdf8; border: 1.5px solid #d9cbb3; border-radius: 14px; padding: 22px 16px;
+    text-align: center; cursor: pointer; transition: all .2s;
+  }
+  .diff-card:hover { border-color: #a9633a; transform: translateY(-2px); box-shadow: 0 8px 20px -8px rgba(80,60,30,0.15); }
+  .diff-card .diff-emoji { font-size: 30px; display: block; margin-bottom: 8px; }
+  .diff-card .diff-name { font-weight: 800; font-size: 15px; margin-bottom: 4px; }
+  .diff-card .diff-desc { font-size: 11.5px; color: #9c8f7e; }
+  .diff-card .diff-best { font-size: 10.5px; color: #a9633a; margin-top: 6px; font-weight: 700; }
+
+  #game-view { padding: 12px 0; }
+  .status-bar {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    background: #fffdf8; border: 1.5px solid #d9cbb3; border-radius: 12px; padding: 10px 14px; margin-bottom: 14px;
+    font-size: 12.5px; flex-wrap: wrap;
+  }
+  .status-item { display: flex; flex-direction: column; align-items: center; min-width: 50px; }
+  .status-item .status-label { color: #9c8f7e; font-size: 10px; }
+  .status-item .status-value { font-weight: 800; font-size: 14px; color: #4a3f35; }
+  .status-btns { display: flex; gap: 6px; margin-left: auto; }
+  .status-btns button {
+    padding: 6px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 700;
+    border: 1.5px solid #d9cbb3; background: #fffdf8; color: #4a3f35; cursor: pointer;
+  }
+  .status-btns button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .status-btns button.sound-btn { font-size: 14px; padding: 6px 9px; }
+
+  #command-box {
+    background: #4a3f35; color: #fffdf8; border-radius: 12px; padding: 12px 16px; margin-bottom: 12px;
+    text-align: center; font-weight: 700; font-size: 14px; min-height: 44px;
+    display: none; align-items: center; justify-content: center;
+  }
+  #command-box.show { display: flex; }
+  #command-box.praise { background: #6b8a4a; }
+  #command-box.mock { background: #b14a35; }
+
+  .board-wrap { position: relative; }
+  #card-grid {
+    display: grid; gap: 6px; max-height: 58vh; aspect-ratio: 1/1; margin: 0 auto;
+    container-type: inline-size;
+  }
+  .memory-card {
+    position: relative; aspect-ratio: 1/1; cursor: pointer;
+    transform-style: preserve-3d; transition: transform .3s; -webkit-transform-style: preserve-3d;
+  }
+  .memory-card.flipped { transform: rotateY(180deg); }
+  .memory-card .card-face {
+    position: absolute; inset: 0; border-radius: 8cqw; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    display: flex; align-items: center; justify-content: center; font-weight: 900;
+    box-shadow: 0 2px 6px -2px rgba(80,60,30,0.25);
+  }
+  .memory-card .card-back {
+    background: linear-gradient(135deg, #4a3f35, #6b5d4d);
+    background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.04) 0, rgba(255,255,255,0.04) 2px, transparent 2px, transparent 10px);
+  }
+  .memory-card .card-back::after { content: '?'; color: rgba(255,253,248,0.5); font-size: 28cqw; }
+  .memory-card .card-front {
+    background: #fffdf8; transform: rotateY(180deg); border: 1.5px solid #d9cbb3;
+    font-size: 7.5cqw; position: relative;
+  }
+  .memory-card .card-front .suit-tl, .memory-card .card-front .suit-br {
+    position: absolute; font-size: 3.2cqw; font-weight: 900; line-height: 1;
+  }
+  .memory-card .card-front .suit-tl { top: 6%; left: 8%; }
+  .memory-card .card-front .suit-br { bottom: 6%; right: 8%; transform: rotate(180deg); }
+  .memory-card.matched .card-front { background: #f1e9da; border-color: #a9633a; }
+  .memory-card.suit-red .card-front { color: #c4453a; }
+  .memory-card.suit-black .card-front { color: #2a2a2a; }
+
+  #ready-overlay {
+    position: absolute; inset: 0; background: rgba(60,45,30,0.55); backdrop-filter: blur(2px);
+    display: none; align-items: center; justify-content: center; border-radius: 12px; z-index: 10;
+  }
+  #ready-overlay.show { display: flex; }
+  .btn-ready-start {
+    padding: 16px 36px; border-radius: 4px; background: #fffdf8; color: #4a3f35;
+    font-weight: 800; font-size: 16px; border: none; cursor: pointer;
+  }
+
+  .memorize-banner { text-align: center; margin-bottom: 10px; font-size: 13px; color: #9c8f7e; display: none; }
+  .memorize-banner.show { display: block; }
+  .memorize-countdown { font-size: 22px; font-weight: 900; color: #4a3f35; }
+  .memorize-countdown.danger { color: #d83b3b; animation: pulse .5s infinite; }
+  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+  .btn-skip-memorize {
+    margin-top: 6px; padding: 6px 16px; border-radius: 99px; background: #f1e9da; border: 1.5px solid #d9cbb3;
+    color: #a9633a; font-weight: 700; font-size: 11.5px; cursor: pointer;
+  }
+
+  #result-overlay {
+    position: fixed; inset: 0; background: rgba(60,45,30,0.5); display: none;
+    align-items: center; justify-content: center; padding: 20px; z-index: 300;
+  }
+  #result-overlay.show { display: flex; }
+  .result-box { background: #fffdf8; border-radius: 18px; padding: 32px 26px; max-width: 360px; width: 100%; text-align: center; }
+  .result-emoji { font-size: 48px; display: block; margin-bottom: 12px; }
+  .result-title { font-size: 19px; font-weight: 900; margin-bottom: 16px; }
+  .result-stats { display: flex; justify-content: center; gap: 24px; margin-bottom: 22px; }
+  .result-stat-item .label { font-size: 11px; color: #9c8f7e; }
+  .result-stat-item .value { font-size: 20px; font-weight: 900; color: #a9633a; }
+  .result-stat-item .new-best { font-size: 10px; color: #6b8a4a; font-weight: 700; }
+  .result-btns { display: flex; gap: 10px; }
+  .result-btns button { flex: 1; padding: 13px; border-radius: 4px; font-weight: 800; font-size: 13.5px; border: none; cursor: pointer; }
+  .btn-result-again { background: #4a3f35; color: #fff; }
+  .btn-result-lobby { background: #f1e9da; color: #4a3f35; }
+
+  @media (max-width: 380px) {
+    .status-bar { font-size: 11px; }
+    .status-btns button { padding: 5px 8px; font-size: 10.5px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="games.html" class="back" id="back-link">← 糞Game大廳</a>
+  <div class="spacer"></div>
+  <div class="qt-lang-pill">
+    <button class="active" onclick="setLang('zh')" data-lang-btn="zh">中</button>
+    <button onclick="setLang('ja')" data-lang-btn="ja">日</button>
+    <button onclick="setLang('en')" data-lang-btn="en">EN</button>
+  </div>
+  <div id="qt-auth-buttons" style="display:flex; gap:8px;">
+    <button class="qt-btn qt-login" onclick="window.location.href='index.html?auth=login'">登入</button>
+    <button class="qt-btn qt-signup" onclick="window.location.href='index.html?auth=signup'">註冊</button>
+  </div>
+  <div id="qt-user-chip-wrap" class="hidden qt-user-wrap">
+    <div class="qt-user-chip" onclick="toggleUserDropdown()">
+      <div class="qt-avatar" id="qt-avatar-initial">U</div>
+      <span id="qt-username-display">用戶</span>
+    </div>
+    <div class="qt-dropdown" id="qt-dropdown">
+      <button onclick="window.location.href='profile.html'">👤 個人頁面</button>
+      <button class="danger" onclick="handleLogoutGames()">🚪 登出</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div id="lobby-view">
+    <div class="lobby-title" id="lobby-title-text">🃏 記憶力大挑戰</div>
+    <p class="lobby-sub" id="lobby-sub-text">翻牌配對，考驗你的瞬間記憶力！</p>
+    <button class="btn-big-start" onclick="goToDifficultySelect()" id="btn-lobby-start">開始遊戲</button>
+  </div>
+
+  <div id="difficulty-view" class="hidden">
+    <div class="diff-title" id="diff-title-text">選擇難度</div>
+    <div class="diff-grid" id="diff-grid"></div>
+  </div>
+
+  <div id="game-view" class="hidden">
+    <div class="status-bar">
+      <div class="status-item">
+        <span class="status-label" id="label-steps">步數</span>
+        <span class="status-value" id="stat-steps">0</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label" id="label-time">時間</span>
+        <span class="status-value" id="stat-time">00:00</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label" id="label-best">最佳</span>
+        <span class="status-value" id="stat-best">--:--</span>
+      </div>
+      <div class="status-btns">
+        <button class="sound-btn" id="btn-sound-toggle" onclick="toggleSound()">🔊</button>
+        <button id="btn-back-lobby" onclick="handleBackToLobby(event)">大廳</button>
+        <button id="btn-reset-game" onclick="handleResetGame(event)">重來</button>
+      </div>
+    </div>
+
+    <div id="command-box"></div>
+
+    <div class="memorize-banner" id="memorize-banner">
+      <span id="memorize-label-text">記住牌的位置！</span>
+      <span class="memorize-countdown" id="memorize-countdown">5</span>
+      <br>
+      <button class="btn-skip-memorize" id="btn-skip-memorize" onclick="skipMemorize()">直接開戰 →</button>
+    </div>
+
+    <div class="board-wrap">
+      <div id="card-grid"></div>
+      <div id="ready-overlay">
+        <button class="btn-ready-start" onclick="startMemorizePhase()" id="btn-ready-start-text">點擊挑戰開始</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="result-overlay">
+  <div class="result-box">
+    <span class="result-emoji">🎉</span>
+    <div class="result-title" id="result-title-text">恭喜過關！</div>
+    <div class="result-stats">
+      <div class="result-stat-item">
+        <div class="label" id="result-steps-label">步數</div>
+        <div class="value" id="result-steps-value">0</div>
+        <div class="new-best hidden" id="result-steps-best">🏆 新紀錄！</div>
+      </div>
+      <div class="result-stat-item">
+        <div class="label" id="result-time-label">時間</div>
+        <div class="value" id="result-time-value">00:00</div>
+        <div class="new-best hidden" id="result-time-best">🏆 新紀錄！</div>
+      </div>
+    </div>
+    <div class="result-btns">
+      <button class="btn-result-lobby" onclick="handleResultToLobby()" id="btn-result-lobby-text">回大廳</button>
+      <button class="btn-result-again" onclick="handleResultPlayAgain()" id="btn-result-again-text">再玩一次</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://xsflpzozgdgbtrtdzdlj.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzZmxwem96Z2RnYnRydGR6ZGxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTMyMzUsImV4cCI6MjA5NzE4OTIzNX0.Uyi5dYa73h0JJ9KwT2bP0C79wV_H-PoYneiR5xsbT6I';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let currentUser = null;
+
+const DIFFICULTIES = {
+  easy:     { grid: 4, pairs: 8,  memorizeSec: 5,  storageKey: 'memory_best_easy' },
+  medium:   { grid: 6, pairs: 18, memorizeSec: 15, storageKey: 'memory_best_medium' },
+  hard:     { grid: 8, pairs: 32, memorizeSec: 30, storageKey: 'memory_best_hard' },
+  hardcore: { grid: 8, pairs: 32, memorizeSec: 30, storageKey: 'memory_best_hardcore' },
+};
+
+let currentDifficulty = null;
+let cards = [];
+let flippedIndices = [];
+let isLocked = false;
+let isGameActive = false;
+let steps = 0;
+let elapsedSec = 0;
+let gameTimerHandle = null;
+let memorizeTimerHandle = null;
+let memorizeRemaining = 0;
+let currentCommand = null;
+let soundEnabled = true;
+
+const SUITS = ['♠', '♥', '♦', '♣'];
+const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+function isRedSuit(suit) { return suit === '♥' || suit === '♦'; }
+
+function buildFullDeck() {
+  const deck = [];
+  let id = 1;
+  for (const suit of SUITS) {
+    for (const rank of RANKS) {
+      deck.push({ id: id++, suit, rank });
+    }
+  }
+  return deck;
+}
+
+function fisherYatesShuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildGameDeck(pairCount) {
+  const fullDeck = buildFullDeck();
+  const sampled = fisherYatesShuffle(fullDeck).slice(0, pairCount);
+  const pairedCards = [];
+  let uidCounter = 1;
+  sampled.forEach(card => {
+    pairedCards.push({ uid: uidCounter++, suit: card.suit, rank: card.rank, matched: false });
+    pairedCards.push({ uid: uidCounter++, suit: card.suit, rank: card.rank, matched: false });
+  });
+  return fisherYatesShuffle(pairedCards);
+}
+
+function goToDifficultySelect() {
+  document.getElementById('lobby-view').classList.add('hidden');
+  document.getElementById('difficulty-view').classList.remove('hidden');
+  renderDifficultyCards();
+}
+
+function renderDifficultyCards() {
+  const t = i18nMemory[currentLang];
+  const defs = [
+    { id: 'easy', emoji: '🌱' },
+    { id: 'medium', emoji: '🔥' },
+    { id: 'hard', emoji: '💀' },
+    { id: 'hardcore', emoji: '😈' },
+  ];
+  const grid = document.getElementById('diff-grid');
+  grid.innerHTML = defs.map(d => {
+    const best = localStorage.getItem(DIFFICULTIES[d.id].storageKey);
+    const bestDisplay = best ? formatTime(parseInt(best, 10)) : '--:--';
+    return `
+      <div class="diff-card" onclick="selectDifficulty('${d.id}')">
+        <span class="diff-emoji">${d.emoji}</span>
+        <div class="diff-name">${t.diffName[d.id]}</div>
+        <div class="diff-desc">${t.diffDesc[d.id]}</div>
+        <div class="diff-best">${t.bestRecord}：${bestDisplay}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function selectDifficulty(diffId) {
+  currentDifficulty = diffId;
+  document.getElementById('difficulty-view').classList.add('hidden');
+  document.getElementById('game-view').classList.remove('hidden');
+  enterPreparePhase();
+}
+
+function enterPreparePhase() {
+  clearAllTimers();
+  steps = 0;
+  elapsedSec = 0;
+  isGameActive = false;
+  isLocked = false;
+  flippedIndices = [];
+  currentCommand = null;
+
+  const diff = DIFFICULTIES[currentDifficulty];
+  cards = buildGameDeck(diff.pairs).map(c => ({ ...c }));
+  renderCardGrid(diff.grid);
+
+  updateStepsDisplay();
+  updateTimeDisplay();
+  updateBestDisplay();
+  document.getElementById('memorize-banner').classList.remove('show');
+  setStatusBarDisabled(true);
+  document.getElementById('command-box').classList.remove('show');
+
+  document.getElementById('ready-overlay').classList.add('show');
+}
+
+function renderCardGrid(gridSize) {
+  const grid = document.getElementById('card-grid');
+  grid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+  grid.innerHTML = cards.map((card, idx) => {
+    const suitClass = isRedSuit(card.suit) ? 'suit-red' : 'suit-black';
+    return `
+      <div class="memory-card ${suitClass}" data-idx="${idx}" onclick="onCardClick(${idx})">
+        <div class="card-face card-back"></div>
+        <div class="card-face card-front">
+          <span class="suit-tl">${card.rank}${card.suit}</span>
+          ${card.rank}
+          <span class="suit-br">${card.rank}${card.suit}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function setStatusBarDisabled(disabled) {
+  document.getElementById('btn-back-lobby').disabled = disabled;
+  document.getElementById('btn-reset-game').disabled = disabled;
+}
+
+function startMemorizePhase() {
+  document.getElementById('ready-overlay').classList.remove('show');
+  document.querySelectorAll('.memory-card').forEach(el => el.classList.add('flipped'));
+
+  AudioEngine.ensureContext();
+
+  setStatusBarDisabled(true);
+  document.querySelectorAll('.memory-card').forEach(el => el.style.pointerEvents = 'none');
+
+  const diff = DIFFICULTIES[currentDifficulty];
+  memorizeRemaining = diff.memorizeSec;
+  const banner = document.getElementById('memorize-banner');
+  banner.classList.add('show');
+  updateMemorizeDisplay();
+
+  memorizeTimerHandle = setInterval(() => {
+    memorizeRemaining--;
+    updateMemorizeDisplay();
+    if (memorizeRemaining <= 5 && memorizeRemaining > 0) {
+      AudioEngine.playBeep();
+    }
+    if (memorizeRemaining <= 0) {
+      finishMemorizePhase();
+    }
+  }, 1000);
+}
+
+function updateMemorizeDisplay() {
+  const el = document.getElementById('memorize-countdown');
+  el.textContent = memorizeRemaining;
+  el.classList.toggle('danger', memorizeRemaining <= 5 && memorizeRemaining > 0);
+}
+
+function skipMemorize() {
+  finishMemorizePhase();
+}
+
+function finishMemorizePhase() {
+  clearInterval(memorizeTimerHandle);
+  memorizeTimerHandle = null;
+  AudioEngine.stopBeep();
+  AudioEngine.playStartGong();
+
+  document.getElementById('memorize-banner').classList.remove('show');
+  document.querySelectorAll('.memory-card').forEach(el => {
+    el.classList.remove('flipped');
+    el.style.pointerEvents = 'auto';
+  });
+
+  setStatusBarDisabled(false);
+  isGameActive = true;
+  isLocked = false;
+
+  startGameTimer();
+
+  if (currentDifficulty === 'hardcore') {
+    currentCommand = null;
+    refreshCommand();
+  }
+}
+
+function startGameTimer() {
+  clearInterval(gameTimerHandle);
+  elapsedSec = 0;
+  updateTimeDisplay();
+  gameTimerHandle = setInterval(() => {
+    elapsedSec++;
+    updateTimeDisplay();
+  }, 1000);
+}
+
+function formatTime(sec) {
+  const m = Math.floor(sec / 60).toString().padStart(2, '0');
+  const s = (sec % 60).toString().padStart(2, '0');
+  return `${m}:${s}`;
+}
+function updateTimeDisplay() { document.getElementById('stat-time').textContent = formatTime(elapsedSec); }
+function updateStepsDisplay() { document.getElementById('stat-steps').textContent = steps; }
+function updateBestDisplay() {
+  const best = localStorage.getItem(DIFFICULTIES[currentDifficulty].storageKey);
+  document.getElementById('stat-best').textContent = best ? formatTime(parseInt(best, 10)) : '--:--';
+}
+
+function onCardClick(idx) {
+  if (!isGameActive || isLocked) return;
+  const card = cards[idx];
+  if (card.matched) return;
+  if (flippedIndices.includes(idx)) return;
+
+  const el = document.querySelector(`.memory-card[data-idx="${idx}"]`);
+
+  if (currentDifficulty === 'hardcore') {
+    handleHardcoreClick(idx, el);
+    return;
+  }
+
+  el.classList.add('flipped');
+  flippedIndices.push(idx);
+
+  if (flippedIndices.length === 1) return;
+
+  isLocked = true;
+  steps++;
+  updateStepsDisplay();
+  const [i1, i2] = flippedIndices;
+  const c1 = cards[i1], c2 = cards[i2];
+
+  if (c1.suit === c2.suit && c1.rank === c2.rank) {
+    AudioEngine.playMatch();
+    c1.matched = true;
+    c2.matched = true;
+    document.querySelector(`.memory-card[data-idx="${i1}"]`).classList.add('matched');
+    document.querySelector(`.memory-card[data-idx="${i2}"]`).classList.add('matched');
+    flippedIndices = [];
+    isLocked = false;
+    checkGameComplete();
+  } else {
+    AudioEngine.playMismatch();
+    setTimeout(() => {
+      document.querySelector(`.memory-card[data-idx="${i1}"]`).classList.remove('flipped');
+      document.querySelector(`.memory-card[data-idx="${i2}"]`).classList.remove('flipped');
+      flippedIndices = [];
+      isLocked = false;
+    }, 700);
+  }
+}
+
+function checkGameComplete() {
+  const allMatched = cards.every(c => c.matched);
+  if (allMatched) finishGame();
+}
+
+function getUnmatchedUniqueCards() {
+  const unmatched = cards.filter(c => !c.matched);
+  const seen = new Map();
+  unmatched.forEach(c => {
+    const key = `${c.suit}${c.rank}`;
+    if (!seen.has(key)) seen.set(key, { suit: c.suit, rank: c.rank });
+  });
+  return Array.from(seen.values());
+}
+
+function refreshCommand() {
+  const uniqueRemaining = getUnmatchedUniqueCards();
+
+  if (uniqueRemaining.length === 0) {
+    currentCommand = null;
+    return;
+  }
+  if (uniqueRemaining.length === 1) {
+    currentCommand = uniqueRemaining[0];
+    renderCommandBox();
+    return;
+  }
+  if (uniqueRemaining.length === 2) {
+    if (!currentCommand || !uniqueRemaining.some(c => c.suit === currentCommand.suit && c.rank === currentCommand.rank)) {
+      currentCommand = uniqueRemaining[0];
+      renderCommandBox();
+    }
+    return;
+  }
+
+  let next;
+  do {
+    next = uniqueRemaining[Math.floor(Math.random() * uniqueRemaining.length)];
+  } while (currentCommand && next.suit === currentCommand.suit && next.rank === currentCommand.rank);
+  currentCommand = next;
+  renderCommandBox();
+}
+
+function renderCommandBox(toneClass) {
+  const box = document.getElementById('command-box');
+  const t = i18nMemory[currentLang];
+  box.className = 'show' + (toneClass ? ' ' + toneClass : '');
+  if (currentCommand) {
+    box.innerHTML = t.commandPrompt(currentCommand.rank, currentCommand.suit);
+  }
+}
+
+function handleHardcoreClick(idx, el) {
+  isLocked = true;
+  const card = cards[idx];
+  const matchesCommand = currentCommand && card.suit === currentCommand.suit && card.rank === currentCommand.rank;
+
+  if (flippedIndices.length === 0) {
+    el.classList.add('flipped');
+    steps++;
+    updateStepsDisplay();
+
+    if (!matchesCommand) {
+      AudioEngine.playMismatch();
+      renderCommandBox('mock');
+      showCommandToast(i18nMemory[currentLang].mockText());
+      setTimeout(() => {
+        el.classList.remove('flipped');
+        isLocked = false;
+      }, 800);
+      return;
+    }
+
+    flippedIndices.push(idx);
+    isLocked = false;
+    return;
+  }
+
+  el.classList.add('flipped');
+  const firstIdx = flippedIndices[0];
+  const firstCard = cards[firstIdx];
+
+  if (matchesCommand) {
+    AudioEngine.playMatch();
+    firstCard.matched = true;
+    card.matched = true;
+    document.querySelector(`.memory-card[data-idx="${firstIdx}"]`).classList.add('matched');
+    el.classList.add('matched');
+    flippedIndices = [];
+    renderCommandBox('praise');
+    showCommandToast(i18nMemory[currentLang].praiseText());
+
+    const stillRemaining = cards.some(c => !c.matched);
+    if (!stillRemaining) {
+      isLocked = false;
+      finishGame();
+      return;
+    }
+    setTimeout(() => {
+      isLocked = false;
+      refreshCommand();
+    }, 500);
+  } else {
+    AudioEngine.playMismatch();
+    renderCommandBox('mock');
+    showCommandToast(i18nMemory[currentLang].mockText());
+    setTimeout(() => {
+      document.querySelector(`.memory-card[data-idx="${firstIdx}"]`).classList.remove('flipped');
+      el.classList.remove('flipped');
+      flippedIndices = [];
+      isLocked = false;
+      refreshCommand();
+    }, 1000);
+  }
+}
+
+function showCommandToast(text) {
+  const t = i18nMemory[currentLang];
+  const box = document.getElementById('command-box');
+  const original = currentCommand ? t.commandPrompt(currentCommand.rank, currentCommand.suit) : '';
+  box.innerHTML = text;
+  setTimeout(() => {
+    if (currentCommand) box.innerHTML = original;
+  }, 700);
+}
+
+function finishGame() {
+  clearInterval(gameTimerHandle);
+  gameTimerHandle = null;
+  isGameActive = false;
+  AudioEngine.playVictory();
+
+  const storageKey = DIFFICULTIES[currentDifficulty].storageKey;
+  const prevBestTime = localStorage.getItem(storageKey);
+  const prevBest = prevBestTime ? parseInt(prevBestTime, 10) : Infinity;
+  const isNewBest = elapsedSec < prevBest;
+  if (isNewBest) localStorage.setItem(storageKey, String(elapsedSec));
+
+  const stepsKey = storageKey + '_steps';
+  const prevBestStepsRaw = localStorage.getItem(stepsKey);
+  const prevBestSteps = prevBestStepsRaw ? parseInt(prevBestStepsRaw, 10) : Infinity;
+  const isNewBestSteps = steps < prevBestSteps;
+  if (isNewBestSteps) localStorage.setItem(stepsKey, String(steps));
+
+  showResultOverlay(isNewBest, isNewBestSteps);
+  recordMemoryProgress();
+}
+
+function showResultOverlay(isNewBestTime, isNewBestSteps) {
+  document.getElementById('result-steps-value').textContent = steps;
+  document.getElementById('result-time-value').textContent = formatTime(elapsedSec);
+  document.getElementById('result-steps-best').classList.toggle('hidden', !isNewBestSteps);
+  document.getElementById('result-time-best').classList.toggle('hidden', !isNewBestTime);
+  document.getElementById('result-overlay').classList.add('show');
+}
+
+function handleResultToLobby() {
+  document.getElementById('result-overlay').classList.remove('show');
+  handleBackToLobbyForce();
+}
+
+function handleResultPlayAgain() {
+  document.getElementById('result-overlay').classList.remove('show');
+  enterPreparePhase();
+}
+
+function clearAllTimers() {
+  clearInterval(gameTimerHandle);
+  clearInterval(memorizeTimerHandle);
+  gameTimerHandle = null;
+  memorizeTimerHandle = null;
+  AudioEngine.stopBeep();
+}
+
+function handleResetGame(e) {
+  if (e && e.currentTarget) e.currentTarget.blur();
+  clearAllTimers();
+  AudioEngine.closeContext();
+  isGameActive = false;
+  currentCommand = null;
+  document.querySelectorAll('.memory-card').forEach(el => { el.style.transition = 'none'; });
+  setTimeout(() => { enterPreparePhase(); }, 0);
+}
+
+function handleBackToLobby(e) {
+  if (e && e.currentTarget) e.currentTarget.blur();
+  handleBackToLobbyForce();
+}
+
+function handleBackToLobbyForce() {
+  clearAllTimers();
+  AudioEngine.closeContext();
+  isGameActive = false;
+  currentCommand = null;
+  steps = 0;
+  elapsedSec = 0;
+  setTimeout(() => {
+    document.getElementById('game-view').classList.add('hidden');
+    document.getElementById('lobby-view').classList.remove('hidden');
+  }, 0);
+}
+
+const AudioEngine = (function() {
+  let ctx = null;
+  let beepOscillator = null;
+
+  function ensureContext() {
+    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    return ctx;
+  }
+
+  function closeContext() {
+    stopBeep();
+    if (ctx) { ctx.close().catch(() => {}); ctx = null; }
+  }
+
+  function playTone(freq, duration, type) {
+    if (!soundEnabled || !ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + duration);
+  }
+
+  function playBeep() {
+    if (!soundEnabled || !ctx) return;
+    stopBeep();
+    beepOscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
+    beepOscillator.type = 'square';
+    beepOscillator.frequency.value = 880;
+    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    beepOscillator.connect(gain);
+    gain.connect(ctx.destination);
+    beepOscillator.start();
+    beepOscillator.stop(ctx.currentTime + 0.15);
+    beepOscillator.onended = () => { beepOscillator = null; };
+  }
+
+  function stopBeep() {
+    if (beepOscillator) {
+      try { beepOscillator.stop(); } catch (e) {}
+      beepOscillator = null;
+    }
+  }
+
+  function playStartGong() { playTone(220, 0.4, 'sine'); }
+  function playMatch() { playTone(660, 0.15, 'sine'); setTimeout(() => playTone(880, 0.15, 'sine'), 100); }
+  function playMismatch() { playTone(180, 0.2, 'sawtooth'); }
+  function playVictory() {
+    [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => playTone(f, 0.25, 'sine'), i * 120));
+  }
+
+  return { ensureContext, closeContext, playBeep, stopBeep, playStartGong, playMatch, playMismatch, playVictory };
+})();
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  document.getElementById('btn-sound-toggle').textContent = soundEnabled ? '🔊' : '🔇';
+  if (!soundEnabled) AudioEngine.stopBeep();
+}
+
+const PROGRESS_KEY = 'quizdrop_game_progress';
+function getProgress() {
+  const raw = localStorage.getItem(PROGRESS_KEY);
+  const defaults = {
+    timing: { wins: 0, plays: 0, stylesUnlocked: ['default'] },
+    chicken: { hits: 0, plays: 0, stylesUnlocked: ['default'] },
+    bubble: { totalPopped: 0, fastestSheetMs: null, stylesUnlocked: ['default'] },
+    memory: { plays: 0, wins: 0 },
+  };
+  if (!raw) return defaults;
+  const parsed = JSON.parse(raw);
+  return { ...defaults, ...parsed, memory: { ...defaults.memory, ...(parsed.memory || {}) } };
+}
+function saveProgress(p) { localStorage.setItem(PROGRESS_KEY, JSON.stringify(p)); }
+
+function recordMemoryProgress() {
+  const progress = getProgress();
+  progress.memory.plays++;
+  progress.memory.wins++;
+  saveProgress(progress);
+  pushProgressToCloud();
+  saveGameResult('memory', { difficulty: currentDifficulty, steps, timeSec: elapsedSec });
+}
+
+async function saveGameResult(gameId, recordDetail) {
+  if (!currentUser) return;
+  try {
+    await supabaseClient.from('game_results').insert({ user_id: currentUser.id, game_id: gameId, detail: recordDetail });
+  } catch (err) {
+    console.warn('紀錄遊戲結果失敗（不影響遊玩）:', err);
+  }
+}
+
+async function pushProgressToCloud() {
+  if (!currentUser) return;
+  try {
+    const current = getProgress();
+    await supabaseClient.from('game_progress').upsert({ user_id: currentUser.id, progress_data: current, updated_at: new Date().toISOString() });
+  } catch (err) {
+    console.warn('進度雲端同步失敗（不影響本機遊玩）:', err);
+  }
+}
+
+function mergeProgress(localP, remoteP) {
+  if (!remoteP) return localP;
+  return {
+    timing: {
+      wins: Math.max(localP.timing.wins, remoteP.timing?.wins || 0),
+      plays: Math.max(localP.timing.plays, remoteP.timing?.plays || 0),
+      stylesUnlocked: Array.from(new Set([...(localP.timing.stylesUnlocked || []), ...(remoteP.timing?.stylesUnlocked || [])])),
+    },
+    chicken: {
+      hits: Math.max(localP.chicken.hits, remoteP.chicken?.hits || 0),
+      plays: Math.max(localP.chicken.plays, remoteP.chicken?.plays || 0),
+      stylesUnlocked: Array.from(new Set([...(localP.chicken.stylesUnlocked || []), ...(remoteP.chicken?.stylesUnlocked || [])])),
+    },
+    bubble: {
+      totalPopped: Math.max(localP.bubble.totalPopped, remoteP.bubble?.totalPopped || 0),
+      fastestSheetMs: minIgnoreNull(localP.bubble.fastestSheetMs, remoteP.bubble?.fastestSheetMs),
+      stylesUnlocked: Array.from(new Set([...(localP.bubble.stylesUnlocked || []), ...(remoteP.bubble?.stylesUnlocked || [])])),
+    },
+    memory: {
+      plays: Math.max(localP.memory?.plays || 0, remoteP.memory?.plays || 0),
+      wins: Math.max(localP.memory?.wins || 0, remoteP.memory?.wins || 0),
+    },
+  };
+}
+function minIgnoreNull(a, b) {
+  if (a == null) return b ?? null;
+  if (b == null) return a;
+  return Math.min(a, b);
+}
+
+async function syncProgressOnLogin(userId) {
+  try {
+    const { data, error } = await supabaseClient.from('game_progress').select('progress_data').eq('user_id', userId).single();
+    const remoteP = (!error && data) ? data.progress_data : null;
+    const localP = getProgress();
+    const merged = mergeProgress(localP, remoteP);
+    saveProgress(merged);
+    await supabaseClient.from('game_progress').upsert({ user_id: userId, progress_data: merged, updated_at: new Date().toISOString() });
+  } catch (err) {
+    console.warn('進度同步失敗（不影響當前遊玩，僅本機進度可能未跨裝置更新）:', err);
+  }
+}
+
+async function initAuthUI() {
+  if (sessionStorage.getItem('quizdrop_just_logged_out') === '1') {
+    sessionStorage.removeItem('quizdrop_just_logged_out');
+    document.getElementById('qt-auth-buttons').classList.remove('hidden');
+    document.getElementById('qt-user-chip-wrap').classList.add('hidden');
+    currentUser = null;
+    return;
+  }
+
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session?.user) {
+    currentUser = session.user;
+    showLoggedInUI(session.user);
+    await syncProgressOnLogin(session.user.id);
+  }
+  supabaseClient.auth.onAuthStateChange((event, newSession) => {
+    if (newSession?.user) {
+      showLoggedInUI(newSession.user);
+      currentUser = newSession.user;
+      syncProgressOnLogin(newSession.user.id);
+    } else {
+      document.getElementById('qt-auth-buttons').classList.remove('hidden');
+      document.getElementById('qt-user-chip-wrap').classList.add('hidden');
+      currentUser = null;
+    }
+  });
+}
+
+async function showLoggedInUI(user) {
+  document.getElementById('qt-auth-buttons').classList.add('hidden');
+  document.getElementById('qt-user-chip-wrap').classList.remove('hidden');
+
+  let nickname = user.email?.split('@')[0] || '用戶';
+  try {
+    const { data: userRow } = await supabaseClient.from('users').select('display_name').eq('id', user.id).single();
+    if (userRow?.display_name) nickname = userRow.display_name;
+  } catch (err) {
+    console.warn('讀取暱稱失敗，改用 email 帳號名顯示:', err);
+  }
+
+  document.getElementById('qt-username-display').textContent = nickname;
+  document.getElementById('qt-avatar-initial').textContent = nickname.charAt(0).toUpperCase();
+}
+
+function toggleUserDropdown() {
+  document.getElementById('qt-dropdown').classList.toggle('show');
+}
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('qt-user-chip-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('qt-dropdown')?.classList.remove('show');
+  }
+});
+function handleLogoutGames() {
+  if (confirm(i18nMemory[currentLang].confirmLogout)) {
+    supabaseClient.auth.signOut().then(() => {
+      sessionStorage.setItem('quizdrop_just_logged_out', '1');
+      localStorage.removeItem(PROGRESS_KEY);
+      window.location.reload();
+    });
+  }
+}
+
+const i18nMemory = {
+  zh: {
+    back: '← 糞Game大廳', login: '登入', signup: '註冊', profile: '👤 個人頁面', logout: '🚪 登出', confirmLogout: '要登出嗎？',
+    lobbyTitle: '🃏 記憶力大挑戰', lobbySub: '翻牌配對，考驗你的瞬間記憶力！', btnLobbyStart: '開始遊戲',
+    diffTitle: '選擇難度',
+    diffName: { easy: '簡單', medium: '中等', hard: '困難', hardcore: '惡夢' },
+    diffDesc: { easy: '4×4・8對', medium: '6×6・18對', hard: '8×8・32對', hardcore: '8×8・指令模式' },
+    bestRecord: '最佳紀錄',
+    labelSteps: '步數', labelTime: '時間', labelBest: '最佳',
+    memorizeLabel: '記住牌的位置！', btnSkipMemorize: '直接開戰 →', btnReadyStart: '點擊挑戰開始',
+    btnBackLobby: '大廳', btnResetGame: '重來',
+    commandPrompt: (rank, suit) => `😈 現在請給我翻出 ${suit}${rank} ！`,
+    praiseText: () => ['太強了吧！', '完全正確！繼續！', '不愧是你！'][Math.floor(Math.random() * 3)],
+    mockText: () => ['哈？這也能翻錯？', '你眼睛是裝飾品嗎？', '再猜下去天都黑了'][Math.floor(Math.random() * 3)],
+    resultTitle: '恭喜過關！', resultSteps: '步數', resultTime: '時間', newBest: '🏆 新紀錄！',
+    btnResultLobby: '回大廳', btnResultAgain: '再玩一次',
+  },
+  ja: {
+    back: '← ゲームロビー', login: 'ログイン', signup: '登録', profile: '👤 プロフィール', logout: '🚪 ログアウト', confirmLogout: 'ログアウトしますか？',
+    lobbyTitle: '🃏 記憶力チャレンジ', lobbySub: 'カードをめくってペアを見つけよう！', btnLobbyStart: 'スタート',
+    diffTitle: '難易度を選択',
+    diffName: { easy: 'かんたん', medium: 'ふつう', hard: 'むずかしい', hardcore: '悪夢' },
+    diffDesc: { easy: '4×4・8組', medium: '6×6・18組', hard: '8×8・32組', hardcore: '8×8・指令モード' },
+    bestRecord: 'ベスト記録',
+    labelSteps: '手数', labelTime: '時間', labelBest: 'ベスト',
+    memorizeLabel: 'カードの位置を覚えよう！', btnSkipMemorize: 'スキップ →', btnReadyStart: 'タップしてスタート',
+    btnBackLobby: 'ロビー', btnResetGame: 'リセット',
+    commandPrompt: (rank, suit) => `😈 ${suit}${rank} をめくってみろ！`,
+    praiseText: () => ['すごいじゃないか！', '正解！その調子！', 'やるな！'][Math.floor(Math.random() * 3)],
+    mockText: () => ['はぁ？それも間違えるの？', '目は飾りか？', 'まだまだだな'][Math.floor(Math.random() * 3)],
+    resultTitle: 'クリア！', resultSteps: '手数', resultTime: '時間', newBest: '🏆 新記録！',
+    btnResultLobby: 'ロビーへ', btnResultAgain: 'もう一度',
+  },
+  en: {
+    back: '← Game Lobby', login: 'Log in', signup: 'Sign up', profile: '👤 Profile', logout: '🚪 Log out', confirmLogout: 'Log out?',
+    lobbyTitle: '🃏 Memory Match Challenge', lobbySub: 'Flip cards and find pairs to test your memory!', btnLobbyStart: 'Start Game',
+    diffTitle: 'Select Difficulty',
+    diffName: { easy: 'Easy', medium: 'Medium', hard: 'Hard', hardcore: 'Nightmare' },
+    diffDesc: { easy: '4×4・8 pairs', medium: '6×6・18 pairs', hard: '8×8・32 pairs', hardcore: '8×8・Command mode' },
+    bestRecord: 'Best',
+    labelSteps: 'Steps', labelTime: 'Time', labelBest: 'Best',
+    memorizeLabel: 'Memorize the card positions!', btnSkipMemorize: 'Skip →', btnReadyStart: 'Tap to start',
+    btnBackLobby: 'Lobby', btnResetGame: 'Reset',
+    commandPrompt: (rank, suit) => `😈 Flip me the ${rank}${suit} !`,
+    praiseText: () => ['Nice one!', 'Correct! Keep going!', "You're good at this!"][Math.floor(Math.random() * 3)],
+    mockText: () => ['Seriously? You missed that?', 'Are your eyes just for decoration?', "At this rate we'll be here forever"][Math.floor(Math.random() * 3)],
+    resultTitle: 'You won!', resultSteps: 'Steps', resultTime: 'Time', newBest: '🏆 New record!',
+    btnResultLobby: 'Back to Lobby', btnResultAgain: 'Play Again',
+  },
+};
+let currentLang = 'zh';
+
+function setLang(l) {
+  currentLang = l;
+  document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === l));
+  localStorage.setItem('quizdrop_lang', l);
+  const t = i18nMemory[l];
+
+  const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+
+  setText('back-link', t.back);
+  const loginBtn = document.querySelector('.qt-login');
+  const signupBtn = document.querySelector('.qt-signup');
+  if (loginBtn) loginBtn.textContent = t.login;
+  if (signupBtn) signupBtn.textContent = t.signup;
+  const dropdown = document.getElementById('qt-dropdown');
+  if (dropdown) {
+    const profileBtn = dropdown.querySelector('button:not(.danger)');
+    const logoutBtn = dropdown.querySelector('button.danger');
+    if (profileBtn) profileBtn.textContent = t.profile;
+    if (logoutBtn) logoutBtn.textContent = t.logout;
+  }
+
+  setText('lobby-title-text', t.lobbyTitle);
+  setText('lobby-sub-text', t.lobbySub);
+  setText('btn-lobby-start', t.btnLobbyStart);
+  setText('diff-title-text', t.diffTitle);
+  setText('label-steps', t.labelSteps);
+  setText('label-time', t.labelTime);
+  setText('label-best', t.labelBest);
+  setText('memorize-label-text', t.memorizeLabel);
+  setText('btn-skip-memorize', t.btnSkipMemorize);
+  setText('btn-ready-start-text', t.btnReadyStart);
+  setText('btn-back-lobby', t.btnBackLobby);
+  setText('btn-reset-game', t.btnResetGame);
+  setText('result-title-text', t.resultTitle);
+  setText('result-steps-label', t.resultSteps);
+  setText('result-time-label', t.resultTime);
+  setText('result-steps-best', t.newBest);
+  setText('result-time-best', t.newBest);
+  setText('btn-result-lobby-text', t.btnResultLobby);
+  setText('btn-result-again-text', t.btnResultAgain);
+
+  if (!document.getElementById('difficulty-view').classList.contains('hidden')) {
+    renderDifficultyCards();
+  }
+  if (currentCommand && document.getElementById('command-box').classList.contains('show')) {
+    renderCommandBox();
+  }
+}
+
+(function initLangFromStorage() {
+  const saved = localStorage.getItem('quizdrop_lang') || 'zh';
+  setLang(saved);
+})();
+
+initAuthUI();
+</script>
+</body>
+</html>
