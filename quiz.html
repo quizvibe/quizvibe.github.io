@@ -46,19 +46,7 @@
   .qt-dropdown button:hover { background: #f8f8f8; }
   .qt-dropdown button.danger { color: #d83b3b; }
   body { padding-top: 80px; }
-
-  /* 底部固定廣告橫幅（手機版） */
-  .ad-banner-fixed {
-    position: fixed; bottom: 0; left: 0; right: 0; height: 50px;
-    background: rgba(255,255,255,0.96); backdrop-filter: blur(8px);
-    border-top: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: center;
-    font-size: 11px; color: #bbb; z-index: 90; pointer-events: none;
-  }
   body { padding-bottom: 60px; }
-  @media (min-width: 768px) {
-    .ad-banner-fixed { display: none; }
-    body { padding-bottom: 0; }
-  }
 
   .creator-badge { display: inline-flex; align-items: center; gap: 5px; background: #fff0f5; color: var(--accent); font-size: 11.5px; font-weight: 700; padding: 4px 12px; border-radius: 99px; margin-bottom: 14px; }
 
@@ -202,7 +190,7 @@
 <div class="toast" id="toast"></div>
 
 <!-- Google AdSense 固定橫幅預留位置（手機版顯示） -->
-<div class="ad-banner-fixed">廣告版位</div>
+
 
 <script>
 const SUPABASE_URL = 'https://xsflpzozgdgbtrtdzdlj.supabase.co';

@@ -129,6 +129,19 @@
   .qt-user-chip { display: flex; align-items: center; gap: 7px; background: rgba(124,77,255,0.12); border-radius: 99px; padding: 5px 12px 5px 5px; cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--text); transition: background .2s; }
   .qt-user-chip:hover { background: rgba(124,77,255,0.22); }
   .qt-avatar { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(120deg,var(--accent),var(--accent2)); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 800; flex-shrink: 0; }
+  .qt-user-wrap { position: relative; }
+  .qt-dropdown {
+    position: absolute; top: 100%; right: 0; margin-top: 8px; background: var(--card);
+    border: 1px solid rgba(124,77,255,0.2); border-radius: 14px; min-width: 160px;
+    box-shadow: 0 12px 32px -8px rgba(0,0,0,0.3); overflow: hidden; z-index: 200; display: none;
+  }
+  .qt-dropdown.show { display: block; }
+  .qt-dropdown button {
+    width: 100%; text-align: left; padding: 12px 16px; background: none; border: none;
+    color: var(--text); font-size: 13.5px; cursor: pointer; transition: background .15s; font-family: inherit;
+  }
+  .qt-dropdown button:hover { background: rgba(124,77,255,0.1); }
+  .qt-dropdown button.danger { color: #ff6b6b; }
   body { padding-top: 80px; } /* push content below fixed topbar */
 </style>
 </head>
@@ -147,10 +160,14 @@
       <button class="qt-btn qt-login" onclick="window.location.href='index.html'">登入</button>
       <button class="qt-btn qt-signup" onclick="window.location.href='index.html'">註冊</button>
     </div>
-    <div id="qt-user-chip-wrap" class="hidden">
-      <div class="qt-user-chip" onclick="window.location.href='profile.html'">
+    <div id="qt-user-chip-wrap" class="hidden qt-user-wrap">
+      <div class="qt-user-chip" onclick="toggleUserDropdown()">
         <div class="qt-avatar" id="qt-avatar-initial">U</div>
         <span id="qt-username-display">用戶</span>
+      </div>
+      <div class="qt-dropdown" id="qt-dropdown">
+        <button onclick="window.location.href='profile.html'">👤 個人頁面</button>
+        <button class="danger" onclick="handleQuizPageLogout()">🚪 登出</button>
       </div>
     </div>
   </div>
@@ -166,7 +183,7 @@
 
 <div id="start-screen" class="hidden">
   <button class="btn-start" onclick="startQuiz()">開始診斷 →</button>
-  <p class="notice">共 10 題 · 約 3 分鐘 · 結果絕對精準（不負責任）</p>
+  <p class="notice">共 10 題 · 約 3 分鐘 · 結果僅供娛樂參考</p>
 </div>
 
 <div class="progress-wrap hidden" id="progress-wrap">
@@ -206,6 +223,9 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- Google AdSense 固定橫幅預留位置（手機版顯示）。正式上線後，將下方 div 換成 AdSense 提供的 <ins> 廣告代碼 -->
+
 
 <script>
 const SUPABASE_URL = 'https://xsflpzozgdgbtrtdzdlj.supabase.co';
@@ -309,6 +329,26 @@ async function loadQuiz() {
   }
 }
 loadQuiz();
+
+function toggleUserDropdown() {
+  document.getElementById('qt-dropdown').classList.toggle('show');
+}
+
+// 點擊頁面其他地方時自動收起下拉選單
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('qt-user-chip-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('qt-dropdown')?.classList.remove('show');
+  }
+});
+
+function handleQuizPageLogout() {
+  if (confirm('要登出嗎？')) {
+    supabaseClient.auth.signOut().then(() => {
+      window.location.href = 'index.html';
+    });
+  }
+}
 
 // 直接顯示已存的結果（從個人頁面點「重溫結果」過來時使用），不重新計分、不重複存檔
 function showSavedResult(result) {
@@ -576,16 +616,34 @@ function shareLine() {
   const shareUrl = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
   window.open(shareUrl, '_blank', 'noopener,noreferrer');
 }
+// 偵測是否在 LINE / Threads / Instagram / Facebook 等 App 內建瀏覽器（WebView）中
+// 這類環境常會封鎖 window.open 開新視窗的行為，需要改用同頁跳轉
+function isInAppWebView() {
+  const ua = navigator.userAgent || '';
+  return /Line\/|FBAN|FBAV|Instagram|Threads/i.test(ua);
+}
+
 function shareFacebook() {
   const { text, url } = getShareText();
-  // Facebook 分享視窗不會顯示動態結果文字（平台限制，只抓網頁固定的 meta 標籤）
-  // 因此先複製完整結果文字，引導使用者貼到貼文裡
   navigator.clipboard.writeText(text + '\n' + url).then(() => {
     showToast('結果已複製！貼到 Facebook 貼文裡分享吧 📋', 4000);
-    // 延遲開啟分享視窗，讓使用者先看清楚提示
+    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
     setTimeout(() => {
-      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
+      if (isInAppWebView()) {
+        // App 內建瀏覽器通常會封鎖 window.open，改用同頁跳轉確保真的會開啟
+        window.location.href = fbUrl;
+      } else {
+        window.open(fbUrl, '_blank', 'noopener,noreferrer');
+      }
     }, 1200);
+  }).catch(() => {
+    // 如果連複製都失敗（部分 WebView 限制 clipboard API），至少還是要嘗試跳轉分享頁
+    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+    if (isInAppWebView()) {
+      window.location.href = fbUrl;
+    } else {
+      window.open(fbUrl, '_blank', 'noopener,noreferrer');
+    }
   });
 }
 function copyResult() {
