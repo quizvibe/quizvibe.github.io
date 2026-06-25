@@ -297,7 +297,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const MAX_SLOTS = 10;
-const FREE_AD_UNLOCK_UNTIL = 5;
+const FREE_AD_UNLOCK_UNTIL = 1; // 廣告品質不可控（McAfee 標記為可疑網域），暫停看廣告解鎖功能，維持只有額度1免費
 const MIN_RESULTS = 4, MAX_RESULTS = 8;
 const MIN_QUESTIONS = 5, MAX_QUESTIONS = 10;
 const MIN_OPTIONS = 4, MAX_OPTIONS = 6;
