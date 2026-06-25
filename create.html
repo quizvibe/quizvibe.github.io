@@ -82,6 +82,20 @@
   }
   .btn-ad-next.ready { opacity: 1; pointer-events: all; }
 
+  .saving-lock-overlay {
+    position: fixed; inset: 0; background: rgba(60,45,30,0.7); z-index: 500;
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .saving-lock-overlay.show { display: flex; }
+  .saving-lock-box { background: #fffdf8; border-radius: 20px; padding: 36px 32px; max-width: 320px; width: 100%; text-align: center; }
+  .saving-spinner {
+    width: 44px; height: 44px; border: 4px solid #ece4d4; border-top-color: #a9633a; border-radius: 50%;
+    margin: 0 auto 18px; animation: savingSpin 0.8s linear infinite;
+  }
+  @keyframes savingSpin { to { transform: rotate(360deg); } }
+  .saving-lock-title { font-size: 16px; font-weight: 800; color: #4a3f35; margin-bottom: 6px; }
+  .saving-lock-desc { font-size: 12.5px; color: #9c8f7e; }
+
   #creator-form { display: none; }
   .section-card { background: #fffdf8; border-radius: 18px; padding: 28px 24px; margin-bottom: 20px; border: 1.5px solid #d9cbb3; }
   .section-title { font-size: 15px; font-weight: 800; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; color: #4a3f35; }
@@ -245,6 +259,14 @@
       <p id="ad-status">請稍候</p>
       <div class="ad-progress-bar"><div class="ad-progress-fill" id="ad-progress-fill"></div></div>
       <button class="btn-ad-next" id="btn-ad-next" onclick="onAdFinished()">完成解鎖 →</button>
+    </div>
+  </div>
+
+  <div class="saving-lock-overlay" id="saving-lock-overlay">
+    <div class="saving-lock-box">
+      <div class="saving-spinner"></div>
+      <div class="saving-lock-title" id="saving-lock-title">儲存中...</div>
+      <div class="saving-lock-desc" id="saving-lock-desc">請稍候，正在確保資料完整寫入</div>
     </div>
   </div>
 
@@ -931,6 +953,23 @@ function collectFormData(skipStrictValidation) {
 
 // 儲存/發布成功後，直接用剛送出的資料更新記憶體裡的 myQuizzes，不依賴重新查詢資料庫，
 // 避免讀寫之間的時間差讓畫面顯示到舊版本
+// 顯示「儲存中」全螢幕鎖定遮罩，強制使用者停留至少 SAVE_LOCK_MS 毫秒，
+// 確保資料庫有足夠時間完成寫入同步，不會被使用者搶在同步完成前就離開頁面、抓到舊資料
+const SAVE_LOCK_MS = 3000;
+function showSavingLock(titleText, descText) {
+  document.getElementById('saving-lock-title').textContent = titleText;
+  document.getElementById('saving-lock-desc').textContent = descText;
+  document.getElementById('saving-lock-overlay').classList.add('show');
+}
+function hideSavingLock() {
+  document.getElementById('saving-lock-overlay').classList.remove('show');
+}
+function waitForSaveLock(startTime) {
+  const elapsed = Date.now() - startTime;
+  const remaining = Math.max(0, SAVE_LOCK_MS - elapsed);
+  return new Promise(resolve => setTimeout(resolve, remaining));
+}
+
 function syncLocalQuizCache(quizId, slotIndex, fullPayload) {
   const cacheEntry = { id: quizId, slot_index: slotIndex, ...fullPayload };
   const idx = myQuizzes.findIndex(q => q.id === quizId);
@@ -963,6 +1002,10 @@ async function publishQuiz() {
   btn.disabled = true;
   btn.textContent = i18nCreate[currentLang].publishingText;
 
+  const t = i18nCreate[currentLang];
+  showSavingLock(t.publishingLockTitle, t.publishingLockDesc);
+  const startTime = Date.now();
+
   try {
     const payload = {
       creator_id: currentUser.id,
@@ -991,9 +1034,13 @@ async function publishQuiz() {
 
     syncLocalQuizCache(data.id, targetSlotIndex, payload);
     formDirty = false;
+    await waitForSaveLock(startTime); // 強制停留至少 3 秒，避免使用者在資料庫同步完成前就離開頁面
+    hideSavingLock();
     showSuccessScreen(data.id);
   } catch (err) {
     console.error('Publish error:', err.message, err);
+    await waitForSaveLock(startTime);
+    hideSavingLock();
     showTopMsg(i18nCreate[currentLang].publishFailed(err.message || i18nCreate[currentLang].tryAgain), 'error');
     highlightError(document.getElementById('top-msg'));
     alert(i18nCreate[currentLang].publishFailed(err.message || i18nCreate[currentLang].tryAgain));
@@ -1022,6 +1069,10 @@ async function saveDraft() {
   const btn = document.getElementById('btn-save-draft');
   btn.disabled = true;
   btn.textContent = i18nCreate[currentLang].savingText;
+
+  const t = i18nCreate[currentLang];
+  showSavingLock(t.savingLockTitle, t.savingLockDesc);
+  const startTime = Date.now();
 
   try {
     const payload = {
@@ -1053,13 +1104,16 @@ async function saveDraft() {
 
     syncLocalQuizCache(editingQuizId, targetSlotIndex, payload);
     formDirty = false;
+    await waitForSaveLock(startTime); // 強制停留至少 3 秒，避免使用者在資料庫同步完成前就離開頁面
     showTopMsg(i18nCreate[currentLang].draftSaved, 'success');
   } catch (err) {
     console.error('Save draft error:', err.message, err);
+    await waitForSaveLock(startTime);
     showTopMsg(i18nCreate[currentLang].saveFailed(err.message || i18nCreate[currentLang].tryAgain), 'error');
     highlightError(document.getElementById('top-msg'));
     alert(i18nCreate[currentLang].saveFailed(err.message || i18nCreate[currentLang].tryAgain) + '\n\n' + i18nCreate[currentLang].saveFailedNote);
   } finally {
+    hideSavingLock();
     btn.disabled = false;
     btn.textContent = i18nCreate[currentLang].btnSaveDraft;
   }
@@ -1211,6 +1265,8 @@ const i18nCreate = {
     slotLabel: (i) => `額度 ${i}`, btnView: '查看', btnEdit: '編輯', btnDelete: '刪除',
     leaveConfirm: '你有尚未儲存的變更，離開將會遺失，確定要離開嗎？\n（可以先點「儲存草稿」再離開）',
     draftSaved: '✅ 草稿已儲存', publishingText: '發布中...', savingText: '儲存中...',
+    savingLockTitle: '儲存中...', savingLockDesc: '請稍候，正在確保資料完整寫入',
+    publishingLockTitle: '發布中...', publishingLockDesc: '請稍候，正在確保資料完整寫入',
     deleteConfirm: '刪除後該測驗的所有資料（題目、結果、玩家紀錄）都會永久消失，且無法復原，確定要刪除嗎？',
     deleteFailed: (msg) => `刪除失敗：${msg}`, linkCopied: '連結已複製！',
     publishFailed: (msg) => `發布失敗：${msg}`, saveFailed: (msg) => `儲存失敗：${msg}`,
@@ -1247,6 +1303,8 @@ const i18nCreate = {
     slotLabel: (i) => `枠 ${i}`, btnView: '見る', btnEdit: '編集', btnDelete: '削除',
     leaveConfirm: '保存していない変更があります。このまま離れると失われます。\n（先に「下書き保存」をタップできます）',
     draftSaved: '✅ 下書きを保存しました', publishingText: '公開中...', savingText: '保存中...',
+    savingLockTitle: '保存中...', savingLockDesc: 'データの保存を確実にするため、少々お待ちください',
+    publishingLockTitle: '公開中...', publishingLockDesc: 'データの保存を確実にするため、少々お待ちください',
     deleteConfirm: '削除すると、このクイズの全データ（質問、結果、プレイ履歴）が完全に消去され、復元できません。本当に削除しますか？',
     deleteFailed: (msg) => `削除に失敗しました：${msg}`, linkCopied: 'リンクをコピーしました！',
     publishFailed: (msg) => `公開に失敗しました：${msg}`, saveFailed: (msg) => `保存に失敗しました：${msg}`,
@@ -1283,6 +1341,8 @@ const i18nCreate = {
     slotLabel: (i) => `Slot ${i}`, btnView: 'View', btnEdit: 'Edit', btnDelete: 'Delete',
     leaveConfirm: 'You have unsaved changes that will be lost if you leave.\n(You can tap "Save Draft" first)',
     draftSaved: '✅ Draft saved', publishingText: 'Publishing...', savingText: 'Saving...',
+    savingLockTitle: 'Saving...', savingLockDesc: 'Please wait while we make sure everything is saved',
+    publishingLockTitle: 'Publishing...', publishingLockDesc: 'Please wait while we make sure everything is saved',
     deleteConfirm: 'Deleting will permanently erase all data for this quiz (questions, results, play history) and cannot be undone. Are you sure you want to delete it?',
     deleteFailed: (msg) => `Delete failed: ${msg}`, linkCopied: 'Link copied!',
     publishFailed: (msg) => `Publish failed: ${msg}`, saveFailed: (msg) => `Save failed: ${msg}`,
