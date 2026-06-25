@@ -921,6 +921,18 @@ function collectFormData(skipStrictValidation) {
   return { title, desc, results, questions };
 }
 
+// 儲存/發布成功後，直接用剛送出的資料更新記憶體裡的 myQuizzes，不依賴重新查詢資料庫，
+// 避免讀寫之間的時間差讓畫面顯示到舊版本
+function syncLocalQuizCache(quizId, slotIndex, title, status) {
+  const idx = myQuizzes.findIndex(q => q.id === quizId);
+  if (idx >= 0) {
+    myQuizzes[idx] = { ...myQuizzes[idx], title, status, slot_index: slotIndex };
+  } else {
+    myQuizzes = myQuizzes.filter(q => q.slot_index !== slotIndex); // 同一格不該有兩筆，先清掉舊的
+    myQuizzes.push({ id: quizId, title, status, slot_index: slotIndex });
+  }
+}
+
 async function publishQuiz() {
   const msgEl = document.getElementById('top-msg');
   msgEl.style.display = 'none';
@@ -968,6 +980,7 @@ async function publishQuiz() {
 
     if (error) throw error;
 
+    syncLocalQuizCache(data.id, targetSlotIndex, title, 'published');
     formDirty = false;
     showSuccessScreen(data.id);
   } catch (err) {
@@ -1029,6 +1042,7 @@ async function saveDraft() {
 
     if (error) throw error;
 
+    syncLocalQuizCache(editingQuizId, targetSlotIndex, title, 'draft');
     formDirty = false;
     showTopMsg(i18nCreate[currentLang].draftSaved, 'success');
   } catch (err) {
@@ -1103,7 +1117,8 @@ async function handleBackToDashboardClick() {
       return;
     }
   }
-  await loadMyQuizzes(); // 重新從資料庫抓取最新資料，避免顯示記憶體裡的舊版本
+  // myQuizzes 已經在每次儲存/發布/刪除時被即時同步，不需要再重新查詢資料庫，
+  // 這樣可以完全避開「資料庫還沒寫入完成、讀到舊版本」的時間差風險
   showDashboard();
 }
 
