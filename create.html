@@ -1479,6 +1479,16 @@ function retranslateDynamicFormContent() {
 
 initAuthUI();
 init(); // 必須放在最後執行，因為 init() 內部可能呼叫 setBackLink，而 setBackLink 依賴 currentLang 與 i18nCreate 已宣告完成
+
+// 偵測瀏覽器「往返快取」(bfcache)：當使用者點擊瀏覽器上一頁/下一頁、或某些情況下快速來回切換頁面時，
+// 瀏覽器可能直接從記憶體還原一份「凍結的舊頁面快照」，完全不會重新執行 JavaScript，
+// 這會導致畫面停留在「離開那一刻」的 myQuizzes 狀態，不管資料庫實際上是否已經更新成功
+// event.persisted === true 就是這種情況發生的訊號，此時強制重新整理，確保拿到真正最新的資料
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted) {
+    window.location.reload();
+  }
+});
 </script>
 </body>
 </html>

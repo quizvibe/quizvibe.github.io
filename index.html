@@ -892,6 +892,13 @@ function redirectBackIfNeeded() {
     window.location.href = returnUrl;
   }
 }
+
+// 偵測瀏覽器往返快取（bfcache），避免快速切換頁面時看到凍結的舊畫面快照
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted) {
+    window.location.reload();
+  }
+});
 </script>
 </body>
 </html>
