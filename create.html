@@ -457,7 +457,7 @@ function goEditQuiz(slotIndex, quizId) {
 }
 
 async function deleteAndRecreate(slotIndex, quizId) {
-  if (!confirm('刪除後該測驗的所有資料（題目、結果、玩家紀錄）都會永久消失，且無法復原，確定要刪除嗎？')) return;
+  if (!confirm(i18nCreate[currentLang].deleteConfirm)) return;
   try {
     const { error } = await supabaseClient.from('quizzes').delete().eq('id', quizId);
     if (error) throw error;
@@ -466,7 +466,7 @@ async function deleteAndRecreate(slotIndex, quizId) {
     editingQuizId = null;
     showCreatorForm();
   } catch (err) {
-    alert('刪除失敗：' + err.message);
+    alert(i18nCreate[currentLang].deleteFailed(err.message));
   }
 }
 
@@ -940,7 +940,7 @@ async function publishQuiz() {
 
   const btn = document.getElementById('btn-publish');
   btn.disabled = true;
-  btn.textContent = '發布中...';
+  btn.textContent = i18nCreate[currentLang].publishingText;
 
   try {
     const payload = {
@@ -972,11 +972,11 @@ async function publishQuiz() {
     showSuccessScreen(data.id);
   } catch (err) {
     console.error('Publish error:', err.message, err);
-    showTopMsg('發布失敗：' + (err.message || '請再試一次'), 'error');
+    showTopMsg(i18nCreate[currentLang].publishFailed(err.message || i18nCreate[currentLang].tryAgain), 'error');
     highlightError(document.getElementById('top-msg'));
-    alert('發布失敗：' + (err.message || '請再試一次'));
+    alert(i18nCreate[currentLang].publishFailed(err.message || i18nCreate[currentLang].tryAgain));
     btn.disabled = false;
-    btn.textContent = '🚀 發布測驗';
+    btn.textContent = i18nCreate[currentLang].btnPublish;
   }
 }
 
@@ -999,7 +999,7 @@ async function saveDraft() {
 
   const btn = document.getElementById('btn-save-draft');
   btn.disabled = true;
-  btn.textContent = '儲存中...';
+  btn.textContent = i18nCreate[currentLang].savingText;
 
   try {
     const payload = {
@@ -1033,12 +1033,12 @@ async function saveDraft() {
     showTopMsg(i18nCreate[currentLang].draftSaved, 'success');
   } catch (err) {
     console.error('Save draft error:', err.message, err);
-    showTopMsg('儲存失敗：' + (err.message || '請再試一次'), 'error');
+    showTopMsg(i18nCreate[currentLang].saveFailed(err.message || i18nCreate[currentLang].tryAgain), 'error');
     highlightError(document.getElementById('top-msg'));
-    alert('儲存失敗：' + (err.message || '請再試一次') + '\n\n（formDirty 不會被清除，請修正問題後再試一次儲存）');
+    alert(i18nCreate[currentLang].saveFailed(err.message || i18nCreate[currentLang].tryAgain) + '\n\n' + i18nCreate[currentLang].saveFailedNote);
   } finally {
     btn.disabled = false;
-    btn.textContent = '💾 儲存草稿';
+    btn.textContent = i18nCreate[currentLang].btnSaveDraft;
   }
 }
 
@@ -1070,7 +1070,7 @@ function showSuccessScreen(quizId) {
 
 function copyShareUrl() {
   const shareUrl = `${window.location.origin}/quiz.html?id=${publishedQuizId}`;
-  navigator.clipboard.writeText(shareUrl).then(() => alert('連結已複製！'));
+  navigator.clipboard.writeText(shareUrl).then(() => alert(i18nCreate[currentLang].linkCopied));
 }
 
 function goToMyQuiz() {
@@ -1186,7 +1186,11 @@ const i18nCreate = {
     slotEmpty: (i) => `✨ 額度 ${i}：尚未建立測驗`, btnStartCreate: '開始創作',
     slotLabel: (i) => `額度 ${i}`, btnView: '查看', btnEdit: '編輯', btnDelete: '刪除',
     leaveConfirm: '你有尚未儲存的變更，離開將會遺失，確定要離開嗎？\n（可以先點「儲存草稿」再離開）',
-    draftSaved: '✅ 草稿已儲存',
+    draftSaved: '✅ 草稿已儲存', publishingText: '發布中...', savingText: '儲存中...',
+    deleteConfirm: '刪除後該測驗的所有資料（題目、結果、玩家紀錄）都會永久消失，且無法復原，確定要刪除嗎？',
+    deleteFailed: (msg) => `刪除失敗：${msg}`, linkCopied: '連結已複製！',
+    publishFailed: (msg) => `發布失敗：${msg}`, saveFailed: (msg) => `儲存失敗：${msg}`,
+    tryAgain: '請再試一次', saveFailedNote: '（formDirty 不會被清除，請修正問題後再試一次儲存）',
     resultLabel: (i) => `結果 ${i}`, removeBtn: '移除',
     labelResultName: '結果名稱', labelResultDesc: '結果敘述',
     placeholderResultName: '例如：貓系戀人', placeholderResultDesc: '毒舌、有趣地描述這個結果的特質',
@@ -1218,7 +1222,11 @@ const i18nCreate = {
     slotEmpty: (i) => `✨ 枠 ${i}：まだクイズがありません`, btnStartCreate: '作成を始める',
     slotLabel: (i) => `枠 ${i}`, btnView: '見る', btnEdit: '編集', btnDelete: '削除',
     leaveConfirm: '保存していない変更があります。このまま離れると失われます。\n（先に「下書き保存」をタップできます）',
-    draftSaved: '✅ 下書きを保存しました',
+    draftSaved: '✅ 下書きを保存しました', publishingText: '公開中...', savingText: '保存中...',
+    deleteConfirm: '削除すると、このクイズの全データ（質問、結果、プレイ履歴）が完全に消去され、復元できません。本当に削除しますか？',
+    deleteFailed: (msg) => `削除に失敗しました：${msg}`, linkCopied: 'リンクをコピーしました！',
+    publishFailed: (msg) => `公開に失敗しました：${msg}`, saveFailed: (msg) => `保存に失敗しました：${msg}`,
+    tryAgain: 'もう一度お試しください', saveFailedNote: '（変更内容は破棄されません。問題を解決してから再度保存してください）',
     resultLabel: (i) => `結果 ${i}`, removeBtn: '削除',
     labelResultName: '結果名', labelResultDesc: '結果の説明',
     placeholderResultName: '例：猫系の恋人', placeholderResultDesc: '皮肉っぽく、面白くこの結果の特徴を説明してください',
@@ -1250,7 +1258,11 @@ const i18nCreate = {
     slotEmpty: (i) => `✨ Slot ${i}: No quiz yet`, btnStartCreate: 'Start Creating',
     slotLabel: (i) => `Slot ${i}`, btnView: 'View', btnEdit: 'Edit', btnDelete: 'Delete',
     leaveConfirm: 'You have unsaved changes that will be lost if you leave.\n(You can tap "Save Draft" first)',
-    draftSaved: '✅ Draft saved',
+    draftSaved: '✅ Draft saved', publishingText: 'Publishing...', savingText: 'Saving...',
+    deleteConfirm: 'Deleting will permanently erase all data for this quiz (questions, results, play history) and cannot be undone. Are you sure you want to delete it?',
+    deleteFailed: (msg) => `Delete failed: ${msg}`, linkCopied: 'Link copied!',
+    publishFailed: (msg) => `Publish failed: ${msg}`, saveFailed: (msg) => `Save failed: ${msg}`,
+    tryAgain: 'Please try again', saveFailedNote: '(Your changes were not discarded — fix the issue and try saving again)',
     resultLabel: (i) => `Result ${i}`, removeBtn: 'Remove',
     labelResultName: 'Result name', labelResultDesc: 'Result description',
     placeholderResultName: 'e.g. Cat-like lover', placeholderResultDesc: 'Describe this result in a witty, entertaining way',
