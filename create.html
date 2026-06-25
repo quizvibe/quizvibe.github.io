@@ -334,6 +334,8 @@ async function init() {
   currentUser = session.user;
 
   await loadUserSlots();
+  // 短暫延遲：給資料庫一點時間完成讀寫同步，降低（但無法保證消除）重新整理頁面後抓到舊資料的機率
+  await new Promise(resolve => setTimeout(resolve, 500));
   await loadMyQuizzes();
   showDashboard();
 }
