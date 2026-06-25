@@ -381,6 +381,7 @@ function showDashboard() {
     dotsEl.appendChild(dot);
   }
 
+  console.log('[DEBUG] showDashboard 渲染前，myQuizzes 內容:', JSON.parse(JSON.stringify(myQuizzes)));
   const listEl = document.getElementById('my-quizzes-list');
   let html = '';
   for (let i = 1; i <= MAX_SLOTS; i++) {
@@ -1006,8 +1007,11 @@ async function saveDraft() {
   }
   currentUser = session.user;
 
+  console.log('[DEBUG] saveDraft 開始 - editingQuizId:', editingQuizId, ', targetSlotIndex:', targetSlotIndex, ', 輸入框目前的值:', document.getElementById('quiz-title').value);
+
   const formData = collectFormData(true); // 草稿只要求標題，其他不強制完整
   if (!formData) return;
+  console.log('[DEBUG] collectFormData 收集到的標題:', formData.title);
   const { title, desc, results, questions } = formData;
 
   const btn = document.getElementById('btn-save-draft');
@@ -1043,6 +1047,7 @@ async function saveDraft() {
     if (error) throw error;
 
     syncLocalQuizCache(editingQuizId, targetSlotIndex, title, 'draft');
+    console.log('[DEBUG] syncLocalQuizCache 執行後，myQuizzes 內容:', JSON.parse(JSON.stringify(myQuizzes)));
     formDirty = false;
     showTopMsg(i18nCreate[currentLang].draftSaved, 'success');
   } catch (err) {
