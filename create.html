@@ -381,7 +381,6 @@ function showDashboard() {
     dotsEl.appendChild(dot);
   }
 
-  console.log('[DEBUG] showDashboard 渲染前，myQuizzes 內容:', JSON.parse(JSON.stringify(myQuizzes)));
   const listEl = document.getElementById('my-quizzes-list');
   let html = '';
   for (let i = 1; i <= MAX_SLOTS; i++) {
@@ -530,7 +529,13 @@ async function showCreatorForm(quizId) {
   formDirty = false;
 
   if (quizId) {
-    // 編輯模式：從 Supabase 載入既有測驗資料填回表單
+    // 編輯模式：優先使用記憶體中剛儲存過的完整資料（避免資料庫讀寫時間差導致顯示舊版本），
+    // 只有當快取裡沒有完整內容時（例如這筆資料是從額度列表查詢來的、本次工作階段還沒編輯過）才查詢資料庫
+    const cached = myQuizzes.find(q => q.id === quizId);
+    if (cached && cached.questions) {
+      loadQuizDataIntoForm(cached);
+      return;
+    }
     try {
       const { data: quizData, error } = await supabaseClient.from('quizzes').select('*').eq('id', quizId).single();
       if (error) throw error;
@@ -924,13 +929,14 @@ function collectFormData(skipStrictValidation) {
 
 // 儲存/發布成功後，直接用剛送出的資料更新記憶體裡的 myQuizzes，不依賴重新查詢資料庫，
 // 避免讀寫之間的時間差讓畫面顯示到舊版本
-function syncLocalQuizCache(quizId, slotIndex, title, status) {
+function syncLocalQuizCache(quizId, slotIndex, fullPayload) {
+  const cacheEntry = { id: quizId, slot_index: slotIndex, ...fullPayload };
   const idx = myQuizzes.findIndex(q => q.id === quizId);
   if (idx >= 0) {
-    myQuizzes[idx] = { ...myQuizzes[idx], title, status, slot_index: slotIndex };
+    myQuizzes[idx] = { ...myQuizzes[idx], ...cacheEntry };
   } else {
     myQuizzes = myQuizzes.filter(q => q.slot_index !== slotIndex); // 同一格不該有兩筆，先清掉舊的
-    myQuizzes.push({ id: quizId, title, status, slot_index: slotIndex });
+    myQuizzes.push(cacheEntry);
   }
 }
 
@@ -981,7 +987,7 @@ async function publishQuiz() {
 
     if (error) throw error;
 
-    syncLocalQuizCache(data.id, targetSlotIndex, title, 'published');
+    syncLocalQuizCache(data.id, targetSlotIndex, payload);
     formDirty = false;
     showSuccessScreen(data.id);
   } catch (err) {
@@ -1007,11 +1013,8 @@ async function saveDraft() {
   }
   currentUser = session.user;
 
-  console.log('[DEBUG] saveDraft 開始 - editingQuizId:', editingQuizId, ', targetSlotIndex:', targetSlotIndex, ', 輸入框目前的值:', document.getElementById('quiz-title').value);
-
   const formData = collectFormData(true); // 草稿只要求標題，其他不強制完整
   if (!formData) return;
-  console.log('[DEBUG] collectFormData 收集到的標題:', formData.title);
   const { title, desc, results, questions } = formData;
 
   const btn = document.getElementById('btn-save-draft');
@@ -1046,8 +1049,7 @@ async function saveDraft() {
 
     if (error) throw error;
 
-    syncLocalQuizCache(editingQuizId, targetSlotIndex, title, 'draft');
-    console.log('[DEBUG] syncLocalQuizCache 執行後，myQuizzes 內容:', JSON.parse(JSON.stringify(myQuizzes)));
+    syncLocalQuizCache(editingQuizId, targetSlotIndex, payload);
     formDirty = false;
     showTopMsg(i18nCreate[currentLang].draftSaved, 'success');
   } catch (err) {
