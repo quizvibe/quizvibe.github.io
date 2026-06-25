@@ -955,7 +955,7 @@ function collectFormData(skipStrictValidation) {
 // 避免讀寫之間的時間差讓畫面顯示到舊版本
 // 顯示「儲存中」全螢幕鎖定遮罩，強制使用者停留至少 SAVE_LOCK_MS 毫秒，
 // 確保資料庫有足夠時間完成寫入同步，不會被使用者搶在同步完成前就離開頁面、抓到舊資料
-const SAVE_LOCK_MS = 3000;
+const SAVE_LOCK_MS = 1000;
 function showSavingLock(titleText, descText) {
   document.getElementById('saving-lock-title').textContent = titleText;
   document.getElementById('saving-lock-desc').textContent = descText;
