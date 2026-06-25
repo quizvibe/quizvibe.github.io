@@ -73,11 +73,6 @@
   }
   .ad-overlay.show { display: flex; }
   .ad-box { background: #fffdf8; border-radius: 20px; padding: 32px; max-width: 360px; width: 100%; text-align: center; }
-  .ad-placeholder {
-    background: repeating-linear-gradient(45deg, #f1e9da, #f1e9da 10px, #ece0ce 10px, #ece0ce 20px);
-    border-radius: 14px; height: 200px; display: flex; align-items: center; justify-content: center;
-    color: #9c8f7e; font-size: 13px; font-weight: 700; margin-bottom: 18px;
-  }
   .ad-progress-bar { height: 6px; background: #f1e9da; border-radius: 99px; overflow: hidden; margin-bottom: 14px; }
   .ad-progress-fill { height: 100%; background: #a9633a; width: 0%; transition: width .1s linear; }
   .ad-status { font-size: 13px; color: #9c8f7e; margin-bottom: 16px; }
@@ -86,12 +81,6 @@
     border: none; cursor: pointer; font-size: 14px; opacity: 0.3; pointer-events: none; transition: opacity .2s;
   }
   .btn-ad-next.ready { opacity: 1; pointer-events: all; }
-
-  .pay-box { background: #fffdf8; border-radius: 20px; padding: 32px; max-width: 360px; width: 100%; text-align: center; }
-  .pay-box h3 { font-size: 18px; font-weight: 900; margin-bottom: 8px; color: #4a3f35; }
-  .pay-box p { font-size: 13.5px; color: #9c8f7e; margin-bottom: 20px; line-height: 1.6; }
-  .pay-price { font-size: 32px; font-weight: 900; color: #a9633a; margin-bottom: 20px; }
-  .pay-note { font-size: 11.5px; color: #b5a890; margin-top: 12px; }
 
   #creator-form { display: none; }
   .section-card { background: #fffdf8; border-radius: 18px; padding: 28px 24px; margin-bottom: 20px; border: 1.5px solid #d9cbb3; }
@@ -238,14 +227,24 @@
 
   <div id="lock-view" class="hidden">
     <div class="lock-card">
-      <span class="lock-emoji" id="lock-emoji">🚀</span>
-      <h2 id="lock-title">多人創作功能即將推出</h2>
-      <p id="lock-desc">敬請期待後續更新！</p>
-      <div class="price-tag" id="lock-price-tag">🚧 開發中</div>
+      <span class="lock-emoji" id="lock-emoji">🎬</span>
+      <h2 id="lock-title">解鎖創作額度</h2>
+      <p id="lock-desc">看一段廣告，立即解鎖這個創作額度！</p>
+      <div class="price-tag" id="lock-price-tag">🎬 看 1 段廣告，免費解鎖</div>
       <br>
-      <button class="btn-unlock" id="btn-unlock-action" disabled>敬請期待</button>
+      <button class="btn-unlock" id="btn-unlock-action" onclick="startUnlockFlow()">看廣告，立即解鎖 →</button>
       <br><br>
       <button class="back-btn" onclick="showDashboard()" style="border:none;background:none;cursor:pointer;">← 返回</button>
+    </div>
+  </div>
+
+  <div class="ad-overlay" id="ad-overlay">
+    <div class="ad-box">
+      <span class="lock-emoji">📺</span>
+      <h3 id="ad-status-title">正在前往廣告頁面...</h3>
+      <p id="ad-status">請稍候</p>
+      <div class="ad-progress-bar"><div class="ad-progress-fill" id="ad-progress-fill"></div></div>
+      <button class="btn-ad-next" id="btn-ad-next" onclick="onAdFinished()">完成解鎖 →</button>
     </div>
   </div>
 
@@ -389,11 +388,20 @@ function showDashboard() {
     const unlocked = i <= mySlotsUnlocked;
 
     if (!unlocked) {
-      html += `
-        <div class="slot-card slot-card-disabled">
-          <div class="slot-card-info"><span class="slot-card-empty">${t.slotComingSoon(i)}</span></div>
-          <div class="slot-card-btns"><button class="primary" disabled>${t.btnComingSoon}</button></div>
-        </div>`;
+      const isAdUnlockable = i <= FREE_AD_UNLOCK_UNTIL;
+      if (isAdUnlockable) {
+        html += `
+          <div class="slot-card">
+            <div class="slot-card-info"><span class="slot-card-empty">${t.slotAdLocked(i)}</span></div>
+            <div class="slot-card-btns"><button class="primary" onclick="goUnlockSlot(${i})">${t.btnWatchAd}</button></div>
+          </div>`;
+      } else {
+        html += `
+          <div class="slot-card slot-card-disabled">
+            <div class="slot-card-info"><span class="slot-card-empty">${t.slotComingSoon(i)}</span></div>
+            <div class="slot-card-btns"><button class="primary" disabled>${t.btnComingSoon}</button></div>
+          </div>`;
+      }
     } else if (!quiz) {
       html += `
         <div class="slot-card">
@@ -422,35 +430,15 @@ function goUnlockSlot(slotIndex) {
   document.getElementById('lock-view').classList.remove('hidden');
   setBackLink('dashboard');
 
-  const isAdSlot = slotIndex <= FREE_AD_UNLOCK_UNTIL;
-  document.getElementById('lock-title').textContent = `解鎖第 ${slotIndex} 個創作額度`;
-  if (isAdSlot) {
-    document.getElementById('lock-desc').textContent = '看一段廣告，立即免費解鎖這個創作額度！';
-    document.getElementById('lock-price-tag').textContent = '🎬 看 1 段廣告，免費解鎖';
-    document.getElementById('btn-unlock-action').textContent = '看廣告，立即解鎖 →';
-  } else {
-    document.getElementById('lock-desc').textContent = '第 6 個額度開始需要付費購買，購買後永久擁有';
-    document.getElementById('lock-price-tag').textContent = '💰 付費 NT$10 解鎖';
-    document.getElementById('btn-unlock-action').textContent = '前往付款 →';
-  }
+  const t = i18nCreate[currentLang];
+  document.getElementById('lock-title').textContent = t.lockTitle(slotIndex);
+  document.getElementById('lock-desc').textContent = t.lockDesc;
+  document.getElementById('lock-price-tag').textContent = t.lockPriceTag;
+  document.getElementById('btn-unlock-action').textContent = t.btnUnlockAction;
 }
 
 function startUnlockFlow() {
-  if (targetSlotIndex <= FREE_AD_UNLOCK_UNTIL) {
-    startAdFlow();
-  } else {
-    document.getElementById('pay-slot-num').textContent = targetSlotIndex;
-    document.getElementById('pay-overlay').classList.add('show');
-  }
-}
-
-function closePayOverlay() {
-  document.getElementById('pay-overlay').classList.remove('show');
-}
-
-async function onPaymentConfirmed() {
-  document.getElementById('pay-overlay').classList.remove('show');
-  await grantSlotUnlock(targetSlotIndex);
+  startAdFlow();
 }
 
 let editingQuizId = null; // null = 新建模式；有值 = 正在編輯這個已存在的測驗
@@ -482,28 +470,40 @@ async function deleteAndRecreate(slotIndex, quizId) {
   }
 }
 
-const AD_DURATION_MS = 3000;
+const SMARTLINK_URL = 'https://www.effectivecpmnetwork.com/avibsjd7?key=d7f5c8d868a749fecc6c873ac8f30076';
+const AD_WAIT_SEC = 10;
 
 function startAdFlow() {
+  // 真正打開 Adsterra Smartlink 廣告頁面（新分頁），讓使用者有機會看到真實廣告
+  window.open(SMARTLINK_URL, '_blank', 'noopener,noreferrer');
+
   document.getElementById('ad-overlay').classList.add('show');
-  document.getElementById('ad-status-title').textContent = '廣告播放中...';
+  const t = i18nCreate[currentLang];
   document.getElementById('btn-ad-next').classList.remove('ready');
-  document.getElementById('btn-ad-next').textContent = '請等待廣告播放完畢';
+
+  let remaining = AD_WAIT_SEC;
+  const updateText = () => {
+    document.getElementById('ad-status-title').textContent = t.adWaitingTitle;
+    document.getElementById('ad-status').textContent = t.adWaitingCountdown(remaining);
+  };
+  updateText();
 
   const fill = document.getElementById('ad-progress-fill');
   fill.style.width = '0%';
 
-  let elapsed = 0;
   const interval = setInterval(() => {
-    elapsed += 100;
-    const pct = Math.min(100, (elapsed / AD_DURATION_MS) * 100);
+    remaining--;
+    const pct = Math.min(100, ((AD_WAIT_SEC - remaining) / AD_WAIT_SEC) * 100);
     fill.style.width = pct + '%';
-    if (elapsed >= AD_DURATION_MS) {
+    if (remaining > 0) {
+      updateText();
+    } else {
       clearInterval(interval);
-      document.getElementById('ad-status-title').textContent = '廣告播放完畢！';
+      document.getElementById('ad-status-title').textContent = t.adReadyTitle;
+      document.getElementById('ad-status').textContent = t.adReadyDesc;
       document.getElementById('btn-ad-next').classList.add('ready');
     }
-  }, 100);
+  }, 1000);
 }
 
 async function onAdFinished() {
@@ -1178,6 +1178,11 @@ const i18nCreate = {
     sectionQuestions: '❓ 設計題目（最少 5 題，最多 10 題）', btnAddQuestion: '+ 新增題目',
     btnPublish: '🚀 發布測驗', btnSaveDraft: '💾 儲存草稿', draftBadge: '草稿',
     slotComingSoon: (i) => `🔒 額度 ${i}（多人創作即將推出）`, btnComingSoon: '敬請期待',
+    slotAdLocked: (i) => `🎬 額度 ${i}（看一段廣告即可解鎖）`, btnWatchAd: '看廣告解鎖',
+    lockTitle: (i) => `解鎖第 ${i} 個創作額度`, lockDesc: '看一段廣告，立即解鎖這個創作額度！',
+    lockPriceTag: '🎬 看 1 段廣告，免費解鎖', btnUnlockAction: '看廣告，立即解鎖 →',
+    adWaitingTitle: '正在前往廣告頁面...', adWaitingCountdown: (s) => `請稍候 ${s} 秒`,
+    adReadyTitle: '完成！', adReadyDesc: '感謝支持，現在可以解鎖了',
     slotEmpty: (i) => `✨ 額度 ${i}：尚未建立測驗`, btnStartCreate: '開始創作',
     slotLabel: (i) => `額度 ${i}`, btnView: '查看', btnEdit: '編輯', btnDelete: '刪除',
     leaveConfirm: '你有尚未儲存的變更，離開將會遺失，確定要離開嗎？\n（可以先點「儲存草稿」再離開）',
@@ -1205,6 +1210,11 @@ const i18nCreate = {
     sectionQuestions: '❓ 質問を作成（最低5問、最大10問）', btnAddQuestion: '+ 質問を追加',
     btnPublish: '🚀 クイズを公開', btnSaveDraft: '💾 下書き保存', draftBadge: '下書き',
     slotComingSoon: (i) => `🔒 枠 ${i}（複数作成機能は近日公開）`, btnComingSoon: 'お楽しみに',
+    slotAdLocked: (i) => `🎬 枠 ${i}（広告を見てアンロック）`, btnWatchAd: '広告を見る',
+    lockTitle: (i) => `枠 ${i} をアンロック`, lockDesc: '広告を見れば、すぐにこの作成枠がアンロックされます！',
+    lockPriceTag: '🎬 広告を1本見て無料アンロック', btnUnlockAction: '広告を見てアンロック →',
+    adWaitingTitle: '広告ページへ移動中...', adWaitingCountdown: (s) => `あと ${s} 秒お待ちください`,
+    adReadyTitle: '完了！', adReadyDesc: 'ご協力ありがとうございます。アンロックできます',
     slotEmpty: (i) => `✨ 枠 ${i}：まだクイズがありません`, btnStartCreate: '作成を始める',
     slotLabel: (i) => `枠 ${i}`, btnView: '見る', btnEdit: '編集', btnDelete: '削除',
     leaveConfirm: '保存していない変更があります。このまま離れると失われます。\n（先に「下書き保存」をタップできます）',
@@ -1232,6 +1242,11 @@ const i18nCreate = {
     sectionQuestions: '❓ Design Questions (5–10 questions)', btnAddQuestion: '+ Add question',
     btnPublish: '🚀 Publish Quiz', btnSaveDraft: '💾 Save Draft', draftBadge: 'Draft',
     slotComingSoon: (i) => `🔒 Slot ${i} (multi-quiz creation coming soon)`, btnComingSoon: 'Coming Soon',
+    slotAdLocked: (i) => `🎬 Slot ${i} (watch an ad to unlock)`, btnWatchAd: 'Watch Ad to Unlock',
+    lockTitle: (i) => `Unlock slot ${i}`, lockDesc: 'Watch an ad to unlock this creation slot instantly!',
+    lockPriceTag: '🎬 Watch 1 ad, unlock for free', btnUnlockAction: 'Watch Ad to Unlock →',
+    adWaitingTitle: 'Heading to the ad page...', adWaitingCountdown: (s) => `Please wait ${s}s`,
+    adReadyTitle: 'Done!', adReadyDesc: 'Thanks for your support, you can unlock now',
     slotEmpty: (i) => `✨ Slot ${i}: No quiz yet`, btnStartCreate: 'Start Creating',
     slotLabel: (i) => `Slot ${i}`, btnView: 'View', btnEdit: 'Edit', btnDelete: 'Delete',
     leaveConfirm: 'You have unsaved changes that will be lost if you leave.\n(You can tap "Save Draft" first)',
@@ -1298,6 +1313,14 @@ function setLang(l) {
   setText('success-desc', t.successDesc);
   setText('btn-copy-url-text', t.btnCopyUrl);
   setText('btn-go-quiz-text', t.btnGoQuiz);
+
+  // 解鎖額度畫面 + 廣告等待畫面（若使用者剛好在這些畫面時切換語言）
+  if (targetSlotIndex) {
+    setText('lock-title', t.lockTitle(targetSlotIndex));
+  }
+  setText('lock-desc', t.lockDesc);
+  setText('lock-price-tag', t.lockPriceTag);
+  setText('btn-unlock-action', t.btnUnlockAction);
 
   // 重新套用目前畫面對應的返回連結文字（不切換畫面本身，只更新文字語言）
   const isOnDashboardFlow = !document.getElementById('dashboard-view').classList.contains('hidden')
