@@ -982,6 +982,10 @@ function syncLocalQuizCache(quizId, slotIndex, fullPayload) {
 }
 
 async function publishQuiz() {
+  const btn = document.getElementById('btn-publish');
+  if (btn.disabled) return; // 已經在發布中，直接擋掉這次重複呼叫
+  btn.disabled = true;
+
   const msgEl = document.getElementById('top-msg');
   msgEl.style.display = 'none';
 
@@ -990,16 +994,14 @@ async function publishQuiz() {
     showTopMsg('登入狀態已失效，請重新登入後再發布', 'error');
     highlightError(document.getElementById('top-msg'));
     setTimeout(() => { window.location.href = 'index.html'; }, 1800);
+    btn.disabled = false;
     return;
   }
   currentUser = session.user;
 
   const formData = collectFormData(false); // 正式發布要求完整驗證
-  if (!formData) return;
+  if (!formData) { btn.disabled = false; return; }
   const { title, desc, results, questions } = formData;
-
-  const btn = document.getElementById('btn-publish');
-  btn.disabled = true;
   btn.textContent = i18nCreate[currentLang].publishingText;
 
   const t = i18nCreate[currentLang];
@@ -1050,6 +1052,10 @@ async function publishQuiz() {
 }
 
 async function saveDraft() {
+  const btn = document.getElementById('btn-save-draft');
+  if (btn.disabled) return; // 已經在儲存中，直接擋掉這次重複呼叫（防止任何空隙讓第二次點擊溜進來）
+  btn.disabled = true;
+
   const msgEl = document.getElementById('top-msg');
   msgEl.style.display = 'none';
 
@@ -1058,16 +1064,14 @@ async function saveDraft() {
     showTopMsg('登入狀態已失效，請重新登入後再儲存', 'error');
     highlightError(document.getElementById('top-msg'));
     setTimeout(() => { window.location.href = 'index.html'; }, 1800);
+    btn.disabled = false;
     return;
   }
   currentUser = session.user;
 
   const formData = collectFormData(true); // 草稿只要求標題，其他不強制完整
-  if (!formData) return;
+  if (!formData) { btn.disabled = false; return; }
   const { title, desc, results, questions } = formData;
-
-  const btn = document.getElementById('btn-save-draft');
-  btn.disabled = true;
   btn.textContent = i18nCreate[currentLang].savingText;
 
   const t = i18nCreate[currentLang];
