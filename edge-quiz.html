@@ -21,7 +21,6 @@
   .top-link a:hover { color: var(--accent2); }
 
   .hero { text-align: center; padding: 24px 16px 28px; max-width: 600px; }
-  .hero-emoji { font-size: 52px; display: block; margin-bottom: 14px; animation: float 3s ease-in-out infinite; }
   @keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);} }
   .hero h1 { font-size: clamp(18px, 4.6vw, 26px); font-weight: 900; line-height: 1.4; background: linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom: 10px; }
   .hero p { color: var(--muted); font-size: 14px; line-height: 1.7; }
@@ -76,7 +75,8 @@
   .lang-btn { background: var(--card); border: 1px solid rgba(169,99,58,0.3); color: var(--muted); border-radius: 8px; padding: 5px 12px; font-size: 13px; cursor: pointer; transition: all .18s; font-family: inherit; }
   .lang-btn.active { background: rgba(169,99,58,0.22); border-color: var(--accent2); color: var(--accent2); }
 
-  .hero-emoji-wrap { width: 80px; height: 80px; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center; }
+  .hero-emoji-wrap { width: 120px; height: 120px; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center; }
+  .hero-illustration { width: 100%; height: 100%; object-fit: contain; animation: float 3s ease-in-out infinite; }
 
   .step-dots { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 6px; }
   .step-dot {
@@ -174,7 +174,7 @@
 </div>
 
 <div class="hero">
-  <div class="hero-emoji-wrap"><span class="hero-emoji" style="font-size:52px;">🙈</span></div>
+  <div class="hero-emoji-wrap"><img src="card-edge.png" alt="" class="hero-illustration"></div>
   <h1 id="hero-title">【現代隱居邊緣人】<br>你的「社交疲勞與精神退化」綜合診斷</h1>
   <p id="hero-sub">10題情境題，精準診斷你的社交能量與精神狀態</p>
 </div>
