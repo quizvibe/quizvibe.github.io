@@ -106,8 +106,11 @@
     cursor: pointer; transition: background .15s; font-size: 13.5px; color: #4a3f35; border-radius: 10px;
   }
   .game-history-item:hover { background: #f7f2e9; }
-  .game-history-item .ghi-left { display: flex; align-items: center; gap: 10px; }
-  .game-history-item .ghi-arrow { color: #b5a890; font-size: 16px; flex-shrink: 0; }
+  .game-history-item .ghi-left { display: flex; align-items: flex-start; gap: 10px; }
+  .game-history-item .ghi-arrow { color: #b5a890; font-size: 16px; flex-shrink: 0; align-self: center; }
+  .ghi-text-block { display: flex; flex-direction: column; gap: 2px; }
+  .ghi-title { font-weight: 700; margin-bottom: 1px; }
+  .ghi-line { font-size: 12px; color: #9c8f7e; }
 
   .blackboard-overlay { position: fixed; inset: 0; background: rgba(40,30,20,.5); z-index: 300; display: none; align-items: center; justify-content: center; padding: 20px; }
   .blackboard-overlay.show { display: flex; }
@@ -292,11 +295,23 @@ const i18nProfile = {
     pwConfirmTitle: '⚠️ 確定要變更密碼嗎？', pwConfirmSub: '變更後，下次登入請使用新密碼',
     pwCancel: '取消', pwConfirmFinal: '確定變更', pwSuccessTitle: '密碼已成功變更！', pwSuccessDone: '完成',
     noQuizHistory: '還沒有測驗紀錄，去玩第一個測驗吧！', unknownQuiz: '未知測驗', resultLabel: '結果',
-    notPlayedYet: '尚未遊玩過', latestRecord: '最新紀錄',
-    timingRecord: (wins, plays) => `累積勝利 ${wins} 次・遊玩 ${plays} 次`,
-    chickenRecord: (hits) => `累積暴擊 ${hits} 次`,
-    bubbleRecord: (total) => `累積捏爆 ${total} 個`,
-    fastestSuffix: (sec) => `，最快 ${sec} 秒`,
+    notPlayedYet: '尚未遊玩過',
+    secUnit: '秒',
+    timingLast: (target, actual, diff) => target == null ? '尚未遊玩過' : `最新：目標 ${target}秒・實際 ${actual.toFixed(2)}秒・誤差 ${diff.toFixed(2)}秒`,
+    timingBest: (target, actual, diff) => diff == null ? '' : `最佳：目標 ${target}秒・實際 ${actual.toFixed(2)}秒・誤差 ${diff.toFixed(2)}秒`,
+    timingPlays: (plays) => `遊玩次數：${plays} 次`,
+    chickenLast: (n) => `最新：${n} 個暴擊`,
+    chickenBest: (n) => `累積總數：${n} 個`,
+    bubbleLast: (n) => `最新：${n} 個`,
+    bubbleBest: (n) => `累積總數：${n} 個`,
+    memoryLast: (diff, steps, sec) => {
+      const diffNames = { easy: '簡單', medium: '中等', hard: '困難', hardcore: '惡夢' };
+      return `最新：${diffNames[diff] || diff}・${steps} 步・${sec.toFixed(0)} 秒`;
+    },
+    memoryBest: (diff, sec) => {
+      const diffNames = { easy: '簡單', medium: '中等', hard: '困難', hardcore: '惡夢' };
+      return sec == null ? '' : `最佳：${diffNames[diff] || diff}・${sec.toFixed(0)} 秒`;
+    },
     confirmLogout: '要登出嗎？',
   },
   ja: {
@@ -310,11 +325,23 @@ const i18nProfile = {
     pwConfirmTitle: '⚠️ パスワードを変更しますか？', pwConfirmSub: '変更後は新しいパスワードでログインしてください',
     pwCancel: 'キャンセル', pwConfirmFinal: '変更する', pwSuccessTitle: 'パスワードを変更しました！', pwSuccessDone: '完了',
     noQuizHistory: 'まだクイズ履歴がありません、最初のクイズに挑戦しよう！', unknownQuiz: '不明なクイズ', resultLabel: '結果',
-    notPlayedYet: 'まだプレイしていません', latestRecord: '最新の記録',
-    timingRecord: (wins, plays) => `累計勝利 ${wins} 回・プレイ ${plays} 回`,
-    chickenRecord: (hits) => `累計ヒット ${hits} 回`,
-    bubbleRecord: (total) => `累計ポップ ${total} 個`,
-    fastestSuffix: (sec) => `、最速 ${sec} 秒`,
+    notPlayedYet: 'まだプレイしていません',
+    secUnit: '秒',
+    timingLast: (target, actual, diff) => target == null ? 'まだプレイしていません' : `最新：目標 ${target}秒・実際 ${actual.toFixed(2)}秒・誤差 ${diff.toFixed(2)}秒`,
+    timingBest: (target, actual, diff) => diff == null ? '' : `ベスト：目標 ${target}秒・実際 ${actual.toFixed(2)}秒・誤差 ${diff.toFixed(2)}秒`,
+    timingPlays: (plays) => `プレイ回数：${plays} 回`,
+    chickenLast: (n) => `最新：${n} ヒット`,
+    chickenBest: (n) => `累計：${n} 回`,
+    bubbleLast: (n) => `最新：${n} 個`,
+    bubbleBest: (n) => `累計：${n} 個`,
+    memoryLast: (diff, steps, sec) => {
+      const diffNames = { easy: 'かんたん', medium: 'ふつう', hard: 'むずかしい', hardcore: '悪夢' };
+      return `最新：${diffNames[diff] || diff}・${steps} 手・${sec.toFixed(0)} 秒`;
+    },
+    memoryBest: (diff, sec) => {
+      const diffNames = { easy: 'かんたん', medium: 'ふつう', hard: 'むずかしい', hardcore: '悪夢' };
+      return sec == null ? '' : `ベスト：${diffNames[diff] || diff}・${sec.toFixed(0)} 秒`;
+    },
     confirmLogout: 'ログアウトしますか？',
   },
   en: {
@@ -328,11 +355,23 @@ const i18nProfile = {
     pwConfirmTitle: '⚠️ Confirm password change?', pwConfirmSub: 'Use your new password next time you log in',
     pwCancel: 'Cancel', pwConfirmFinal: 'Confirm change', pwSuccessTitle: 'Password changed successfully!', pwSuccessDone: 'Done',
     noQuizHistory: 'No quiz history yet, take your first quiz!', unknownQuiz: 'Unknown quiz', resultLabel: 'Result',
-    notPlayedYet: 'Not played yet', latestRecord: 'Latest record',
-    timingRecord: (wins, plays) => `${wins} wins out of ${plays} plays`,
-    chickenRecord: (hits) => `${hits} total hits`,
-    bubbleRecord: (total) => `${total} total popped`,
-    fastestSuffix: (sec) => `, fastest ${sec}s`,
+    notPlayedYet: 'Not played yet',
+    secUnit: 's',
+    timingLast: (target, actual, diff) => target == null ? 'Not played yet' : `Latest: Target ${target}s・Actual ${actual.toFixed(2)}s・Diff ${diff.toFixed(2)}s`,
+    timingBest: (target, actual, diff) => diff == null ? '' : `Best: Target ${target}s・Actual ${actual.toFixed(2)}s・Diff ${diff.toFixed(2)}s`,
+    timingPlays: (plays) => `Plays: ${plays}`,
+    chickenLast: (n) => `Latest: ${n} hits`,
+    chickenBest: (n) => `Total: ${n} hits`,
+    bubbleLast: (n) => `Latest: ${n} pops`,
+    bubbleBest: (n) => `Total: ${n} pops`,
+    memoryLast: (diff, steps, sec) => {
+      const diffNames = { easy: 'Easy', medium: 'Medium', hard: 'Hard', hardcore: 'Nightmare' };
+      return `Latest: ${diffNames[diff] || diff}・${steps} steps・${sec.toFixed(0)}s`;
+    },
+    memoryBest: (diff, sec) => {
+      const diffNames = { easy: 'Easy', medium: 'Medium', hard: 'Hard', hardcore: 'Nightmare' };
+      return sec == null ? '' : `Best: ${diffNames[diff] || diff}・${sec.toFixed(0)}s`;
+    },
     confirmLogout: 'Log out?',
   },
 };
@@ -425,8 +464,9 @@ async function init() {
 /* ============================================================ */
 const GAMES_META = [
   { id: 'timing', title: '黃金秒數盲數挑戰', emoji: '⏱️', url: 'game-timing.html' },
-  { id: 'chicken', title: '社畜超度：尖叫雞進化論', emoji: '🐔', url: 'game-chicken.html' },
+  { id: 'chicken', title: '社畜超度：尖叫鴨進化論', emoji: '🦆', url: 'game-chicken.html' },
   { id: 'bubble', title: '強迫症救星：無限捏泡泡紙', emoji: '🫧', url: 'game-bubble.html' },
+  { id: 'memory', title: '記憶力大挑戰', emoji: '🃏', url: 'game-memory.html' },
 ];
 
 function switchTab(tab) {
@@ -439,10 +479,20 @@ function switchTab(tab) {
 
 function getGameProgress() {
   const raw = localStorage.getItem('quizdrop_game_progress');
-  return raw ? JSON.parse(raw) : {
-    timing: { wins: 0, plays: 0, stylesUnlocked: ['default'] },
-    chicken: { hits: 0, plays: 0, stylesUnlocked: ['default'] },
-    bubble: { totalPopped: 0, fastestSheetMs: null, stylesUnlocked: ['default'] },
+  const defaults = {
+    timing: { wins: 0, plays: 0, stylesUnlocked: ['default'], lastTarget: null, lastActual: null, lastDiff: null, bestDiff: null, bestTarget: null, bestActual: null },
+    chicken: { hits: 0, plays: 0, stylesUnlocked: ['default'], lastSessionHits: 0 },
+    bubble: { totalPopped: 0, fastestSheetMs: null, stylesUnlocked: ['default'], lastSessionPopped: 0 },
+    memory: { plays: 0, wins: 0, lastDifficulty: null, lastSteps: null, lastTimeSec: null, bestTimeSec: null, bestDifficulty: null },
+  };
+  if (!raw) return defaults;
+  const parsed = JSON.parse(raw);
+  return {
+    ...defaults, ...parsed,
+    timing: { ...defaults.timing, ...(parsed.timing || {}) },
+    chicken: { ...defaults.chicken, ...(parsed.chicken || {}) },
+    bubble: { ...defaults.bubble, ...(parsed.bubble || {}) },
+    memory: { ...defaults.memory, ...(parsed.memory || {}) },
   };
 }
 
@@ -451,21 +501,43 @@ function renderGameHistory() {
   const listEl = document.getElementById('game-history-list');
   const t = i18nProfile[currentLang];
 
+  const formatSec = (sec) => sec == null ? '--' : sec.toFixed(2) + (t.secUnit || 's');
+
   const rows = GAMES_META.map(g => {
-    let recordText = t.notPlayedYet;
+    let lines = [t.notPlayedYet];
+
     if (g.id === 'timing' && progress.timing.plays > 0) {
-      recordText = t.timingRecord(progress.timing.wins, progress.timing.plays);
+      lines = [
+        t.timingLast(progress.timing.lastTarget, progress.timing.lastActual, progress.timing.lastDiff),
+        t.timingBest(progress.timing.bestTarget, progress.timing.bestActual, progress.timing.bestDiff),
+        t.timingPlays(progress.timing.plays),
+      ];
     } else if (g.id === 'chicken' && progress.chicken.hits > 0) {
-      recordText = t.chickenRecord(progress.chicken.hits);
+      lines = [
+        t.chickenLast(progress.chicken.lastSessionHits),
+        t.chickenBest(progress.chicken.hits),
+      ];
     } else if (g.id === 'bubble' && progress.bubble.totalPopped > 0) {
-      const fastest = progress.bubble.fastestSheetMs ? t.fastestSuffix((progress.bubble.fastestSheetMs / 1000).toFixed(2)) : '';
-      recordText = t.bubbleRecord(progress.bubble.totalPopped) + fastest;
+      lines = [
+        t.bubbleLast(progress.bubble.lastSessionPopped),
+        t.bubbleBest(progress.bubble.totalPopped),
+      ];
+    } else if (g.id === 'memory' && progress.memory.plays > 0) {
+      lines = [
+        t.memoryLast(progress.memory.lastDifficulty, progress.memory.lastSteps, progress.memory.lastTimeSec),
+        t.memoryBest(progress.memory.bestDifficulty, progress.memory.bestTimeSec),
+      ];
     }
+
+    const recordHtml = lines.map(l => `<div class="ghi-line">${l}</div>`).join('');
     return `
       <div class="game-history-item" style="cursor:pointer;" onclick="goToGame('${g.url}')">
         <div class="ghi-left" style="pointer-events:none;">
           <span>${g.emoji}</span>
-          <span>${g.title}　｜　${t.latestRecord}：${recordText}</span>
+          <div class="ghi-text-block">
+            <div class="ghi-title">${g.title}</div>
+            ${recordHtml}
+          </div>
         </div>
         <span class="ghi-arrow" style="pointer-events:none;">→</span>
       </div>
@@ -490,6 +562,10 @@ function showBlackboardModal() {
     } else if (g.id === 'bubble') {
       const fastest = progress.bubble.fastestSheetMs ? (progress.bubble.fastestSheetMs / 1000).toFixed(2) + ' 秒' : '尚無紀錄';
       stats = `累積捏爆：${progress.bubble.totalPopped} 個<br>單張最快手速：${fastest}<br>已解鎖風格：${progress.bubble.stylesUnlocked.length} / 2`;
+    } else if (g.id === 'memory') {
+      const diffNames = { easy: '簡單', medium: '中等', hard: '困難', hardcore: '惡夢' };
+      const best = progress.memory.bestTimeSec != null ? `${diffNames[progress.memory.bestDifficulty] || ''}・${progress.memory.bestTimeSec.toFixed(0)} 秒` : '尚無紀錄';
+      stats = `累積遊玩：${progress.memory.plays} 次<br>最佳紀錄：${best}`;
     }
     return `
       <div class="blackboard-row">

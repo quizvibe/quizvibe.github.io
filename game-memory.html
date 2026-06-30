@@ -875,14 +875,20 @@ const PROGRESS_KEY = 'quizdrop_game_progress';
 function getProgress() {
   const raw = localStorage.getItem(PROGRESS_KEY);
   const defaults = {
-    timing: { wins: 0, plays: 0, stylesUnlocked: ['default'] },
-    chicken: { hits: 0, plays: 0, stylesUnlocked: ['default'] },
-    bubble: { totalPopped: 0, fastestSheetMs: null, stylesUnlocked: ['default'] },
-    memory: { plays: 0, wins: 0 },
+    timing: { wins: 0, plays: 0, stylesUnlocked: ['default'], lastTarget: null, lastActual: null, lastDiff: null, bestDiff: null, bestTarget: null, bestActual: null },
+    chicken: { hits: 0, plays: 0, stylesUnlocked: ['default'], lastSessionHits: 0 },
+    bubble: { totalPopped: 0, fastestSheetMs: null, stylesUnlocked: ['default'], lastSessionPopped: 0 },
+    memory: { plays: 0, wins: 0, lastDifficulty: null, lastSteps: null, lastTimeSec: null, bestTimeSec: null, bestDifficulty: null },
   };
   if (!raw) return defaults;
   const parsed = JSON.parse(raw);
-  return { ...defaults, ...parsed, memory: { ...defaults.memory, ...(parsed.memory || {}) } };
+  return {
+    ...defaults, ...parsed,
+    timing: { ...defaults.timing, ...(parsed.timing || {}) },
+    chicken: { ...defaults.chicken, ...(parsed.chicken || {}) },
+    bubble: { ...defaults.bubble, ...(parsed.bubble || {}) },
+    memory: { ...defaults.memory, ...(parsed.memory || {}) },
+  };
 }
 function saveProgress(p) { localStorage.setItem(PROGRESS_KEY, JSON.stringify(p)); }
 
@@ -890,6 +896,14 @@ function recordMemoryProgress() {
   const progress = getProgress();
   progress.memory.plays++;
   progress.memory.wins++;
+  progress.memory.lastDifficulty = currentDifficulty;
+  progress.memory.lastSteps = steps;
+  progress.memory.lastTimeSec = elapsedSec;
+  const prevBestTime = progress.memory.bestTimeSec != null ? progress.memory.bestTimeSec : Infinity;
+  if (elapsedSec < prevBestTime) {
+    progress.memory.bestTimeSec = elapsedSec;
+    progress.memory.bestDifficulty = currentDifficulty;
+  }
   saveProgress(progress);
   pushProgressToCloud();
   saveGameResult('memory', { difficulty: currentDifficulty, steps, timeSec: elapsedSec });
@@ -916,27 +930,50 @@ async function pushProgressToCloud() {
 
 function mergeProgress(localP, remoteP) {
   if (!remoteP) return localP;
-  return {
+
+  const localBestDiff = localP.timing.bestDiff != null ? localP.timing.bestDiff : Infinity;
+  const remoteBestDiff = remoteP.timing?.bestDiff != null ? remoteP.timing.bestDiff : Infinity;
+  const timingBestIsLocal = localBestDiff <= remoteBestDiff;
+
+  const localBestTime = localP.memory?.bestTimeSec != null ? localP.memory.bestTimeSec : Infinity;
+  const remoteBestTime = remoteP.memory?.bestTimeSec != null ? remoteP.memory.bestTimeSec : Infinity;
+  const memoryBestIsLocal = localBestTime <= remoteBestTime;
+
+  const merged = {
     timing: {
       wins: Math.max(localP.timing.wins, remoteP.timing?.wins || 0),
       plays: Math.max(localP.timing.plays, remoteP.timing?.plays || 0),
       stylesUnlocked: Array.from(new Set([...(localP.timing.stylesUnlocked || []), ...(remoteP.timing?.stylesUnlocked || [])])),
+      lastTarget: localP.timing.lastTarget ?? remoteP.timing?.lastTarget ?? null,
+      lastActual: localP.timing.lastActual ?? remoteP.timing?.lastActual ?? null,
+      lastDiff: localP.timing.lastDiff ?? remoteP.timing?.lastDiff ?? null,
+      bestDiff: timingBestIsLocal ? (localP.timing.bestDiff ?? null) : (remoteP.timing?.bestDiff ?? null),
+      bestTarget: timingBestIsLocal ? (localP.timing.bestTarget ?? null) : (remoteP.timing?.bestTarget ?? null),
+      bestActual: timingBestIsLocal ? (localP.timing.bestActual ?? null) : (remoteP.timing?.bestActual ?? null),
     },
     chicken: {
       hits: Math.max(localP.chicken.hits, remoteP.chicken?.hits || 0),
       plays: Math.max(localP.chicken.plays, remoteP.chicken?.plays || 0),
       stylesUnlocked: Array.from(new Set([...(localP.chicken.stylesUnlocked || []), ...(remoteP.chicken?.stylesUnlocked || [])])),
+      lastSessionHits: localP.chicken.lastSessionHits || remoteP.chicken?.lastSessionHits || 0,
     },
     bubble: {
       totalPopped: Math.max(localP.bubble.totalPopped, remoteP.bubble?.totalPopped || 0),
       fastestSheetMs: minIgnoreNull(localP.bubble.fastestSheetMs, remoteP.bubble?.fastestSheetMs),
       stylesUnlocked: Array.from(new Set([...(localP.bubble.stylesUnlocked || []), ...(remoteP.bubble?.stylesUnlocked || [])])),
+      lastSessionPopped: localP.bubble.lastSessionPopped || remoteP.bubble?.lastSessionPopped || 0,
     },
     memory: {
       plays: Math.max(localP.memory?.plays || 0, remoteP.memory?.plays || 0),
       wins: Math.max(localP.memory?.wins || 0, remoteP.memory?.wins || 0),
+      lastDifficulty: localP.memory?.lastDifficulty ?? remoteP.memory?.lastDifficulty ?? null,
+      lastSteps: localP.memory?.lastSteps ?? remoteP.memory?.lastSteps ?? null,
+      lastTimeSec: localP.memory?.lastTimeSec ?? remoteP.memory?.lastTimeSec ?? null,
+      bestTimeSec: memoryBestIsLocal ? (localP.memory?.bestTimeSec ?? null) : (remoteP.memory?.bestTimeSec ?? null),
+      bestDifficulty: memoryBestIsLocal ? (localP.memory?.bestDifficulty ?? null) : (remoteP.memory?.bestDifficulty ?? null),
     },
   };
+  return merged;
 }
 function minIgnoreNull(a, b) {
   if (a == null) return b ?? null;

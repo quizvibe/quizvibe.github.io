@@ -94,7 +94,7 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 // 陣列物件管理遊戲清單，未來新增遊戲只需要在這裡加一筆資料
 const GAMES_LIST = [
   { id: 'timing', title: '黃金秒數盲數挑戰', desc: '考驗你的生物鐘，盲數到目標秒數', emoji: '⏱️', url: 'game-timing.html' },
-  { id: 'chicken', title: '社畜超度：尖叫雞進化論', desc: '瘋狂點擊洩憤，累積你的暴擊次數', emoji: '🐔', url: 'game-chicken.html' },
+  { id: 'chicken', title: '社畜超度：尖叫鴨進化論', desc: '瘋狂點擊洩憤，累積你的暴擊次數', emoji: '🦆', url: 'game-chicken.html' },
   { id: 'bubble', title: '強迫症救星：無限捏泡泡紙', desc: '捏到爽為止，比比看誰手速最快', emoji: '🫧', url: 'game-bubble.html' },
   { id: 'memory', title: '記憶力大挑戰', desc: '翻牌配對，挑戰惡夢難度的指令模式', emoji: '🃏', url: 'game-memory.html' },
 ];
@@ -161,7 +161,7 @@ const i18n = {
   zh: { heroTitle: '🎮 糞Game大廳', heroSub: '解壓專用小遊戲，瘋狂玩到爽為止', back: '← QuizDrop', login: '登入', signup: '註冊', profile: '👤 個人頁面', logout: '🚪 登出', confirmLogout: '要登出嗎？',
     games: [
       { title: '黃金秒數盲數挑戰', desc: '考驗你的生物鐘，盲數到目標秒數' },
-      { title: '社畜超度：尖叫雞進化論', desc: '瘋狂點擊洩憤，累積你的暴擊次數' },
+      { title: '社畜超度：尖叫鴨進化論', desc: '瘋狂點擊洩憤，累積你的暴擊次數' },
       { title: '強迫症救星：無限捏泡泡紙', desc: '捏到爽為止，比比看誰手速最快' },
       { title: '記憶力大挑戰', desc: '翻牌配對，挑戰惡夢難度的指令模式' },
     ]
@@ -169,7 +169,7 @@ const i18n = {
   ja: { heroTitle: '🎮 ストレス解消ゲーム', heroSub: 'スカッとするまで遊ぼう', back: '← QuizDrop', login: 'ログイン', signup: '登録', profile: '👤 プロフィール', logout: '🚪 ログアウト', confirmLogout: 'ログアウトしますか？',
     games: [
       { title: 'タイムレース', desc: '体内時計を試そう、目標の秒数で止めよう' },
-      { title: '叫び鶏の進化', desc: 'クリックしてストレス発散、累計ヒット数を記録' },
+      { title: '叫びアヒルの進化', desc: 'クリックしてストレス発散、累計ヒット数を記録' },
       { title: 'プチプチ無限版', desc: '一枚を割り切ったら新しいシートが出現' },
       { title: '記憶力チャレンジ', desc: 'カードをめくってペアを探そう、悪夢モードに挑戦' },
     ]
@@ -177,7 +177,7 @@ const i18n = {
   en: { heroTitle: '🎮 Stress Relief Games', heroSub: 'Play until you feel better', back: '← QuizDrop', login: 'Log in', signup: 'Sign up', profile: '👤 Profile', logout: '🚪 Log out', confirmLogout: 'Log out?',
     games: [
       { title: 'Golden Second Challenge', desc: 'Test your internal clock, stop at the target second' },
-      { title: 'Screaming Chicken Evolution', desc: 'Click to release stress, rack up your hit count' },
+      { title: 'Screaming Duck Evolution', desc: 'Click to release stress, rack up your hit count' },
       { title: 'Infinite Bubble Wrap', desc: 'Pop a full sheet and a fresh one appears instantly' },
       { title: 'Memory Match Challenge', desc: 'Flip cards and find pairs, try the nightmare command mode' },
     ]

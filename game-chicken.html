@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>社畜超度：尖叫雞進化論 - QuizDrop</title>
+<title>社畜超度：尖叫鴨進化論 - QuizDrop</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@700;900&display=swap');
@@ -43,8 +43,10 @@
   .hit-counter { font-size: 40px; font-weight: 900; color: #a9633a; margin-bottom: 20px; }
 
   .chicken-stage { position: relative; height: 280px; display: flex; align-items: center; justify-content: center; }
-  .chicken-svg-wrap { width: 200px; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
-  .chicken-svg-wrap.shake { animation: shake 0.15s; }
+  .chicken-img-wrap {
+    position: relative; height: 260px; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
+  }
+  .chicken-img-wrap.shake { animation: shake 0.15s; }
   @keyframes shake {
     0%, 100% { transform: translate(0,0) rotate(0deg); }
     25% { transform: translate(-4px,2px) rotate(-3deg); }
@@ -52,8 +54,12 @@
     75% { transform: translate(-3px,1px) rotate(-2deg); }
   }
 
-  .pec-flex { transform-origin: center; transition: transform .1s; }
-  .chicken-svg-wrap.shake .pec-flex { transform: scale(1.08); }
+  .chicken-img {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    height: 100%; width: auto; max-width: none; opacity: 0; transition: opacity .08s;
+    pointer-events: none;
+  }
+  .chicken-img.show { opacity: 1; }
 
   .floating-text {
     position: absolute; font-weight: 900; font-size: 15px; color: #d83b3b;
@@ -100,48 +106,23 @@
 </div>
 
 <div class="wrap">
-  <div class="game-title">🐔 社畜超度：尖叫雞進化論</div>
+  <div class="game-title">🦆 社畜超度：尖叫鴨進化論</div>
   <div class="game-sub">瘋狂點擊牠，發洩你的社畜壓力！</div>
 
   <div class="hit-counter" id="hit-counter">0 暴擊</div>
 
   <div class="chicken-stage" id="chicken-stage">
-    <!-- 風格 1: 呆滯雞 -->
-    <svg id="chicken-default" class="chicken-svg-wrap" viewBox="0 0 200 200" onclick="hitChicken(event)">
-      <ellipse cx="100" cy="120" rx="55" ry="60" fill="#fff" stroke="#000" stroke-width="3"/>
-      <circle cx="100" cy="55" r="38" fill="#fff" stroke="#000" stroke-width="3"/>
-      <circle cx="86" cy="48" r="5" fill="#000"/>
-      <circle cx="114" cy="48" r="5" fill="#000"/>
-      <path d="M90 65 Q100 60 110 65" stroke="#000" stroke-width="2" fill="none"/>
-      <path d="M95 30 L100 10 L105 30 Z" fill="#ff3b3b" stroke="#000" stroke-width="2"/>
-      <path d="M80 32 L70 15 L88 28 Z" fill="#ff3b3b" stroke="#000" stroke-width="2"/>
-      <path d="M120 32 L130 15 L112 28 Z" fill="#ff3b3b" stroke="#000" stroke-width="2"/>
-      <path d="M90 70 L100 78 L110 70 Z" fill="#ff9100" stroke="#000" stroke-width="2"/>
-      <line x1="80" y1="170" x2="75" y2="195" stroke="#000" stroke-width="3"/>
-      <line x1="120" y1="170" x2="125" y2="195" stroke="#000" stroke-width="3"/>
-      <path d="M70 195 L80 195 M70 195 L66 188 M70 195 L72 200" stroke="#ff9100" stroke-width="2" fill="none"/>
-      <path d="M120 195 L130 195 M130 195 L134 188 M130 195 L128 200" stroke="#ff9100" stroke-width="2" fill="none"/>
-    </svg>
+    <!-- 風格 1: 一般版 -->
+    <div id="chicken-default" class="chicken-img-wrap" onclick="hitChicken(event)">
+      <img src="duck-before.png" alt="" class="chicken-img chicken-img-before show">
+      <img src="duck-quack.png" alt="" class="chicken-img chicken-img-quack">
+    </div>
 
-    <!-- 風格 2: 猛男雞 -->
-    <svg id="chicken-muscle" class="chicken-svg-wrap hidden" viewBox="0 0 200 200" onclick="hitChicken(event)">
-      <ellipse cx="100" cy="125" rx="62" ry="58" fill="#ffe9c2" stroke="#000" stroke-width="3"/>
-      <g class="pec-flex">
-        <path d="M70 95 Q100 80 130 95 Q128 130 100 132 Q72 130 70 95 Z" fill="#ffd9a0" stroke="#000" stroke-width="2.5"/>
-        <line x1="100" y1="85" x2="100" y2="128" stroke="#000" stroke-width="2"/>
-      </g>
-      <circle cx="100" cy="50" r="36" fill="#fff" stroke="#000" stroke-width="3"/>
-      <circle cx="87" cy="44" r="5" fill="#000"/>
-      <circle cx="113" cy="44" r="5" fill="#000"/>
-      <path d="M88 60 Q100 56 112 60" stroke="#000" stroke-width="2" fill="none"/>
-      <path d="M95 25 L100 6 L105 25 Z" fill="#ff3b3b" stroke="#000" stroke-width="2"/>
-      <path d="M80 27 L70 10 L88 23 Z" fill="#ff3b3b" stroke="#000" stroke-width="2"/>
-      <path d="M120 27 L130 10 L112 23 Z" fill="#ff3b3b" stroke="#000" stroke-width="2"/>
-      <ellipse cx="55" cy="115" rx="16" ry="26" fill="#ffd9a0" stroke="#000" stroke-width="2.5"/>
-      <ellipse cx="145" cy="115" rx="16" ry="26" fill="#ffd9a0" stroke="#000" stroke-width="2.5"/>
-      <line x1="82" y1="178" x2="78" y2="198" stroke="#000" stroke-width="4"/>
-      <line x1="118" y1="178" x2="122" y2="198" stroke="#000" stroke-width="4"/>
-    </svg>
+    <!-- 風格 2: 猛男版 -->
+    <div id="chicken-muscle" class="chicken-img-wrap hidden" onclick="hitChicken(event)">
+      <img src="duck-before-muscle.png" alt="" class="chicken-img chicken-img-before show">
+      <img src="duck-quack-muscle.png" alt="" class="chicken-img chicken-img-quack">
+    </div>
   </div>
 
   <div class="style-row" id="style-row"></div>
@@ -181,10 +162,20 @@ const AudioEngine = (() => {
 const PROGRESS_KEY = 'quizdrop_game_progress';
 function getProgress() {
   const raw = localStorage.getItem(PROGRESS_KEY);
-  return raw ? JSON.parse(raw) : {
-    timing: { wins: 0, plays: 0, stylesUnlocked: ['default'] },
-    chicken: { hits: 0, plays: 0, stylesUnlocked: ['default'] },
-    bubble: { totalPopped: 0, fastestSheetMs: null, stylesUnlocked: ['default'] },
+  const defaults = {
+    timing: { wins: 0, plays: 0, stylesUnlocked: ['default'], lastTarget: null, lastActual: null, lastDiff: null, bestDiff: null, bestTarget: null, bestActual: null },
+    chicken: { hits: 0, plays: 0, stylesUnlocked: ['default'], lastSessionHits: 0 },
+    bubble: { totalPopped: 0, fastestSheetMs: null, stylesUnlocked: ['default'], lastSessionPopped: 0 },
+    memory: { plays: 0, wins: 0, lastDifficulty: null, lastSteps: null, lastTimeSec: null, bestTimeSec: null, bestDifficulty: null },
+  };
+  if (!raw) return defaults;
+  const parsed = JSON.parse(raw);
+  return {
+    ...defaults, ...parsed,
+    timing: { ...defaults.timing, ...(parsed.timing || {}) },
+    chicken: { ...defaults.chicken, ...(parsed.chicken || {}) },
+    bubble: { ...defaults.bubble, ...(parsed.bubble || {}) },
+    memory: { ...defaults.memory, ...(parsed.memory || {}) },
   };
 }
 function saveProgress(p) { localStorage.setItem(PROGRESS_KEY, JSON.stringify(p)); }
@@ -216,7 +207,6 @@ function showAdUnlockModal(onComplete) {
   btn.onclick = () => { document.body.removeChild(overlay); onComplete(); };
 }
 
-const PRESSURE_WORDS = ['收到請回覆！', 'KPI呢？', '加班一下吧', '明天早上交！', '誰叫你的？', '會議改到現在', '客戶在等', '老闆找你', '報告呢？', '今晚要嗎？'];
 
 let hitCount = 0;
 let currentStyle = 'default';
@@ -232,10 +222,23 @@ function hitChicken(e) {
   void stageEl.offsetWidth; // reflow 重置動畫
   stageEl.classList.add('shake');
 
+  // 表情切換：平靜 -> 大叫 -> 自動切回平靜。若連續快速點擊，先清掉前一次還沒結束的「切回平靜」計時器，
+  // 避免上一次的計時器在這次大叫顯示後又把表情切回去，造成畫面閃爍錯亂
+  const beforeImg = stageEl.querySelector('.chicken-img-before');
+  const quackImg = stageEl.querySelector('.chicken-img-quack');
+  if (stageEl.quackTimeoutHandle) clearTimeout(stageEl.quackTimeoutHandle);
+  beforeImg.classList.remove('show');
+  quackImg.classList.add('show');
+  stageEl.quackTimeoutHandle = setTimeout(() => {
+    quackImg.classList.remove('show');
+    beforeImg.classList.add('show');
+  }, 300);
+
   spawnFloatingText(e);
 
   const progress = getProgress();
-  progress.chicken.hits = hitCount;
+  progress.chicken.hits++; // 真正累積總數，跨裝置/跨次遊玩持續累加
+  progress.chicken.lastSessionHits = hitCount; // 本次（這一輪）累積暴擊數
   saveProgress(progress);
   checkUnlocks();
 
@@ -251,7 +254,8 @@ function spawnFloatingText(e) {
   const rect = stage.getBoundingClientRect();
   const text = document.createElement('div');
   text.className = 'floating-text';
-  text.textContent = PRESSURE_WORDS[Math.floor(Math.random() * PRESSURE_WORDS.length)];
+  const words = i18nChicken[currentLang].pressureWords;
+  text.textContent = words[Math.floor(Math.random() * words.length)];
   const x = (e.clientX || rect.left + rect.width / 2) - rect.left + (Math.random() * 40 - 20);
   const y = (e.clientY || rect.top + rect.height / 2) - rect.top;
   text.style.left = x + 'px';
@@ -358,23 +362,50 @@ async function initAuthUI() {
 
 function mergeProgress(localP, remoteP) {
   if (!remoteP) return localP;
-  return {
+
+  const localBestDiff = localP.timing.bestDiff != null ? localP.timing.bestDiff : Infinity;
+  const remoteBestDiff = remoteP.timing?.bestDiff != null ? remoteP.timing.bestDiff : Infinity;
+  const timingBestIsLocal = localBestDiff <= remoteBestDiff;
+
+  const localBestTime = localP.memory?.bestTimeSec != null ? localP.memory.bestTimeSec : Infinity;
+  const remoteBestTime = remoteP.memory?.bestTimeSec != null ? remoteP.memory.bestTimeSec : Infinity;
+  const memoryBestIsLocal = localBestTime <= remoteBestTime;
+
+  const merged = {
     timing: {
       wins: Math.max(localP.timing.wins, remoteP.timing?.wins || 0),
       plays: Math.max(localP.timing.plays, remoteP.timing?.plays || 0),
       stylesUnlocked: Array.from(new Set([...(localP.timing.stylesUnlocked || []), ...(remoteP.timing?.stylesUnlocked || [])])),
+      lastTarget: localP.timing.lastTarget ?? remoteP.timing?.lastTarget ?? null,
+      lastActual: localP.timing.lastActual ?? remoteP.timing?.lastActual ?? null,
+      lastDiff: localP.timing.lastDiff ?? remoteP.timing?.lastDiff ?? null,
+      bestDiff: timingBestIsLocal ? (localP.timing.bestDiff ?? null) : (remoteP.timing?.bestDiff ?? null),
+      bestTarget: timingBestIsLocal ? (localP.timing.bestTarget ?? null) : (remoteP.timing?.bestTarget ?? null),
+      bestActual: timingBestIsLocal ? (localP.timing.bestActual ?? null) : (remoteP.timing?.bestActual ?? null),
     },
     chicken: {
       hits: Math.max(localP.chicken.hits, remoteP.chicken?.hits || 0),
       plays: Math.max(localP.chicken.plays, remoteP.chicken?.plays || 0),
       stylesUnlocked: Array.from(new Set([...(localP.chicken.stylesUnlocked || []), ...(remoteP.chicken?.stylesUnlocked || [])])),
+      lastSessionHits: localP.chicken.lastSessionHits || remoteP.chicken?.lastSessionHits || 0,
     },
     bubble: {
       totalPopped: Math.max(localP.bubble.totalPopped, remoteP.bubble?.totalPopped || 0),
       fastestSheetMs: minIgnoreNull(localP.bubble.fastestSheetMs, remoteP.bubble?.fastestSheetMs),
       stylesUnlocked: Array.from(new Set([...(localP.bubble.stylesUnlocked || []), ...(remoteP.bubble?.stylesUnlocked || [])])),
+      lastSessionPopped: localP.bubble.lastSessionPopped || remoteP.bubble?.lastSessionPopped || 0,
+    },
+    memory: {
+      plays: Math.max(localP.memory?.plays || 0, remoteP.memory?.plays || 0),
+      wins: Math.max(localP.memory?.wins || 0, remoteP.memory?.wins || 0),
+      lastDifficulty: localP.memory?.lastDifficulty ?? remoteP.memory?.lastDifficulty ?? null,
+      lastSteps: localP.memory?.lastSteps ?? remoteP.memory?.lastSteps ?? null,
+      lastTimeSec: localP.memory?.lastTimeSec ?? remoteP.memory?.lastTimeSec ?? null,
+      bestTimeSec: memoryBestIsLocal ? (localP.memory?.bestTimeSec ?? null) : (remoteP.memory?.bestTimeSec ?? null),
+      bestDifficulty: memoryBestIsLocal ? (localP.memory?.bestDifficulty ?? null) : (remoteP.memory?.bestDifficulty ?? null),
     },
   };
+  return merged;
 }
 
 function minIgnoreNull(a, b) {
@@ -445,31 +476,34 @@ function handleLogoutGames() {
 /* ---------------- 語言切換 ---------------- */
 const i18nChicken = {
   zh: {
-    gameTitle: '🐔 社畜超度：尖叫雞進化論', gameSub: '瘋狂點擊牠，發洩你的社畜壓力！',
+    gameTitle: '🦆 社畜超度：尖叫鴨進化論', gameSub: '瘋狂點擊牠，發洩你的社畜壓力！',
     back: '← 糞Game大廳', progress: '📊 本關進度', login: '登入', signup: '註冊', profile: '👤 個人頁面', logout: '🚪 登出',
-    hitCounter: (n) => `${n} 暴擊`, styleDefault: '🐤 呆滯雞', styleMuscle: '💪 猛男爆衣版',
+    hitCounter: (n) => `${n} 暴擊`, styleDefault: '🦆 呆滯鴨', styleMuscle: '💪 猛男爆衣版',
     unlockMuscle: '累積暴擊 1000 次解鎖',
     lockedHint: (text) => `此風格尚未解鎖（${text}），繼續挑戰就能解鎖喔！`,
     confirmLogout: '要登出嗎？',
-    progressModal: (hits, unlocked, total) => `📊 尖叫雞進化論\n\n累積暴擊：${hits} 次\n已解鎖風格：${unlocked} / ${total}`,
+    progressModal: (hits, unlocked, total) => `📊 尖叫鴨進化論\n\n累積暴擊：${hits} 次\n已解鎖風格：${unlocked} / ${total}`,
+    pressureWords: ['收到請回覆！', 'KPI呢？', '加班一下吧', '明天早上交！', '誰叫你的？', '會議改到現在', '客戶在等', '老闆找你', '報告呢？', '今晚要嗎？'],
   },
   ja: {
-    gameTitle: '🐔 叫び鶏の進化', gameSub: 'クリックしてストレスを発散しよう！',
+    gameTitle: '🦆 叫びアヒルの進化', gameSub: 'クリックしてストレスを発散しよう！',
     back: '← ゲームロビー', progress: '📊 進捗確認', login: 'ログイン', signup: '登録', profile: '👤 プロフィール', logout: '🚪 ログアウト',
-    hitCounter: (n) => `${n} ヒット`, styleDefault: '🐤 ぼんやり鶏', styleMuscle: '💪 マッスル覚醒版',
+    hitCounter: (n) => `${n} ヒット`, styleDefault: '🦆 ぼんやりアヒル', styleMuscle: '💪 マッスル覚醒版',
     unlockMuscle: '累計1000ヒットでアンロック',
     lockedHint: (text) => `このスタイルはまだアンロックされていません（${text}）。挑戦を続けよう！`,
     confirmLogout: 'ログアウトしますか？',
-    progressModal: (hits, unlocked, total) => `📊 叫び鶏の進化\n\n累計ヒット：${hits} 回\nアンロック済みスタイル：${unlocked} / ${total}`,
+    progressModal: (hits, unlocked, total) => `📊 叫びアヒルの進化\n\n累計ヒット：${hits} 回\nアンロック済みスタイル：${unlocked} / ${total}`,
+    pressureWords: ['了解しました！', 'KPIは？', '残業しよう', '明日の朝までに！', '誰の指示？', '会議が前倒しに', 'クライアントが待ってる', '上司が呼んでる', '報告書は？', '今夜やる？'],
   },
   en: {
-    gameTitle: '🐔 Screaming Chicken Evolution', gameSub: 'Click like crazy to release your stress!',
+    gameTitle: '🦆 Screaming Duck Evolution', gameSub: 'Click like crazy to release your stress!',
     back: '← Game Lobby', progress: '📊 Progress', login: 'Log in', signup: 'Sign up', profile: '👤 Profile', logout: '🚪 Log out',
-    hitCounter: (n) => `${n} hits`, styleDefault: '🐤 Dazed Chicken', styleMuscle: '💪 Muscle Mode',
+    hitCounter: (n) => `${n} hits`, styleDefault: '🦆 Dazed Duck', styleMuscle: '💪 Muscle Mode',
     unlockMuscle: 'Unlock after 1000 total hits',
     lockedHint: (text) => `This style is locked (${text}). Keep playing to unlock it!`,
     confirmLogout: 'Log out?',
-    progressModal: (hits, unlocked, total) => `📊 Screaming Chicken Evolution\n\nTotal hits: ${hits}\nStyles unlocked: ${unlocked} / ${total}`,
+    progressModal: (hits, unlocked, total) => `📊 Screaming Duck Evolution\n\nTotal hits: ${hits}\nStyles unlocked: ${unlocked} / ${total}`,
+    pressureWords: ['Reply ASAP!', "What's the KPI?", 'Time for overtime', 'Due tomorrow morning!', 'Who asked for this?', 'Meeting moved up', 'Client is waiting', 'Boss wants you', "Where's the report?", 'Working tonight?'],
   },
 };
 let currentLang = 'zh';
