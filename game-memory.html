@@ -279,10 +279,10 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 let currentUser = null;
 
 const DIFFICULTIES = {
-  easy:     { grid: 4, pairs: 8,  memorizeSec: 5,  storageKey: 'memory_best_easy' },
-  medium:   { grid: 6, pairs: 18, memorizeSec: 15, storageKey: 'memory_best_medium' },
-  hard:     { grid: 8, pairs: 32, memorizeSec: 30, storageKey: 'memory_best_hard' },
-  hardcore: { grid: 8, pairs: 32, memorizeSec: 30, storageKey: 'memory_best_hardcore' },
+  easy:     { grid: 4, pairs: 8,  memorizeSec: 5 },
+  medium:   { grid: 6, pairs: 18, memorizeSec: 15 },
+  hard:     { grid: 8, pairs: 32, memorizeSec: 30 },
+  hardcore: { grid: 8, pairs: 32, memorizeSec: 30 },
 };
 
 let currentDifficulty = null;
@@ -397,10 +397,12 @@ function renderDifficultyCards() {
     { id: 'hard', emoji: '💀' },
     { id: 'hardcore', emoji: '😈' },
   ];
+  const progress = getProgress();
   const grid = document.getElementById('diff-grid');
   grid.innerHTML = defs.map(d => {
-    const best = localStorage.getItem(DIFFICULTIES[d.id].storageKey);
-    const bestDisplay = best ? formatTime(parseInt(best, 10)) : '--:--';
+    const comboKey = `${cardTheme}-${d.id}`;
+    const record = progress.memory.bestByCombo[comboKey];
+    const bestDisplay = record ? formatTime(Math.round(record.timeSec)) : '--:--';
     return `
       <div class="diff-card" onclick="selectDifficulty('${d.id}')">
         <span class="diff-emoji">${d.emoji}</span>
@@ -553,8 +555,10 @@ function formatTime(sec) {
 function updateTimeDisplay() { document.getElementById('stat-time').textContent = formatTime(elapsedSec); }
 function updateStepsDisplay() { document.getElementById('stat-steps').textContent = steps; }
 function updateBestDisplay() {
-  const best = localStorage.getItem(DIFFICULTIES[currentDifficulty].storageKey);
-  document.getElementById('stat-best').textContent = best ? formatTime(parseInt(best, 10)) : '--:--';
+  const progress = getProgress();
+  const comboKey = `${cardTheme}-${currentDifficulty}`;
+  const record = progress.memory.bestByCombo[comboKey];
+  document.getElementById('stat-best').textContent = record ? formatTime(Math.round(record.timeSec)) : '--:--';
 }
 
 function onCardClick(idx) {
@@ -733,20 +737,15 @@ function finishGame() {
   isGameActive = false;
   AudioEngine.playVictory();
 
-  const storageKey = DIFFICULTIES[currentDifficulty].storageKey;
-  const prevBestTime = localStorage.getItem(storageKey);
-  const prevBest = prevBestTime ? parseInt(prevBestTime, 10) : Infinity;
-  const isNewBest = elapsedSec < prevBest;
-  if (isNewBest) localStorage.setItem(storageKey, String(elapsedSec));
-
-  const stepsKey = storageKey + '_steps';
-  const prevBestStepsRaw = localStorage.getItem(stepsKey);
-  const prevBestSteps = prevBestStepsRaw ? parseInt(prevBestStepsRaw, 10) : Infinity;
-  const isNewBestSteps = steps < prevBestSteps;
-  if (isNewBestSteps) localStorage.setItem(stepsKey, String(steps));
+  // 結算前先讀取目前這個「牌面主題 + 難度」組合的既有最佳紀錄，用來判斷這次是否破紀錄
+  const progress = getProgress();
+  const comboKey = `${cardTheme}-${currentDifficulty}`;
+  const prevBest = progress.memory.bestByCombo[comboKey];
+  const isNewBest = !prevBest || elapsedSec < prevBest.timeSec;
+  const isNewBestSteps = !prevBest || steps < prevBest.steps;
 
   showResultOverlay(isNewBest, isNewBestSteps);
-  recordMemoryProgress();
+  recordMemoryProgress(); // 這裡才是唯一寫入最佳紀錄的地方，已正確依牌面主題分開記錄
 }
 
 function showResultOverlay(isNewBestTime, isNewBestSteps) {
