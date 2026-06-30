@@ -187,6 +187,12 @@
   .input-field { width: 100%; padding: 13px 16px; border-radius: 10px; border: 1.5px solid #d9cbb3; font-size: 14px; margin-bottom: 12px; outline: none; transition: border-color .2s; background: #fffdf8; color: #4a3f35; }
   .input-field:focus { border-color: #a9633a; }
   .pw-field-wrap { position: relative; margin-bottom: 12px; }
+  .terms-agree-row {
+    display: flex; align-items: flex-start; gap: 8px; margin-bottom: 14px; cursor: pointer;
+    font-size: 12px; color: #9c8f7e; line-height: 1.5;
+  }
+  .terms-agree-row input[type="checkbox"] { margin-top: 2px; flex-shrink: 0; cursor: pointer; }
+  .terms-agree-row a { color: #a9633a; text-decoration: underline; }
   .pw-field-wrap .input-field { margin-bottom: 0; padding-right: 46px; }
   .pw-eye {
     position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
@@ -361,6 +367,11 @@
         <button type="button" class="pw-eye" onclick="togglePwVisibility('auth-password-confirm', this)" aria-label="顯示密碼">👁️</button>
       </div>
 
+      <label class="terms-agree-row hidden" id="terms-agree-row">
+        <input type="checkbox" id="auth-terms-checkbox" />
+        <span id="terms-agree-text">我已閱讀並同意 <a href="terms.html" target="_blank" rel="noopener">使用條款</a> 與 <a href="privacy.html" target="_blank" rel="noopener">隱私權政策</a></span>
+      </label>
+
       <button class="btn-primary-full" id="auth-submit-btn" onclick="handleAuthSubmit()">登入</button>
 
       <div class="divider">或</div>
@@ -452,6 +463,8 @@ const i18n = {
     email: "Email", password: "密碼（至少6位數）",
     noAccount: "還沒有帳號？", haveAccount: "已經有帳號？",
     toSignup: "立即註冊", toLogin: "直接登入",
+    termsAgreeText: '我已閱讀並同意 <a href="terms.html" target="_blank" rel="noopener">使用條款</a> 與 <a href="privacy.html" target="_blank" rel="noopener">隱私權政策</a>',
+    termsRequired: "請先閱讀並同意使用條款與隱私權政策",
     authErrorGeneric: "信箱或密碼不正確，請重新確認",
     authErrorNetwork: "連線發生問題，請再試一次",
     customChip: "🚀 客製化",
@@ -467,6 +480,8 @@ const i18n = {
     email: "メール", password: "パスワード（6文字以上）",
     noAccount: "アカウントがない？", haveAccount: "アカウントをお持ち？",
     toSignup: "今すぐ登録", toLogin: "ログインする",
+    termsAgreeText: '<a href="terms.html" target="_blank" rel="noopener">利用規約</a>と<a href="privacy.html" target="_blank" rel="noopener">プライバシーポリシー</a>を読み、同意します',
+    termsRequired: "利用規約とプライバシーポリシーに同意してください",
     authErrorGeneric: "メールアドレスまたはパスワードが正しくありません",
     authErrorNetwork: "接続エラーが発生しました。もう一度お試しください",
     customChip: "🚀 カスタム作成",
@@ -482,6 +497,8 @@ const i18n = {
     email: "Email", password: "Password (6+ characters)",
     noAccount: "No account yet?", haveAccount: "Already have an account?",
     toSignup: "Sign up now", toLogin: "Log in instead",
+    termsAgreeText: 'I have read and agree to the <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>',
+    termsRequired: "Please agree to the Terms of Service and Privacy Policy first",
     authErrorGeneric: "Incorrect email or password. Please try again",
     authErrorNetwork: "A connection error occurred. Please try again",
     customChip: "🚀 Create Your Own",
@@ -611,6 +628,8 @@ function updateAuthModalUI() {
   const t = i18n[currentLang];
   const nicknameField = document.getElementById('auth-nickname');
   const confirmWrap = document.getElementById('confirm-pw-wrap');
+  const termsRow = document.getElementById('terms-agree-row');
+  const termsCheckbox = document.getElementById('auth-terms-checkbox');
 
   if (authMode === 'login') {
     document.getElementById('auth-title').textContent = t.welcomeBack;
@@ -620,6 +639,8 @@ function updateAuthModalUI() {
     document.getElementById('switch-btn').textContent = t.toSignup;
     nicknameField.classList.add('hidden');
     confirmWrap.classList.add('hidden');
+    termsRow.classList.add('hidden');
+    termsCheckbox.checked = false; // 切回登入模式時重置，避免殘留勾選狀態造成誤判
   } else {
     document.getElementById('auth-title').textContent = t.createAccount;
     document.getElementById('auth-subtitle').textContent = t.signupSub;
@@ -628,9 +649,11 @@ function updateAuthModalUI() {
     document.getElementById('switch-btn').textContent = t.toLogin;
     nicknameField.classList.remove('hidden');
     confirmWrap.classList.remove('hidden');
+    termsRow.classList.remove('hidden');
   }
   document.getElementById('auth-email').placeholder = t.email;
   document.getElementById('auth-password').placeholder = t.password;
+  document.getElementById('terms-agree-text').innerHTML = t.termsAgreeText;
 }
 
 function togglePwVisibility(inputId, btn) {
@@ -678,6 +701,10 @@ async function handleAuthSubmit() {
     }
     if (!nickname) {
       showFormMsg('請輸入暱稱', 'error');
+      return;
+    }
+    if (!document.getElementById('auth-terms-checkbox').checked) {
+      showFormMsg(i18n[currentLang].termsRequired, 'error');
       return;
     }
   }
