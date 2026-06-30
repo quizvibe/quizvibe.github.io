@@ -304,14 +304,17 @@ const i18nProfile = {
     chickenBest: (n) => `累積總數：${n} 個`,
     bubbleLast: (n) => `最新：${n} 個`,
     bubbleBest: (n) => `累積總數：${n} 個`,
-    memoryLast: (diff, steps, sec) => {
+    memoryLast: (theme, diff, steps, sec) => {
       const diffNames = { easy: '簡單', medium: '中等', hard: '困難', hardcore: '惡夢' };
-      return `最新：${diffNames[diff] || diff}・${steps} 步・${sec.toFixed(0)} 秒`;
+      const themeNames = { letter: '字母版', poker: '撲克牌版' };
+      return `最新：${themeNames[theme] || theme}・${diffNames[diff] || diff}・${steps} 步・${sec.toFixed(0)} 秒`;
     },
-    memoryBest: (diff, sec) => {
+    memoryBestCombo: (theme, diff, sec) => {
       const diffNames = { easy: '簡單', medium: '中等', hard: '困難', hardcore: '惡夢' };
-      return sec == null ? '' : `最佳：${diffNames[diff] || diff}・${sec.toFixed(0)} 秒`;
+      const themeNames = { letter: '字母版', poker: '撲克牌版' };
+      return `最佳・${themeNames[theme] || theme}${diffNames[diff] || diff}：${sec.toFixed(0)} 秒`;
     },
+    memoryNoBest: '尚無最佳紀錄',
     confirmLogout: '要登出嗎？',
   },
   ja: {
@@ -334,14 +337,17 @@ const i18nProfile = {
     chickenBest: (n) => `累計：${n} 回`,
     bubbleLast: (n) => `最新：${n} 個`,
     bubbleBest: (n) => `累計：${n} 個`,
-    memoryLast: (diff, steps, sec) => {
+    memoryLast: (theme, diff, steps, sec) => {
       const diffNames = { easy: 'かんたん', medium: 'ふつう', hard: 'むずかしい', hardcore: '悪夢' };
-      return `最新：${diffNames[diff] || diff}・${steps} 手・${sec.toFixed(0)} 秒`;
+      const themeNames = { letter: 'アルファベット版', poker: 'トランプ版' };
+      return `最新：${themeNames[theme] || theme}・${diffNames[diff] || diff}・${steps} 手・${sec.toFixed(0)} 秒`;
     },
-    memoryBest: (diff, sec) => {
+    memoryBestCombo: (theme, diff, sec) => {
       const diffNames = { easy: 'かんたん', medium: 'ふつう', hard: 'むずかしい', hardcore: '悪夢' };
-      return sec == null ? '' : `ベスト：${diffNames[diff] || diff}・${sec.toFixed(0)} 秒`;
+      const themeNames = { letter: 'アルファベット版', poker: 'トランプ版' };
+      return `ベスト・${themeNames[theme] || theme}${diffNames[diff] || diff}：${sec.toFixed(0)} 秒`;
     },
+    memoryNoBest: 'ベスト記録なし',
     confirmLogout: 'ログアウトしますか？',
   },
   en: {
@@ -364,14 +370,17 @@ const i18nProfile = {
     chickenBest: (n) => `Total: ${n} hits`,
     bubbleLast: (n) => `Latest: ${n} pops`,
     bubbleBest: (n) => `Total: ${n} pops`,
-    memoryLast: (diff, steps, sec) => {
+    memoryLast: (theme, diff, steps, sec) => {
       const diffNames = { easy: 'Easy', medium: 'Medium', hard: 'Hard', hardcore: 'Nightmare' };
-      return `Latest: ${diffNames[diff] || diff}・${steps} steps・${sec.toFixed(0)}s`;
+      const themeNames = { letter: 'Letters', poker: 'Poker Cards' };
+      return `Latest: ${themeNames[theme] || theme}・${diffNames[diff] || diff}・${steps} steps・${sec.toFixed(0)}s`;
     },
-    memoryBest: (diff, sec) => {
+    memoryBestCombo: (theme, diff, sec) => {
       const diffNames = { easy: 'Easy', medium: 'Medium', hard: 'Hard', hardcore: 'Nightmare' };
-      return sec == null ? '' : `Best: ${diffNames[diff] || diff}・${sec.toFixed(0)}s`;
+      const themeNames = { letter: 'Letters', poker: 'Poker Cards' };
+      return `Best・${themeNames[theme] || theme} ${diffNames[diff] || diff}: ${sec.toFixed(0)}s`;
     },
+    memoryNoBest: 'No best record yet',
     confirmLogout: 'Log out?',
   },
 };
@@ -483,7 +492,7 @@ function getGameProgress() {
     timing: { wins: 0, plays: 0, stylesUnlocked: ['default'], lastTarget: null, lastActual: null, lastDiff: null, bestDiff: null, bestTarget: null, bestActual: null },
     chicken: { hits: 0, plays: 0, stylesUnlocked: ['default'], lastSessionHits: 0 },
     bubble: { totalPopped: 0, fastestSheetMs: null, stylesUnlocked: ['default'], lastSessionPopped: 0 },
-    memory: { plays: 0, wins: 0, lastDifficulty: null, lastSteps: null, lastTimeSec: null, bestTimeSec: null, bestDifficulty: null },
+    memory: { plays: 0, wins: 0, lastTheme: null, lastDifficulty: null, lastSteps: null, lastTimeSec: null, bestByCombo: {} },
   };
   if (!raw) return defaults;
   const parsed = JSON.parse(raw);
@@ -492,7 +501,7 @@ function getGameProgress() {
     timing: { ...defaults.timing, ...(parsed.timing || {}) },
     chicken: { ...defaults.chicken, ...(parsed.chicken || {}) },
     bubble: { ...defaults.bubble, ...(parsed.bubble || {}) },
-    memory: { ...defaults.memory, ...(parsed.memory || {}) },
+    memory: { ...defaults.memory, ...(parsed.memory || {}), bestByCombo: { ...(parsed.memory?.bestByCombo || {}) } },
   };
 }
 
@@ -523,10 +532,27 @@ function renderGameHistory() {
         t.bubbleBest(progress.bubble.totalPopped),
       ];
     } else if (g.id === 'memory' && progress.memory.plays > 0) {
-      lines = [
-        t.memoryLast(progress.memory.lastDifficulty, progress.memory.lastSteps, progress.memory.lastTimeSec),
-        t.memoryBest(progress.memory.bestDifficulty, progress.memory.bestTimeSec),
-      ];
+      lines = [t.memoryLast(progress.memory.lastTheme, progress.memory.lastDifficulty, progress.memory.lastSteps, progress.memory.lastTimeSec)];
+      const comboKeys = Object.keys(progress.memory.bestByCombo || {});
+      if (comboKeys.length === 0) {
+        lines.push(t.memoryNoBest);
+      } else {
+        // 依牌面主題、難度排序顯示，讓清單看起來有規律（不是隨機順序）
+        const themeOrder = ['letter', 'poker'];
+        const diffOrder = ['easy', 'medium', 'hard', 'hardcore'];
+        comboKeys.sort((a, b) => {
+          const [aTheme, aDiff] = a.split('-');
+          const [bTheme, bDiff] = b.split('-');
+          const themeCmp = themeOrder.indexOf(aTheme) - themeOrder.indexOf(bTheme);
+          if (themeCmp !== 0) return themeCmp;
+          return diffOrder.indexOf(aDiff) - diffOrder.indexOf(bDiff);
+        });
+        comboKeys.forEach(key => {
+          const [theme, diff] = key.split('-');
+          const record = progress.memory.bestByCombo[key];
+          lines.push(t.memoryBestCombo(theme, diff, record.timeSec));
+        });
+      }
     }
 
     const recordHtml = lines.map(l => `<div class="ghi-line">${l}</div>`).join('');
@@ -564,8 +590,17 @@ function showBlackboardModal() {
       stats = `累積捏爆：${progress.bubble.totalPopped} 個<br>單張最快手速：${fastest}<br>已解鎖風格：${progress.bubble.stylesUnlocked.length} / 2`;
     } else if (g.id === 'memory') {
       const diffNames = { easy: '簡單', medium: '中等', hard: '困難', hardcore: '惡夢' };
-      const best = progress.memory.bestTimeSec != null ? `${diffNames[progress.memory.bestDifficulty] || ''}・${progress.memory.bestTimeSec.toFixed(0)} 秒` : '尚無紀錄';
-      stats = `累積遊玩：${progress.memory.plays} 次<br>最佳紀錄：${best}`;
+      const themeNames = { letter: '字母版', poker: '撲克牌版' };
+      const comboKeys = Object.keys(progress.memory.bestByCombo || {});
+      let bestList = '尚無紀錄';
+      if (comboKeys.length > 0) {
+        bestList = comboKeys.map(key => {
+          const [theme, diff] = key.split('-');
+          const r = progress.memory.bestByCombo[key];
+          return `${themeNames[theme] || theme}${diffNames[diff] || diff}：${r.timeSec.toFixed(0)} 秒`;
+        }).join('<br>');
+      }
+      stats = `累積遊玩：${progress.memory.plays} 次<br>${bestList}`;
     }
     return `
       <div class="blackboard-row">

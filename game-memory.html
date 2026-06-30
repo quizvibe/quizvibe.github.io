@@ -878,7 +878,7 @@ function getProgress() {
     timing: { wins: 0, plays: 0, stylesUnlocked: ['default'], lastTarget: null, lastActual: null, lastDiff: null, bestDiff: null, bestTarget: null, bestActual: null },
     chicken: { hits: 0, plays: 0, stylesUnlocked: ['default'], lastSessionHits: 0 },
     bubble: { totalPopped: 0, fastestSheetMs: null, stylesUnlocked: ['default'], lastSessionPopped: 0 },
-    memory: { plays: 0, wins: 0, lastDifficulty: null, lastSteps: null, lastTimeSec: null, bestTimeSec: null, bestDifficulty: null },
+    memory: { plays: 0, wins: 0, lastTheme: null, lastDifficulty: null, lastSteps: null, lastTimeSec: null, bestByCombo: {} },
   };
   if (!raw) return defaults;
   const parsed = JSON.parse(raw);
@@ -887,7 +887,7 @@ function getProgress() {
     timing: { ...defaults.timing, ...(parsed.timing || {}) },
     chicken: { ...defaults.chicken, ...(parsed.chicken || {}) },
     bubble: { ...defaults.bubble, ...(parsed.bubble || {}) },
-    memory: { ...defaults.memory, ...(parsed.memory || {}) },
+    memory: { ...defaults.memory, ...(parsed.memory || {}), bestByCombo: { ...(parsed.memory?.bestByCombo || {}) } },
   };
 }
 function saveProgress(p) { localStorage.setItem(PROGRESS_KEY, JSON.stringify(p)); }
@@ -896,17 +896,22 @@ function recordMemoryProgress() {
   const progress = getProgress();
   progress.memory.plays++;
   progress.memory.wins++;
+  progress.memory.lastTheme = cardTheme;
   progress.memory.lastDifficulty = currentDifficulty;
   progress.memory.lastSteps = steps;
   progress.memory.lastTimeSec = elapsedSec;
-  const prevBestTime = progress.memory.bestTimeSec != null ? progress.memory.bestTimeSec : Infinity;
+
+  // 8 種「牌面主題 × 難度」組合各自獨立記錄最佳紀錄，不互相覆蓋
+  const comboKey = `${cardTheme}-${currentDifficulty}`;
+  const prevBest = progress.memory.bestByCombo[comboKey];
+  const prevBestTime = prevBest ? prevBest.timeSec : Infinity;
   if (elapsedSec < prevBestTime) {
-    progress.memory.bestTimeSec = elapsedSec;
-    progress.memory.bestDifficulty = currentDifficulty;
+    progress.memory.bestByCombo[comboKey] = { timeSec: elapsedSec, steps: steps };
   }
+
   saveProgress(progress);
   pushProgressToCloud();
-  saveGameResult('memory', { difficulty: currentDifficulty, steps, timeSec: elapsedSec });
+  saveGameResult('memory', { difficulty: currentDifficulty, theme: cardTheme, steps, timeSec: elapsedSec });
 }
 
 async function saveGameResult(gameId, recordDetail) {
@@ -935,9 +940,16 @@ function mergeProgress(localP, remoteP) {
   const remoteBestDiff = remoteP.timing?.bestDiff != null ? remoteP.timing.bestDiff : Infinity;
   const timingBestIsLocal = localBestDiff <= remoteBestDiff;
 
-  const localBestTime = localP.memory?.bestTimeSec != null ? localP.memory.bestTimeSec : Infinity;
-  const remoteBestTime = remoteP.memory?.bestTimeSec != null ? remoteP.memory.bestTimeSec : Infinity;
-  const memoryBestIsLocal = localBestTime <= remoteBestTime;
+  // 合併 8 種「牌面主題 × 難度」組合的最佳紀錄：每個組合各自比較，取時間較短的那筆
+  const localCombos = localP.memory?.bestByCombo || {};
+  const remoteCombos = remoteP.memory?.bestByCombo || {};
+  const mergedBestByCombo = {};
+  for (const key of new Set([...Object.keys(localCombos), ...Object.keys(remoteCombos)])) {
+    const l = localCombos[key];
+    const r = remoteCombos[key];
+    if (l && r) mergedBestByCombo[key] = l.timeSec <= r.timeSec ? l : r;
+    else mergedBestByCombo[key] = l || r;
+  }
 
   const merged = {
     timing: {
@@ -966,11 +978,11 @@ function mergeProgress(localP, remoteP) {
     memory: {
       plays: Math.max(localP.memory?.plays || 0, remoteP.memory?.plays || 0),
       wins: Math.max(localP.memory?.wins || 0, remoteP.memory?.wins || 0),
+      lastTheme: localP.memory?.lastTheme ?? remoteP.memory?.lastTheme ?? null,
       lastDifficulty: localP.memory?.lastDifficulty ?? remoteP.memory?.lastDifficulty ?? null,
       lastSteps: localP.memory?.lastSteps ?? remoteP.memory?.lastSteps ?? null,
       lastTimeSec: localP.memory?.lastTimeSec ?? remoteP.memory?.lastTimeSec ?? null,
-      bestTimeSec: memoryBestIsLocal ? (localP.memory?.bestTimeSec ?? null) : (remoteP.memory?.bestTimeSec ?? null),
-      bestDifficulty: memoryBestIsLocal ? (localP.memory?.bestDifficulty ?? null) : (remoteP.memory?.bestDifficulty ?? null),
+      bestByCombo: mergedBestByCombo,
     },
   };
   return merged;
