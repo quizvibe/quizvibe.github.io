@@ -134,8 +134,11 @@
     font-weight: 800; font-size: 16px; border: none; cursor: pointer;
   }
 
-  .memorize-banner { text-align: center; margin-bottom: 10px; font-size: 13px; color: #9c8f7e; display: none; }
-  .memorize-banner.show { display: block; }
+  .memorize-banner {
+    text-align: center; margin-bottom: 10px; font-size: 13px; color: #9c8f7e;
+    height: 64px; visibility: hidden; opacity: 0; transition: opacity .15s;
+  }
+  .memorize-banner.show { visibility: visible; opacity: 1; }
   .memorize-countdown { font-size: 22px; font-weight: 900; color: #4a3f35; }
   .memorize-countdown.danger { color: #d83b3b; animation: pulse .5s infinite; }
   @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
