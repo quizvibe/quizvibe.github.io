@@ -241,6 +241,7 @@ const AudioEngine = (() => {
 })();
 
 const PROGRESS_KEY = 'quizdrop_game_progress';
+const PROGRESS_OWNER_KEY = 'quizdrop_game_progress_owner'; // 記錄目前這份本機進度是哪個登入帳號留下的，避免切換帳號時互相污染
 function getProgress() {
   const raw = localStorage.getItem(PROGRESS_KEY);
   const defaults = {
@@ -704,10 +705,20 @@ async function syncProgressOnLogin(userId) {
   try {
     const { data, error } = await supabaseClient.from('game_progress').select('progress_data').eq('user_id', userId).single();
     const remoteP = (!error && data) ? data.progress_data : null;
-    const localP = getProgress();
-    const merged = mergeProgress(localP, remoteP);
-    saveProgress(merged); // 更新本機顯示
-    await supabaseClient.from('game_progress').upsert({ user_id: userId, progress_data: merged, updated_at: new Date().toISOString() });
+
+    // 本機暫存上一次是被哪個帳號寫入的；如果跟這次登入的人不同，代表這份本機資料
+    // 是「別的登入身分」（或別的帳號）留下的，不能拿來合併，否則會把別人的紀錄寫進這個帳號
+    const owner = localStorage.getItem(PROGRESS_OWNER_KEY);
+    if (owner && owner !== userId) {
+      const cloudTruth = remoteP || getProgress();
+      saveProgress(cloudTruth);
+    } else {
+      const localP = getProgress();
+      const merged = mergeProgress(localP, remoteP);
+      saveProgress(merged); // 更新本機顯示
+      await supabaseClient.from('game_progress').upsert({ user_id: userId, progress_data: merged, updated_at: new Date().toISOString() });
+    }
+    localStorage.setItem(PROGRESS_OWNER_KEY, userId);
     // 合併完成後重新渲染畫面上會用到進度的部分
     if (typeof renderStyleRow === 'function') renderStyleRow();
     if (typeof renderRecentList === 'function') renderRecentList();
