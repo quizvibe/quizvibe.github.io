@@ -438,6 +438,7 @@ function setLang(l) {
 })();
 
 let currentUser = null;
+let cachedRemoteProgress = null; // 這個帳號在 Supabase game_progress 表裡真正存的資料，取代直接讀本機 localStorage
 
 async function init() {
   setLang(currentLang); // 套用之前儲存的語言偏好，確保載入時文字已是正確語言
@@ -465,6 +466,20 @@ async function init() {
   document.getElementById('email-display').value = currentUser.email;
   document.getElementById('avatar-initial').textContent = displayName.charAt(0).toUpperCase();
 
+  // 載入這個帳號在雲端真正的遊戲進度（不要相信本機殘留的 localStorage，
+  // 那份可能是別的登入身分留下的，切換帳號時會顯示錯誤的紀錄）
+  try {
+    const { data: gpRow, error: gpError } = await supabaseClient
+      .from('game_progress')
+      .select('progress_data')
+      .eq('user_id', currentUser.id)
+      .single();
+    cachedRemoteProgress = (!gpError && gpRow) ? gpRow.progress_data : null;
+  } catch (err) {
+    console.warn('讀取遊戲進度失敗:', err);
+    cachedRemoteProgress = null;
+  }
+
   loadHistory(); // 確認登入與使用者資料載入完成後才讀取測驗紀錄
 }
 
@@ -487,15 +502,14 @@ function switchTab(tab) {
 }
 
 function getGameProgress() {
-  const raw = localStorage.getItem('quizdrop_game_progress');
+  const parsed = cachedRemoteProgress; // 改用登入時從 Supabase 抓回來的雲端資料，而不是本機 localStorage
   const defaults = {
     timing: { wins: 0, plays: 0, stylesUnlocked: ['default'], lastTarget: null, lastActual: null, lastDiff: null, bestDiff: null, bestTarget: null, bestActual: null },
     chicken: { hits: 0, plays: 0, stylesUnlocked: ['default'], lastSessionHits: 0 },
     bubble: { totalPopped: 0, fastestSheetMs: null, stylesUnlocked: ['default'], lastSessionPopped: 0 },
     memory: { plays: 0, wins: 0, lastTheme: null, lastDifficulty: null, lastSteps: null, lastTimeSec: null, bestByCombo: {} },
   };
-  if (!raw) return defaults;
-  const parsed = JSON.parse(raw);
+  if (!parsed) return defaults;
   return {
     ...defaults, ...parsed,
     timing: { ...defaults.timing, ...(parsed.timing || {}) },
