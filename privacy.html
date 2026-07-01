@@ -8,8 +8,12 @@
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, 'Noto Sans TC', sans-serif; }
   body { background: #f7f2e9; color: #4a3f35; min-height: 100vh; line-height: 1.8; }
 
-  .topbar { height: 58px; background: #fffdf8; border-bottom: 1px solid #ece4d4; display: flex; align-items: center; padding: 0 20px; position: sticky; top: 0; z-index: 50; }
+  .topbar { height: 58px; background: #fffdf8; border-bottom: 1px solid #ece4d4; display: flex; align-items: center; padding: 0 20px; gap: 12px; position: sticky; top: 0; z-index: 50; }
   .back { color: #9c8f7e; font-size: 13px; text-decoration: none; }
+  .spacer { flex: 1; }
+  .lang-pill { display: flex; gap: 3px; background: #f1e9da; border-radius: 10px; padding: 3px; }
+  .lang-pill button { padding: 5px 10px; border-radius: 8px; font-size: 12.5px; font-weight: 600; color: #9c8f7e; border: none; background: none; cursor: pointer; transition: all .2s; }
+  .lang-pill button.active { background: #fffdf8; color: #a9633a; box-shadow: 0 1px 4px rgba(80,60,30,0.1); }
 
   .wrap { max-width: 680px; margin: 0 auto; padding: 32px 20px 80px; }
   h1 { font-size: 24px; font-weight: 900; margin-bottom: 6px; }
@@ -17,90 +21,242 @@
   h2 { font-size: 17px; font-weight: 800; color: #a9633a; margin: 30px 0 10px; }
   p, li { font-size: 14px; color: #5a4f43; margin-bottom: 10px; }
   ul, ol { padding-left: 22px; margin-bottom: 10px; }
-  .notice-box {
-    background: #fffdf8; border: 1.5px solid #d9cbb3; border-radius: 12px; padding: 16px 18px; margin: 20px 0;
-    font-size: 13px; color: #6b5d4d;
-  }
   a { color: #a9633a; }
-  .draft-tag {
-    display: inline-block; background: #f1e9da; color: #a9633a; font-size: 11px; font-weight: 700;
-    padding: 3px 10px; border-radius: 99px; margin-bottom: 14px;
-  }
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <a href="index.html" class="back">← QuizDrop</a>
-</div>
-
-<div class="wrap">
-  <span class="draft-tag">草案 Draft</span>
-  <h1>隱私權政策</h1>
-  <p class="updated">最後更新日期：2026 年 6 月 30 日</p>
-
-  <div class="notice-box">
-    本頁面為初版草案，提供 QuizDrop（quizdrop.me，以下稱「本服務」或「我們」）基本的隱私權說明。內容尚未經過專業法律審閱，正式上線前建議諮詢律師以確保符合您所在地區的相關法規（如歐盟 GDPR、加州 CCPA 等）。
+  <a href="index.html" class="back" id="back-link">← QuizDrop</a>
+  <div class="spacer"></div>
+  <div class="lang-pill">
+    <button class="active" onclick="setLang('zh')" data-lang-btn="zh">中</button>
+    <button onclick="setLang('ja')" data-lang-btn="ja">日</button>
+    <button onclick="setLang('en')" data-lang-btn="en">EN</button>
   </div>
-
-  <h2>1. 我們蒐集哪些資料</h2>
-  <p>當您使用本服務時，我們可能會蒐集以下資料：</p>
-  <ul>
-    <li><strong>帳號資料</strong>：註冊時提供的電子郵件地址、您設定的暱稱。</li>
-    <li><strong>測驗紀錄</strong>：您完成測驗後的結果、選擇的答案、完成時間。</li>
-    <li><strong>遊戲進度</strong>：您在小遊戲（計時挑戰、尖叫鴨、泡泡紙、記憶力翻牌）中的累積分數、最佳紀錄、解鎖的風格項目。</li>
-    <li><strong>創作內容</strong>：若您使用「創作測驗」功能，您建立的測驗題目、選項、結果內容。</li>
-    <li><strong>技術性資料</strong>：瀏覽器類型、裝置資訊、IP 位址等，主要由第三方服務（如廣告聯播網）自動蒐集。</li>
-  </ul>
-
-  <h2>2. 我們如何使用這些資料</h2>
-  <ul>
-    <li>提供、維護並改善本服務的功能（例如記住您的測驗結果與遊戲進度，讓您下次登入時能看到先前的紀錄）。</li>
-    <li>驗證您的帳號（透過電子郵件發送註冊驗證信）。</li>
-    <li>確保服務的安全性與正常運作。</li>
-  </ul>
-  <p>我們<strong>不會</strong>使用您的電子郵件發送行銷信件或電子報；電子郵件僅用於帳號註冊驗證等必要通知。</p>
-
-  <h2>3. 第三方服務</h2>
-  <p>本服務使用以下第三方服務協助營運，這些服務可能會依其各自的隱私權政策處理您的資料：</p>
-  <ul>
-    <li><strong>Supabase</strong>：我們的資料庫與帳號驗證服務供應商，用於儲存上述帳號資料、測驗紀錄與遊戲進度。</li>
-    <li><strong>Resend</strong>：用於發送帳號註冊驗證信件。</li>
-    <li><strong>Adsterra</strong>：本服務使用的廣告聯播網。Adsterra 及其合作廣告主可能會透過 Cookie 或類似技術，蒐集您的瀏覽行為以提供廣告服務。詳情請參閱 <a href="https://adsterra.com/privacy-policy/" target="_blank" rel="noopener">Adsterra 隱私權政策</a>。</li>
-  </ul>
-
-  <h2>4. Cookie 與類似技術</h2>
-  <p>本服務及其廣告合作夥伴可能使用 Cookie、本機儲存（localStorage）等技術，用於：</p>
-  <ul>
-    <li>記住您的登入狀態與語言偏好設定。</li>
-    <li>在您未登入時，於您的裝置本機暫存遊戲進度（訪客模式）。</li>
-    <li>廣告聯播網用於投放與衡量廣告效果。</li>
-  </ul>
-  <p>您可以透過瀏覽器設定管理或封鎖 Cookie，但這可能會影響部分功能的正常運作。</p>
-
-  <h2>5. 資料保留與刪除</h2>
-  <p>我們會在您持有帳號期間保留上述資料。若您希望刪除帳號及其相關資料，請透過下方聯絡方式與我們聯繫，我們將在合理期間內處理您的請求。</p>
-
-  <h2>6. 資料安全</h2>
-  <p>我們透過 Supabase 提供的標準安全機制（包含列級安全性政策 Row Level Security）保護您的資料，確保僅有您本人能存取與修改自己的帳號資料。但請注意，沒有任何網路傳輸或儲存方式能保證百分之百安全。</p>
-
-  <h2>7. 使用者年齡</h2>
-  <p>本服務並非針對 13 歲以下兒童設計。若您未滿 13 歲，請勿使用本服務或提供任何個人資料。若我們得知有 13 歲以下兒童在未經家長同意的情況下提供了個人資料，我們將盡快刪除相關資料。</p>
-
-  <h2>8. 您的權利</h2>
-  <p>您可以隨時：</p>
-  <ul>
-    <li>透過「個人頁面」查看與修改您的帳號資料。</li>
-    <li>聯繫我們要求刪除您的帳號與相關資料。</li>
-    <li>聯繫我們詢問我們持有您哪些資料。</li>
-  </ul>
-
-  <h2>9. 政策異動</h2>
-  <p>我們可能會不時更新本隱私權政策。重大變更時，我們會在本頁面更新「最後更新日期」，建議您定期查看本頁面以了解最新內容。</p>
-
-  <h2>10. 聯絡我們</h2>
-  <p>若您對本隱私權政策有任何疑問，歡迎透過 <a href="mailto:contact@quizdrop.me">contact@quizdrop.me</a> 與我們聯繫。</p>
 </div>
 
+<div class="wrap" id="content"></div>
+
+<script>
+const i18n = {
+  zh: {
+    backLink: '← QuizDrop',
+    title: '隱私權政策',
+    updated: '最後更新日期：2026 年 6 月 30 日',
+    body: `
+      <p>歡迎使用 QuizDrop（quizdrop.me，以下稱「本服務」或「我們」）。本隱私權政策說明我們如何蒐集、使用及保護您的個人資料。使用本服務即表示您同意本政策之內容。</p>
+
+      <h2>1. 我們蒐集哪些資料</h2>
+      <p>當您使用本服務時，我們可能會蒐集以下資料：</p>
+      <ul>
+        <li><strong>帳號資料</strong>：註冊時提供的電子郵件地址、您設定的暱稱。</li>
+        <li><strong>測驗紀錄</strong>：您完成測驗後的結果、選擇的答案、完成時間。</li>
+        <li><strong>遊戲進度</strong>：您在小遊戲（計時挑戰、尖叫鴨、泡泡紙、記憶力翻牌）中的累積分數、最佳紀錄、解鎖的風格項目。</li>
+        <li><strong>創作內容</strong>：若您使用「創作測驗」功能，您建立的測驗題目、選項、結果內容。</li>
+        <li><strong>技術性資料</strong>：瀏覽器類型、裝置資訊、IP 位址等，主要由第三方服務（如廣告聯播網）自動蒐集。</li>
+      </ul>
+
+      <h2>2. 我們如何使用這些資料</h2>
+      <ul>
+        <li>提供、維護並改善本服務的功能（例如記住您的測驗結果與遊戲進度，讓您下次登入時能看到先前的紀錄）。</li>
+        <li>驗證您的帳號（透過電子郵件發送註冊驗證信）。</li>
+        <li>確保服務的安全性與正常運作。</li>
+      </ul>
+      <p>我們<strong>不會</strong>使用您的電子郵件發送行銷信件或電子報；電子郵件僅用於帳號註冊驗證等必要通知。</p>
+
+      <h2>3. 第三方服務</h2>
+      <p>本服務使用以下第三方服務協助營運，這些服務可能會依其各自的隱私權政策處理您的資料：</p>
+      <ul>
+        <li><strong>Supabase</strong>：我們的資料庫與帳號驗證服務供應商，用於儲存上述帳號資料、測驗紀錄與遊戲進度。</li>
+        <li><strong>Resend</strong>：用於發送帳號註冊驗證信件。</li>
+        <li><strong>Adsterra</strong>：本服務使用的廣告聯播網。Adsterra 及其合作廣告主可能會透過 Cookie 或類似技術，蒐集您的瀏覽行為以提供廣告服務。詳情請參閱 <a href="https://adsterra.com/privacy-policy/" target="_blank" rel="noopener">Adsterra 隱私權政策</a>。</li>
+      </ul>
+
+      <h2>4. Cookie 與類似技術</h2>
+      <p>本服務及其廣告合作夥伴可能使用 Cookie、本機儲存（localStorage）等技術，用於：</p>
+      <ul>
+        <li>記住您的登入狀態與語言偏好設定。</li>
+        <li>在您未登入時，於您的裝置本機暫存遊戲進度（訪客模式）。</li>
+        <li>廣告聯播網用於投放與衡量廣告效果。</li>
+      </ul>
+      <p>您可以透過瀏覽器設定管理或封鎖 Cookie，但這可能會影響部分功能的正常運作。</p>
+
+      <h2>5. 資料保留與刪除</h2>
+      <p>我們會在您持有帳號期間保留上述資料。若您希望刪除帳號及其相關資料，請透過下方聯絡方式與我們聯繫，我們將在合理期間內處理您的請求。</p>
+
+      <h2>6. 資料安全</h2>
+      <p>我們透過 Supabase 提供的標準安全機制（包含列級安全性政策 Row Level Security）保護您的資料，確保僅有您本人能存取與修改自己的帳號資料。但請注意，沒有任何網路傳輸或儲存方式能保證百分之百安全。</p>
+
+      <h2>7. 使用者年齡</h2>
+      <p>本服務並非針對 13 歲以下兒童設計。若您未滿 13 歲，請勿使用本服務或提供任何個人資料。若我們得知有 13 歲以下兒童在未經家長同意的情況下提供了個人資料，我們將盡快刪除相關資料。</p>
+
+      <h2>8. 您的權利</h2>
+      <p>您可以隨時：</p>
+      <ul>
+        <li>透過「個人頁面」查看與修改您的帳號資料。</li>
+        <li>聯繫我們要求刪除您的帳號與相關資料。</li>
+        <li>聯繫我們詢問我們持有您哪些資料。</li>
+      </ul>
+
+      <h2>9. 政策異動</h2>
+      <p>我們可能會不時更新本隱私權政策。重大變更時，我們會在本頁面更新「最後更新日期」，建議您定期查看本頁面以了解最新內容。</p>
+
+      <h2>10. 聯絡我們</h2>
+      <p>若您對本隱私權政策有任何疑問，歡迎透過 <a href="mailto:contact@quizdrop.me">contact@quizdrop.me</a> 與我們聯繫。</p>
+    `,
+  },
+  ja: {
+    backLink: '← QuizDrop',
+    title: 'プライバシーポリシー',
+    updated: '最終更新日：2026年6月30日',
+    body: `
+      <p>QuizDrop（quizdrop.me、以下「本サービス」または「当社」）をご利用いただきありがとうございます。本プライバシーポリシーは、当社がお客様の個人情報をどのように収集、使用、保護するかについて説明するものです。本サービスのご利用により、本ポリシーの内容に同意したものとみなされます。</p>
+
+      <h2>1. 収集する情報</h2>
+      <p>本サービスのご利用にあたり、以下の情報を収集する場合があります：</p>
+      <ul>
+        <li><strong>アカウント情報</strong>：登録時にご提供いただくメールアドレス、設定されたニックネーム。</li>
+        <li><strong>クイズ履歴</strong>：クイズ完了後の結果、選択した回答、完了時刻。</li>
+        <li><strong>ゲーム進捗</strong>：ミニゲーム（タイムレース、叫びアヒル、プチプチ、記憶力チャレンジ）における累計スコア、ベスト記録、アンロック済みスタイル。</li>
+        <li><strong>作成コンテンツ</strong>：「クイズ作成」機能をご利用の場合、作成された質問、選択肢、結果の内容。</li>
+        <li><strong>技術情報</strong>：ブラウザの種類、デバイス情報、IPアドレスなど。主に広告ネットワークなどの第三者サービスにより自動的に収集されます。</li>
+      </ul>
+
+      <h2>2. 情報の利用方法</h2>
+      <ul>
+        <li>本サービスの機能を提供・維持・改善するため（例：クイズ結果やゲーム進捗を記憶し、次回ログイン時に過去の記録を表示するため）。</li>
+        <li>アカウントの確認のため（登録確認メールの送信）。</li>
+        <li>サービスの安全性と正常な動作を確保するため。</li>
+      </ul>
+      <p>当社はお客様のメールアドレスを<strong>マーケティングメールやニュースレターの送信には使用しません</strong>。メールはアカウント登録確認など、必要な通知のみに使用されます。</p>
+
+      <h2>3. 第三者サービス</h2>
+      <p>本サービスは運営のため以下の第三者サービスを利用しており、これらのサービスはそれぞれのプライバシーポリシーに従ってお客様の情報を処理する場合があります：</p>
+      <ul>
+        <li><strong>Supabase</strong>：データベースおよびアカウント認証サービスのプロバイダー。上記のアカウント情報、クイズ履歴、ゲーム進捗の保存に使用。</li>
+        <li><strong>Resend</strong>：アカウント登録確認メールの送信に使用。</li>
+        <li><strong>Adsterra</strong>：本サービスが使用する広告ネットワーク。Adsterraおよびその提携広告主は、Cookieまたは類似技術を通じて閲覧行動を収集し、広告サービスを提供する場合があります。詳細は<a href="https://adsterra.com/privacy-policy/" target="_blank" rel="noopener">Adsterraのプライバシーポリシー</a>をご参照ください。</li>
+      </ul>
+
+      <h2>4. Cookieおよび類似技術</h2>
+      <p>本サービスおよび広告パートナーは、以下の目的でCookieやローカルストレージ（localStorage）などの技術を使用する場合があります：</p>
+      <ul>
+        <li>ログイン状態や言語設定の記憶。</li>
+        <li>未ログイン時に、デバイスのローカルにゲーム進捗を一時保存（ゲストモード）。</li>
+        <li>広告ネットワークによる広告配信・効果測定。</li>
+      </ul>
+      <p>ブラウザの設定でCookieを管理・ブロックすることができますが、一部機能が正常に動作しなくなる場合があります。</p>
+
+      <h2>5. データの保持と削除</h2>
+      <p>当社は、お客様がアカウントを保持している間、上記の情報を保持します。アカウントおよび関連データの削除をご希望の場合は、下記の連絡先までご連絡ください。合理的な期間内に対応いたします。</p>
+
+      <h2>6. データセキュリティ</h2>
+      <p>当社はSupabaseが提供する標準的なセキュリティ機構（行レベルセキュリティポリシーを含む）により、お客様のデータを保護し、本人のみが自身のアカウントデータにアクセス・変更できるようにしています。ただし、いかなるネットワーク伝送や保存方法も100%の安全性を保証するものではないことにご留意ください。</p>
+
+      <h2>7. 利用者の年齢</h2>
+      <p>本サービスは13歳未満のお子様を対象としていません。13歳未満の方は、本サービスのご利用または個人情報のご提供をお控えください。13歳未満のお子様が保護者の同意なく個人情報を提供したことが判明した場合、当社は速やかに該当データを削除します。</p>
+
+      <h2>8. お客様の権利</h2>
+      <p>お客様はいつでも以下のことが可能です：</p>
+      <ul>
+        <li>「プロフィールページ」でアカウント情報を確認・変更する。</li>
+        <li>アカウントおよび関連データの削除を当社に依頼する。</li>
+        <li>当社が保持しているお客様の情報について問い合わせる。</li>
+      </ul>
+
+      <h2>9. ポリシーの変更</h2>
+      <p>当社は本プライバシーポリシーを随時更新する場合があります。重要な変更がある場合、本ページの「最終更新日」を更新します。最新の内容をご確認いただくため、定期的に本ページをご確認いただくことをお勧めします。</p>
+
+      <h2>10. お問い合わせ</h2>
+      <p>本プライバシーポリシーについてご質問がございましたら、<a href="mailto:contact@quizdrop.me">contact@quizdrop.me</a> までお気軽にお問い合わせください。</p>
+    `,
+  },
+  en: {
+    backLink: '← QuizDrop',
+    title: 'Privacy Policy',
+    updated: 'Last updated: June 30, 2026',
+    body: `
+      <p>Welcome to QuizDrop (quizdrop.me, referred to as "the Service" or "we"). This Privacy Policy explains how we collect, use, and protect your personal information. By using the Service, you agree to the terms of this policy.</p>
+
+      <h2>1. Information We Collect</h2>
+      <p>When you use the Service, we may collect the following information:</p>
+      <ul>
+        <li><strong>Account information</strong>: the email address you provide at registration and your chosen nickname.</li>
+        <li><strong>Quiz history</strong>: your results after completing quizzes, your selected answers, and completion times.</li>
+        <li><strong>Game progress</strong>: your cumulative scores, best records, and unlocked styles in our mini-games (Timing Challenge, Screaming Duck, Bubble Wrap, Memory Match).</li>
+        <li><strong>Created content</strong>: if you use the "Create Quiz" feature, the questions, options, and results you build.</li>
+        <li><strong>Technical data</strong>: browser type, device information, IP address, etc., mostly collected automatically by third-party services such as advertising networks.</li>
+      </ul>
+
+      <h2>2. How We Use This Information</h2>
+      <ul>
+        <li>To provide, maintain, and improve the Service's features (e.g. remembering your quiz results and game progress so you can see them again next time you log in).</li>
+        <li>To verify your account (by sending registration confirmation emails).</li>
+        <li>To ensure the security and proper functioning of the Service.</li>
+      </ul>
+      <p>We <strong>do not</strong> use your email address to send marketing emails or newsletters; email is used only for necessary notices such as account registration confirmation.</p>
+
+      <h2>3. Third-Party Services</h2>
+      <p>The Service uses the following third-party services to support its operation, which may process your data according to their own privacy policies:</p>
+      <ul>
+        <li><strong>Supabase</strong>: our database and account authentication provider, used to store the account information, quiz history, and game progress mentioned above.</li>
+        <li><strong>Resend</strong>: used to send account registration confirmation emails.</li>
+        <li><strong>Adsterra</strong>: the advertising network used by the Service. Adsterra and its partner advertisers may use cookies or similar technologies to collect your browsing behavior in order to deliver ads. See the <a href="https://adsterra.com/privacy-policy/" target="_blank" rel="noopener">Adsterra Privacy Policy</a> for details.</li>
+      </ul>
+
+      <h2>4. Cookies and Similar Technologies</h2>
+      <p>The Service and its advertising partners may use cookies, local storage (localStorage), and similar technologies to:</p>
+      <ul>
+        <li>Remember your login status and language preference.</li>
+        <li>Temporarily store game progress on your device when you're not logged in (guest mode).</li>
+        <li>Allow advertising networks to deliver and measure ad performance.</li>
+      </ul>
+      <p>You may manage or block cookies through your browser settings, but doing so may affect some features of the Service.</p>
+
+      <h2>5. Data Retention and Deletion</h2>
+      <p>We retain the information described above for as long as you maintain an account. If you wish to delete your account and related data, please contact us using the information below, and we will process your request within a reasonable time.</p>
+
+      <h2>6. Data Security</h2>
+      <p>We protect your data using Supabase's standard security mechanisms (including Row Level Security policies), ensuring that only you can access and modify your own account data. However, please note that no method of transmission or storage over the internet is 100% secure.</p>
+
+      <h2>7. User Age</h2>
+      <p>The Service is not designed for children under the age of 13. If you are under 13, please do not use the Service or provide any personal information. If we become aware that a child under 13 has provided personal information without parental consent, we will delete such data as soon as possible.</p>
+
+      <h2>8. Your Rights</h2>
+      <p>You may at any time:</p>
+      <ul>
+        <li>View and update your account information via your "Profile" page.</li>
+        <li>Contact us to request deletion of your account and related data.</li>
+        <li>Contact us to ask what data we hold about you.</li>
+      </ul>
+
+      <h2>9. Changes to This Policy</h2>
+      <p>We may update this Privacy Policy from time to time. For material changes, we will update the "Last updated" date on this page. We recommend checking this page periodically for the latest information.</p>
+
+      <h2>10. Contact Us</h2>
+      <p>If you have any questions about this Privacy Policy, please feel free to contact us at <a href="mailto:contact@quizdrop.me">contact@quizdrop.me</a>.</p>
+    `,
+  },
+};
+
+function setLang(l) {
+  const t = i18n[l];
+  document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === l));
+  localStorage.setItem('quizdrop_lang', l);
+  document.getElementById('back-link').textContent = t.backLink;
+  document.title = t.title + ' - QuizDrop';
+  document.getElementById('content').innerHTML = `
+    <h1>${t.title}</h1>
+    <p class="updated">${t.updated}</p>
+    ${t.body}
+  `;
+}
+
+(function init() {
+  const saved = localStorage.getItem('quizdrop_lang') || 'zh';
+  setLang(saved);
+})();
+</script>
 </body>
 </html>

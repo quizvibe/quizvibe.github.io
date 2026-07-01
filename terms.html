@@ -8,8 +8,12 @@
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, 'Noto Sans TC', sans-serif; }
   body { background: #f7f2e9; color: #4a3f35; min-height: 100vh; line-height: 1.8; }
 
-  .topbar { height: 58px; background: #fffdf8; border-bottom: 1px solid #ece4d4; display: flex; align-items: center; padding: 0 20px; position: sticky; top: 0; z-index: 50; }
+  .topbar { height: 58px; background: #fffdf8; border-bottom: 1px solid #ece4d4; display: flex; align-items: center; padding: 0 20px; gap: 12px; position: sticky; top: 0; z-index: 50; }
   .back { color: #9c8f7e; font-size: 13px; text-decoration: none; }
+  .spacer { flex: 1; }
+  .lang-pill { display: flex; gap: 3px; background: #f1e9da; border-radius: 10px; padding: 3px; }
+  .lang-pill button { padding: 5px 10px; border-radius: 8px; font-size: 12.5px; font-weight: 600; color: #9c8f7e; border: none; background: none; cursor: pointer; transition: all .2s; }
+  .lang-pill button.active { background: #fffdf8; color: #a9633a; box-shadow: 0 1px 4px rgba(80,60,30,0.1); }
 
   .wrap { max-width: 680px; margin: 0 auto; padding: 32px 20px 80px; }
   h1 { font-size: 24px; font-weight: 900; margin-bottom: 6px; }
@@ -17,79 +21,209 @@
   h2 { font-size: 17px; font-weight: 800; color: #a9633a; margin: 30px 0 10px; }
   p, li { font-size: 14px; color: #5a4f43; margin-bottom: 10px; }
   ul, ol { padding-left: 22px; margin-bottom: 10px; }
-  .notice-box {
-    background: #fffdf8; border: 1.5px solid #d9cbb3; border-radius: 12px; padding: 16px 18px; margin: 20px 0;
-    font-size: 13px; color: #6b5d4d;
-  }
   a { color: #a9633a; }
-  .draft-tag {
-    display: inline-block; background: #f1e9da; color: #a9633a; font-size: 11px; font-weight: 700;
-    padding: 3px 10px; border-radius: 99px; margin-bottom: 14px;
-  }
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <a href="index.html" class="back">← QuizDrop</a>
-</div>
-
-<div class="wrap">
-  <span class="draft-tag">草案 Draft</span>
-  <h1>使用條款</h1>
-  <p class="updated">最後更新日期：2026 年 6 月 30 日</p>
-
-  <div class="notice-box">
-    本頁面為初版草案，內容尚未經過專業法律審閱，正式上線前建議諮詢律師以確保符合您所在地區的相關法規。使用本服務即表示您同意以下條款。
+  <a href="index.html" class="back" id="back-link">← QuizDrop</a>
+  <div class="spacer"></div>
+  <div class="lang-pill">
+    <button class="active" onclick="setLang('zh')" data-lang-btn="zh">中</button>
+    <button onclick="setLang('ja')" data-lang-btn="ja">日</button>
+    <button onclick="setLang('en')" data-lang-btn="en">EN</button>
   </div>
-
-  <h2>1. 服務說明</h2>
-  <p>QuizDrop（quizdrop.me，以下稱「本服務」）提供心理測驗、休閒小遊戲及使用者自創測驗（UGC）功能，純粹作為娛樂用途。</p>
-
-  <h2>2. 測驗結果僅供娛樂參考</h2>
-  <p><strong>本服務提供之所有測驗結果（包含官方測驗與使用者自創測驗）僅供娛樂參考，不構成任何形式之心理諮商、醫療診斷或專業建議。</strong>若您有心理健康相關需求，請尋求合格的專業人士協助。</p>
-
-  <h2>3. 帳號使用規範</h2>
-  <ul>
-    <li>您須提供真實且正確的註冊資訊。</li>
-    <li>您須妥善保管自己的帳號密碼，對於透過您帳號進行的所有行為負責。</li>
-    <li>禁止使用自動化程式（機器人、爬蟲）大量註冊帳號或濫用本服務功能。</li>
-    <li>禁止以任何方式干擾、破壞本服務的正常運作。</li>
-  </ul>
-
-  <h2>4. 使用者自創內容（UGC）</h2>
-  <p>本服務提供「創作測驗」功能，讓使用者建立並發布自己的測驗內容。對此功能，您同意：</p>
-  <ul>
-    <li>您對自己創作並發布的內容（包含測驗題目、選項、結果文字）負完全責任。</li>
-    <li>您發布的內容不得包含：違法內容、色情或猥褻內容、仇恨言論、騷擾或霸凌他人之內容、侵犯他人智慧財產權之內容，或其他可能造成他人不適或傷害之內容。</li>
-    <li>本服務保留在不另行通知的情況下，移除違反前述規範之使用者內容，並暫停或終止違規帳號之權利。</li>
-    <li>您發布的測驗內容將公開於本服務平台上，供其他使用者瀏覽及遊玩。</li>
-  </ul>
-
-  <h2>5. 智慧財產權</h2>
-  <ul>
-    <li>本服務之官方測驗內容、視覺設計、程式碼及相關素材，其智慧財產權歸 QuizDrop 所有，未經授權不得擅自複製、散布或用於商業用途。</li>
-    <li>使用者於本服務發布之自創內容，其著作權仍歸使用者本人所有，惟使用者同意授權本服務於平台上公開展示、儲存及傳輸該內容，以提供服務之必要範圍為限。</li>
-  </ul>
-
-  <h2>6. 廣告</h2>
-  <p>本服務透過第三方廣告聯播網（Adsterra）於頁面顯示廣告，以維持服務之免費營運。廣告內容由廣告聯播網及其合作廣告主提供，本服務不對廣告內容之真實性或合法性負責，亦不對使用者因點擊廣告而衍生之任何損失負責。</p>
-
-  <h2>7. 服務變更與中斷</h2>
-  <p>我們保留隨時修改、暫停或終止本服務（或其任何部分）之權利，恕不另行個別通知。我們將盡力維持服務穩定，但不保證服務不會中斷或無錯誤。</p>
-
-  <h2>8. 免責聲明</h2>
-  <p>本服務以「現狀」提供，不提供任何明示或默示之保證。在法律允許之最大範圍內，QuizDrop 不對因使用或無法使用本服務所產生之任何直接、間接、附帶或衍生性損害負責。</p>
-
-  <h2>9. 條款異動</h2>
-  <p>我們可能會不時更新本使用條款。重大變更時，我們會在本頁面更新「最後更新日期」。您於變更後繼續使用本服務，即表示您同意接受變更後之條款。</p>
-
-  <h2>10. 準據法</h2>
-  <p>本條款之解釋與適用，以及與本條款有關之爭議，均應依照中華民國法律予以解釋及規範。</p>
-
-  <h2>11. 聯絡我們</h2>
-  <p>若您對本使用條款有任何疑問，歡迎透過 <a href="mailto:contact@quizdrop.me">contact@quizdrop.me</a> 與我們聯繫。</p>
 </div>
 
+<div class="wrap" id="content"></div>
+
+<script>
+const i18n = {
+  zh: {
+    backLink: '← QuizDrop',
+    title: '使用條款',
+    updated: '最後更新日期：2026 年 6 月 30 日',
+    body: `
+      <p>歡迎使用 QuizDrop（quizdrop.me，以下稱「本服務」）。使用本服務即表示您同意遵守以下條款。</p>
+
+      <h2>1. 服務說明</h2>
+      <p>QuizDrop 提供心理測驗、休閒小遊戲及使用者自創測驗（UGC）功能，純粹作為娛樂用途。</p>
+
+      <h2>2. 測驗結果僅供娛樂參考</h2>
+      <p><strong>本服務提供之所有測驗結果（包含官方測驗與使用者自創測驗）僅供娛樂參考，不構成任何形式之心理諮商、醫療診斷或專業建議。</strong>若您有心理健康相關需求，請尋求合格的專業人士協助。</p>
+
+      <h2>3. 帳號使用規範</h2>
+      <ul>
+        <li>您須提供真實且正確的註冊資訊。</li>
+        <li>您須妥善保管自己的帳號密碼，對於透過您帳號進行的所有行為負責。</li>
+        <li>禁止使用自動化程式（機器人、爬蟲）大量註冊帳號或濫用本服務功能。</li>
+        <li>禁止以任何方式干擾、破壞本服務的正常運作。</li>
+      </ul>
+
+      <h2>4. 使用者自創內容（UGC）</h2>
+      <p>本服務提供「創作測驗」功能，讓使用者建立並發布自己的測驗內容。對此功能，您同意：</p>
+      <ul>
+        <li>您對自己創作並發布的內容（包含測驗題目、選項、結果文字）負完全責任。</li>
+        <li>您發布的內容不得包含：違法內容、色情或猥褻內容、仇恨言論、騷擾或霸凌他人之內容、侵犯他人智慧財產權之內容，或其他可能造成他人不適或傷害之內容。</li>
+        <li>本服務保留在不另行通知的情況下，移除違反前述規範之使用者內容，並暫停或終止違規帳號之權利。</li>
+        <li>您發布的測驗內容將公開於本服務平台上，供其他使用者瀏覽及遊玩。</li>
+      </ul>
+
+      <h2>5. 智慧財產權</h2>
+      <ul>
+        <li>本服務之官方測驗內容、視覺設計、程式碼及相關素材，其智慧財產權歸 QuizDrop 所有，未經授權不得擅自複製、散布或用於商業用途。</li>
+        <li>使用者於本服務發布之自創內容，其著作權仍歸使用者本人所有，惟使用者同意授權本服務於平台上公開展示、儲存及傳輸該內容，以提供服務之必要範圍為限。</li>
+      </ul>
+
+      <h2>6. 廣告</h2>
+      <p>本服務透過第三方廣告聯播網（Adsterra）於頁面顯示廣告，以維持服務之免費營運。廣告內容由廣告聯播網及其合作廣告主提供，本服務不對廣告內容之真實性或合法性負責，亦不對使用者因點擊廣告而衍生之任何損失負責。</p>
+
+      <h2>7. 服務變更與中斷</h2>
+      <p>我們保留隨時修改、暫停或終止本服務（或其任何部分）之權利，恕不另行個別通知。我們將盡力維持服務穩定，但不保證服務不會中斷或無錯誤。</p>
+
+      <h2>8. 免責聲明</h2>
+      <p>本服務以「現狀」提供，不提供任何明示或默示之保證。在法律允許之最大範圍內，QuizDrop 不對因使用或無法使用本服務所產生之任何直接、間接、附帶或衍生性損害負責。</p>
+
+      <h2>9. 條款異動</h2>
+      <p>我們可能會不時更新本使用條款。重大變更時，我們會在本頁面更新「最後更新日期」。您於變更後繼續使用本服務，即表示您同意接受變更後之條款。</p>
+
+      <h2>10. 準據法</h2>
+      <p>本條款之解釋與適用，以及與本條款有關之爭議，均應依照中華民國法律予以解釋及規範。</p>
+
+      <h2>11. 聯絡我們</h2>
+      <p>若您對本使用條款有任何疑問，歡迎透過 <a href="mailto:contact@quizdrop.me">contact@quizdrop.me</a> 與我們聯繫。</p>
+    `,
+  },
+  ja: {
+    backLink: '← QuizDrop',
+    title: '利用規約',
+    updated: '最終更新日：2026年6月30日',
+    body: `
+      <p>QuizDrop（quizdrop.me、以下「本サービス」）をご利用いただきありがとうございます。本サービスのご利用により、以下の規約に同意したものとみなされます。</p>
+
+      <h2>1. サービス内容</h2>
+      <p>QuizDropは心理クイズ、カジュアルミニゲーム、ユーザー作成クイズ（UGC）機能を提供する、純粹に娯楽目的のサービスです。</p>
+
+      <h2>2. クイズ結果はエンターテインメント目的のみ</h2>
+      <p><strong>本サービスが提供するすべてのクイズ結果（公式クイズおよびユーザー作成クイズを含む）は、エンターテインメント目的のみを意図しており、いかなる形式の心理カウンセリング、医学的診断、または専門的助言を構成するものではありません。</strong>心理的健康に関するニーズがある場合は、資格を持つ専門家にご相談ください。</p>
+
+      <h2>3. アカウント利用規約</h2>
+      <ul>
+        <li>登録時には正確な情報をご提供いただく必要があります。</li>
+        <li>アカウントとパスワードを適切に管理し、アカウントを通じて行われたすべての行為に責任を負うものとします。</li>
+        <li>自動化プログラム（ボット、クローラー等）を使用した大量のアカウント登録や本サービスの不正利用を禁止します。</li>
+        <li>本サービスの正常な運営を妨害・破壊する行為を禁止します。</li>
+      </ul>
+
+      <h2>4. ユーザー作成コンテンツ（UGC）</h2>
+      <p>本サービスは、ユーザーが自身のクイズコンテンツを作成・公開できる「クイズ作成」機能を提供しています。この機能について、お客様は以下に同意するものとします：</p>
+      <ul>
+        <li>ご自身が作成・公開したコンテンツ（クイズの質問、選択肢、結果の文章を含む）について、全責任を負うこと。</li>
+        <li>公開するコンテンツに、違法なコンテンツ、わいせつまたは不適切なコンテンツ、ヘイトスピーチ、他者への嫌がらせやいじめを含むコンテンツ、他者の知的財産権を侵害するコンテンツ、その他他者に不快感や害を及ぼす可能性のあるコンテンツを含めないこと。</li>
+        <li>本サービスは、事前通知なく、前述の規約に違反するユーザーコンテンツを削除し、違反アカウントを停止または終了する権利を留保します。</li>
+        <li>公開されたクイズコンテンツは本サービス上で公開され、他のユーザーが閲覧・プレイできる状態になること。</li>
+      </ul>
+
+      <h2>5. 知的財産権</h2>
+      <ul>
+        <li>本サービスの公式クイズコンテンツ、ビジュアルデザイン、プログラムコードおよび関連素材の知的財産権はQuizDropに帰属し、許可なく複製、配布、商業利用することを禁じます。</li>
+        <li>ユーザーが本サービスで公開した作成コンテンツの著作権は、引き続きユーザー本人に帰属しますが、ユーザーは本サービスの提供に必要な範囲において、当該コンテンツを本サービス上で公開・保存・伝送することを許諾するものとします。</li>
+      </ul>
+
+      <h2>6. 広告</h2>
+      <p>本サービスは、無料でのサービス運営を維持するため、第三者広告ネットワーク（Adsterra）を通じてページに広告を表示します。広告コンテンツは広告ネットワークおよびその提携広告主によって提供されるものであり、本サービスは広告コンテンツの正確性または適法性について責任を負わず、ユーザーが広告をクリックしたことにより生じたいかなる損失についても責任を負いません。</p>
+
+      <h2>7. サービスの変更および中断</h2>
+      <p>当社は、個別の通知なしに、本サービス（またはその一部）をいつでも変更、一時停止、または終了する権利を留保します。サービスの安定性維持に努めますが、中断やエラーが発生しないことを保証するものではありません。</p>
+
+      <h2>8. 免責事項</h2>
+      <p>本サービスは「現状有姿」で提供されるものであり、明示または黙示を問わずいかなる保証も行いません。法律で認められる最大限の範囲において、QuizDropは本サービスの利用または利用不能から生じる直接的、間接的、付随的、または結果的損害について責任を負いません。</p>
+
+      <h2>9. 規約の変更</h2>
+      <p>当社は本利用規約を随時更新する場合があります。重要な変更がある場合、本ページの「最終更新日」を更新します。変更後も本サービスをご利用いただく場合、変更後の規約に同意したものとみなされます。</p>
+
+      <h2>10. 準拠法</h2>
+      <p>本規約の解釈および適用、ならびに本規約に関連する紛争については、中華民国（台湾）の法律に準拠するものとします。</p>
+
+      <h2>11. お問い合わせ</h2>
+      <p>本利用規約についてご質問がございましたら、<a href="mailto:contact@quizdrop.me">contact@quizdrop.me</a> までお気軽にお問い合わせください。</p>
+    `,
+  },
+  en: {
+    backLink: '← QuizDrop',
+    title: 'Terms of Service',
+    updated: 'Last updated: June 30, 2026',
+    body: `
+      <p>Welcome to QuizDrop (quizdrop.me, referred to as "the Service"). By using the Service, you agree to be bound by the following terms.</p>
+
+      <h2>1. Service Description</h2>
+      <p>QuizDrop provides personality quizzes, casual mini-games, and a user-generated quiz (UGC) feature, purely for entertainment purposes.</p>
+
+      <h2>2. Quiz Results Are for Entertainment Only</h2>
+      <p><strong>All quiz results provided by the Service (including official quizzes and user-created quizzes) are for entertainment purposes only and do not constitute any form of psychological counseling, medical diagnosis, or professional advice.</strong> If you have mental health needs, please seek assistance from a qualified professional.</p>
+
+      <h2>3. Account Usage Rules</h2>
+      <ul>
+        <li>You must provide accurate and truthful registration information.</li>
+        <li>You are responsible for safeguarding your account credentials and for all activity conducted through your account.</li>
+        <li>The use of automated programs (bots, crawlers) to mass-register accounts or abuse the Service's features is prohibited.</li>
+        <li>Interfering with or disrupting the normal operation of the Service in any way is prohibited.</li>
+      </ul>
+
+      <h2>4. User-Generated Content (UGC)</h2>
+      <p>The Service provides a "Create Quiz" feature allowing users to build and publish their own quiz content. By using this feature, you agree that:</p>
+      <ul>
+        <li>You bear full responsibility for the content you create and publish (including quiz questions, options, and result text).</li>
+        <li>Your published content must not include: illegal content, sexually explicit or obscene content, hate speech, content that harasses or bullies others, content that infringes on others' intellectual property rights, or other content that may cause discomfort or harm to others.</li>
+        <li>The Service reserves the right to remove user content that violates the above rules, and to suspend or terminate violating accounts, without prior notice.</li>
+        <li>Quiz content you publish will be made public on the Service platform for other users to browse and play.</li>
+      </ul>
+
+      <h2>5. Intellectual Property</h2>
+      <ul>
+        <li>The intellectual property rights to the Service's official quiz content, visual design, source code, and related materials belong to QuizDrop. Unauthorized copying, distribution, or commercial use is prohibited.</li>
+        <li>Copyright in content you create and publish on the Service remains with you; however, you grant the Service a license to publicly display, store, and transmit such content on the platform to the extent necessary to provide the Service.</li>
+      </ul>
+
+      <h2>6. Advertising</h2>
+      <p>The Service displays advertisements on its pages through a third-party advertising network (Adsterra) to support free operation. Ad content is provided by the advertising network and its partner advertisers; the Service is not responsible for the accuracy or legality of ad content, nor for any loss arising from users clicking on advertisements.</p>
+
+      <h2>7. Service Changes and Interruptions</h2>
+      <p>We reserve the right to modify, suspend, or terminate the Service (or any part of it) at any time without individual prior notice. We will make reasonable efforts to maintain service stability but do not guarantee that the Service will be uninterrupted or error-free.</p>
+
+      <h2>8. Disclaimer</h2>
+      <p>The Service is provided "as is" without warranties of any kind, express or implied. To the maximum extent permitted by law, QuizDrop shall not be liable for any direct, indirect, incidental, or consequential damages arising from the use or inability to use the Service.</p>
+
+      <h2>9. Changes to These Terms</h2>
+      <p>We may update these Terms of Service from time to time. For material changes, we will update the "Last updated" date on this page. Your continued use of the Service after such changes constitutes your acceptance of the revised terms.</p>
+
+      <h2>10. Governing Law</h2>
+      <p>These Terms shall be interpreted and governed by, and any disputes related to these Terms shall be resolved in accordance with, the laws of the Republic of China (Taiwan).</p>
+
+      <h2>11. Contact Us</h2>
+      <p>If you have any questions about these Terms of Service, please feel free to contact us at <a href="mailto:contact@quizdrop.me">contact@quizdrop.me</a>.</p>
+    `,
+  },
+};
+
+function setLang(l) {
+  const t = i18n[l];
+  document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === l));
+  localStorage.setItem('quizdrop_lang', l);
+  document.getElementById('back-link').textContent = t.backLink;
+  document.title = t.title + ' - QuizDrop';
+  document.getElementById('content').innerHTML = `
+    <h1>${t.title}</h1>
+    <p class="updated">${t.updated}</p>
+    ${t.body}
+  `;
+}
+
+(function init() {
+  const saved = localStorage.getItem('quizdrop_lang') || 'zh';
+  setLang(saved);
+})();
+</script>
 </body>
 </html>
