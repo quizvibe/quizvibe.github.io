@@ -456,6 +456,13 @@ async function pushProgressToCloud() {
   }
 }
 
+// 保險機制：不管有沒有湊到節流的倍數（每 20 下才同步一次），
+// 只要使用者切換分頁或離開頁面，就強制把目前最新進度推一次，
+// 避免玩比較短的一局時，紀錄完全沒同步到雲端
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') pushProgressToCloud();
+});
+
 async function showLoggedInUI(user) {
   document.getElementById('qt-auth-buttons').classList.add('hidden');
   document.getElementById('qt-user-chip-wrap').classList.remove('hidden');
