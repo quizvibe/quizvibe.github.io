@@ -239,10 +239,12 @@
       <div class="modal-title" id="pw-modal-title">🔑 修改密碼</div>
       <div class="modal-sub" id="pw-modal-sub">請輸入目前密碼與新密碼</div>
 
-      <label class="field-label" id="label-pw-old">目前密碼</label>
-      <div class="pw-field-wrap">
-        <input type="password" class="input-field" id="pw-old" />
-        <button type="button" class="pw-eye" onclick="togglePwVisibility('pw-old', this)">👁️</button>
+      <div id="pw-old-group">
+        <label class="field-label" id="label-pw-old">目前密碼</label>
+        <div class="pw-field-wrap">
+          <input type="password" class="input-field" id="pw-old" />
+          <button type="button" class="pw-eye" onclick="togglePwVisibility('pw-old', this)">👁️</button>
+        </div>
       </div>
 
       <label class="field-label" id="label-pw-new">新密碼（至少6位數）</label>
@@ -286,11 +288,12 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 const i18nProfile = {
   zh: {
     backToHome: '回首頁', loginRequiredTitle: '請先登入', loginRequiredDesc: '登入後才能查看你的個人頁面與測驗紀錄', loginRequiredLink: '回首頁登入 →',
-    labelNickname: '暱稱', labelEmail: 'Email', btnSave: '儲存變更', btnChangePw: '🔑 修改密碼',
+    labelNickname: '暱稱', labelEmail: 'Email', btnSave: '儲存變更', btnChangePw: '🔑 修改密碼', btnSetPw: '🔑 設定密碼',
     tabQuiz: '📜 測驗紀錄', tabGame: '🎮 糞Game紀錄', loadingText: '載入中...',
     blackboardTrigger: '📊 查看全站總任務黑板', noGameHistory: '還沒有遊戲紀錄，去玩一場吧！', btnLogout: '🚪 登出',
     blackboardTitle: '📊 全站總任務黑板', blackboardClose: '關閉',
     pwModalTitle: '🔑 修改密碼', pwModalSub: '請輸入目前密碼與新密碼',
+    pwModalTitleSet: '🔑 設定密碼', pwModalSubSet: '設定密碼後，之後也能用 Email + 密碼登入',
     labelPwOld: '目前密碼', labelPwNew: '新密碼（至少6位數）', labelPwNewConfirm: '再次輸入新密碼',
     pwConfirmTitle: '⚠️ 確定要變更密碼嗎？', pwConfirmSub: '變更後，下次登入請使用新密碼',
     pwCancel: '取消', pwConfirmFinal: '確定變更', pwSuccessTitle: '密碼已成功變更！', pwSuccessDone: '完成',
@@ -319,11 +322,12 @@ const i18nProfile = {
   },
   ja: {
     backToHome: 'ホームへ', loginRequiredTitle: 'ログインが必要です', loginRequiredDesc: 'ログインするとプロフィールとクイズ履歴が見られます', loginRequiredLink: 'ホームでログイン →',
-    labelNickname: 'ニックネーム', labelEmail: 'メール', btnSave: '保存', btnChangePw: '🔑 パスワード変更',
+    labelNickname: 'ニックネーム', labelEmail: 'メール', btnSave: '保存', btnChangePw: '🔑 パスワード変更', btnSetPw: '🔑 パスワードを設定',
     tabQuiz: '📜 クイズ履歴', tabGame: '🎮 ゲーム履歴', loadingText: '読み込み中...',
     blackboardTrigger: '📊 全体の進捗ボードを見る', noGameHistory: 'まだゲーム履歴がありません、遊んでみよう！', btnLogout: '🚪 ログアウト',
     blackboardTitle: '📊 全体の進捗ボード', blackboardClose: '閉じる',
     pwModalTitle: '🔑 パスワード変更', pwModalSub: '現在のパスワードと新しいパスワードを入力してください',
+    pwModalTitleSet: '🔑 パスワードを設定', pwModalSubSet: '設定後はメール+パスワードでもログインできます',
     labelPwOld: '現在のパスワード', labelPwNew: '新しいパスワード（6文字以上）', labelPwNewConfirm: '新しいパスワード（再入力）',
     pwConfirmTitle: '⚠️ パスワードを変更しますか？', pwConfirmSub: '変更後は新しいパスワードでログインしてください',
     pwCancel: 'キャンセル', pwConfirmFinal: '変更する', pwSuccessTitle: 'パスワードを変更しました！', pwSuccessDone: '完了',
@@ -352,11 +356,12 @@ const i18nProfile = {
   },
   en: {
     backToHome: 'Back to home', loginRequiredTitle: 'Please log in', loginRequiredDesc: 'Log in to view your profile and quiz history', loginRequiredLink: 'Go to home & log in →',
-    labelNickname: 'Nickname', labelEmail: 'Email', btnSave: 'Save changes', btnChangePw: '🔑 Change password',
+    labelNickname: 'Nickname', labelEmail: 'Email', btnSave: 'Save changes', btnChangePw: '🔑 Change password', btnSetPw: '🔑 Set password',
     tabQuiz: '📜 Quiz History', tabGame: '🎮 Game History', loadingText: 'Loading...',
     blackboardTrigger: '📊 View site-wide progress board', noGameHistory: 'No game history yet, go play something!', btnLogout: '🚪 Log out',
     blackboardTitle: '📊 Site-wide Progress Board', blackboardClose: 'Close',
     pwModalTitle: '🔑 Change Password', pwModalSub: 'Enter your current password and new password',
+    pwModalTitleSet: '🔑 Set Password', pwModalSubSet: 'Once set, you can also log in with Email + password',
     labelPwOld: 'Current password', labelPwNew: 'New password (6+ characters)', labelPwNewConfirm: 'Confirm new password',
     pwConfirmTitle: '⚠️ Confirm password change?', pwConfirmSub: 'Use your new password next time you log in',
     pwCancel: 'Cancel', pwConfirmFinal: 'Confirm change', pwSuccessTitle: 'Password changed successfully!', pwSuccessDone: 'Done',
@@ -439,6 +444,7 @@ function setLang(l) {
 
 let currentUser = null;
 let cachedRemoteProgress = null; // 這個帳號在 Supabase game_progress 表裡真正存的資料，取代直接讀本機 localStorage
+let hasPasswordIdentity = false; // 這個帳號是否曾經用 Email+密碼註冊過；純 OAuth（Google/FB/Apple）登入的帳號沒有密碼
 
 async function init() {
   setLang(currentLang); // 套用之前儲存的語言偏好，確保載入時文字已是正確語言
@@ -451,8 +457,15 @@ async function init() {
   }
 
   currentUser = session.user;
+  hasPasswordIdentity = (currentUser.identities || []).some(i => i.provider === 'email');
   document.getElementById('login-required-view').classList.add('hidden');
   document.getElementById('profile-view').classList.remove('hidden');
+
+  // 純 OAuth 帳號沒有密碼，把「修改密碼」改成「設定密碼」，並且不需要驗證舊密碼那一關
+  const pwBtnText = document.getElementById('btn-change-pw-text');
+  if (pwBtnText && !hasPasswordIdentity) {
+    pwBtnText.textContent = i18nProfile[currentLang].btnSetPw;
+  }
 
   // 載入 users 表的資料（暱稱）
   const { data: userRow, error } = await supabaseClient
@@ -732,6 +745,12 @@ function openPasswordModal() {
   document.getElementById('pw-step-confirm').classList.add('hidden');
   document.getElementById('pw-step-success').classList.add('hidden');
   document.getElementById('pw-form-msg').style.display = 'none';
+
+  // 純 OAuth 帳號沒有密碼：不顯示「目前密碼」欄位，標題與說明也改成「設定密碼」情境
+  const t = i18nProfile[currentLang];
+  document.getElementById('pw-old-group').style.display = hasPasswordIdentity ? '' : 'none';
+  document.getElementById('pw-modal-title').textContent = hasPasswordIdentity ? t.pwModalTitle : t.pwModalTitleSet;
+  document.getElementById('pw-modal-sub').textContent = hasPasswordIdentity ? t.pwModalSub : t.pwModalSubSet;
 }
 
 function closePasswordModal() {
@@ -771,7 +790,12 @@ async function handlePasswordSubmit() {
   const newPw = document.getElementById('pw-new').value;
   const newPwConfirm = document.getElementById('pw-new-confirm').value;
 
-  if (!oldPw || !newPw || !newPwConfirm) {
+  // 純 OAuth 帳號沒有密碼，不需要填寫/驗證「目前密碼」
+  if (hasPasswordIdentity && !oldPw) {
+    showPwMsg('請填寫所有欄位', 'error');
+    return;
+  }
+  if (!newPw || !newPwConfirm) {
     showPwMsg('請填寫所有欄位', 'error');
     return;
   }
@@ -783,16 +807,27 @@ async function handlePasswordSubmit() {
     showPwMsg('兩次輸入的新密碼不一致，請再確認一次', 'error');
     return;
   }
-  if (newPw === oldPw) {
+  if (hasPasswordIdentity && newPw === oldPw) {
     showPwMsg('新密碼不能跟目前密碼相同', 'error');
     return;
   }
 
-  // 先驗證舊密碼是否正確：用目前帳號的 email + 輸入的舊密碼重新登入測試
   const btn = document.getElementById('pw-submit-btn');
   btn.disabled = true;
   btn.textContent = '驗證中...';
 
+  // 沒有密碼的帳號（純 OAuth）：不用驗證舊密碼，直接進入二次確認畫面
+  if (!hasPasswordIdentity) {
+    pendingNewPassword = newPw;
+    pendingOldPassword = null;
+    document.getElementById('pw-step-form').classList.add('hidden');
+    document.getElementById('pw-step-confirm').classList.remove('hidden');
+    btn.disabled = false;
+    btn.textContent = '確認變更';
+    return;
+  }
+
+  // 先驗證舊密碼是否正確：用目前帳號的 email + 輸入的舊密碼重新登入測試
   try {
     const { data: { user } } = await supabaseClient.auth.getUser();
     const { error: signInError } = await supabaseClient.auth.signInWithPassword({ email: user.email, password: oldPw });
