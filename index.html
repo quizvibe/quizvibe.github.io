@@ -450,7 +450,7 @@
 
       <button class="btn-primary-full" id="auth-submit-btn" onclick="handleAuthSubmit()">登入</button>
 
-      <div class="divider">或</div>
+      <div class="divider" id="auth-or-divider">或</div>
 
       <div class="oauth-row">
         <button class="oauth-btn" onclick="handleOAuth('google')">
@@ -533,6 +533,7 @@ const i18n = {
     welcomeBack: "歡迎回來", loginSub: "登入繼續你的測驗紀錄",
     createAccount: "建立帳號", signupSub: "註冊開始記錄你的測驗旅程",
     email: "Email", password: "密碼（至少6位數）",
+    nickname: "暱稱", passwordConfirm: "再次輸入密碼", orDivider: "或",
     noAccount: "還沒有帳號？", haveAccount: "已經有帳號？",
     toSignup: "立即註冊", toLogin: "直接登入",
     termsAgreeText: '我已閱讀並同意 <a href="terms.html" target="_blank" rel="noopener">使用條款</a> 與 <a href="privacy.html" target="_blank" rel="noopener">隱私權政策</a>',
@@ -550,6 +551,7 @@ const i18n = {
     welcomeBack: "おかえりなさい", loginSub: "ログインしてテスト履歴を見る",
     createAccount: "アカウント作成", signupSub: "登録してテストの旅を記録",
     email: "メール", password: "パスワード（6文字以上）",
+    nickname: "ニックネーム", passwordConfirm: "パスワードを再入力", orDivider: "または",
     noAccount: "アカウントがない？", haveAccount: "アカウントをお持ち？",
     toSignup: "今すぐ登録", toLogin: "ログインする",
     termsAgreeText: '<a href="terms.html" target="_blank" rel="noopener">利用規約</a>と<a href="privacy.html" target="_blank" rel="noopener">プライバシーポリシー</a>を読み、同意します',
@@ -567,6 +569,7 @@ const i18n = {
     welcomeBack: "Welcome back", loginSub: "Log in to continue your quiz history",
     createAccount: "Create account", signupSub: "Sign up to start tracking your quiz journey",
     email: "Email", password: "Password (6+ characters)",
+    nickname: "Nickname", passwordConfirm: "Confirm password", orDivider: "or",
     noAccount: "No account yet?", haveAccount: "Already have an account?",
     toSignup: "Sign up now", toLogin: "Log in instead",
     termsAgreeText: 'I have read and agree to the <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>',
@@ -727,6 +730,10 @@ function updateAuthModalUI() {
   }
   document.getElementById('auth-email').placeholder = t.email;
   document.getElementById('auth-password').placeholder = t.password;
+  // 這三個之前漏掉了，切換語言時不會跟著變
+  document.getElementById('auth-nickname').placeholder = t.nickname;
+  document.getElementById('auth-password-confirm').placeholder = t.passwordConfirm;
+  document.getElementById('auth-or-divider').textContent = t.orDivider;
   document.getElementById('terms-agree-text').innerHTML = t.termsAgreeText;
 }
 
