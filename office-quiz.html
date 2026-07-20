@@ -150,7 +150,7 @@
 <body>
 
 <div class="quiz-topbar">
-  <a href="index.html" class="back">← QuizDrop</a>
+  <a href="index.html" class="back" id="back-link">← QuizDrop</a>
   <div class="spacer"></div>
   <div class="qt-right">
     <div class="qt-lang-pill">
@@ -184,8 +184,8 @@
 <div id="loading" class="loading-state">載入測驗中...</div>
 
 <div id="start-screen" class="hidden">
-  <button class="btn-start" onclick="startQuiz()">開始診斷 →</button>
-  <p class="notice">共 10 題 · 約 3 分鐘 · 結果僅供娛樂參考</p>
+  <button class="btn-start" id="start-btn" onclick="startQuiz()">開始診斷 →</button>
+  <p class="notice" id="notice-text">共 10 題 · 約 3 分鐘 · 結果僅供娛樂參考</p>
 </div>
 
 <div class="progress-wrap hidden" id="progress-wrap">
@@ -220,7 +220,7 @@
     <button class="share-btn btn-fb" onclick="shareFacebook()">📘 Facebook</button>
     <button class="share-btn btn-copy" onclick="copyResult()">📋 複製</button>
   </div>
-  <button class="btn-retry" onclick="retry()">再測一次</button>
+  <button class="btn-retry" id="retry-btn" onclick="retry()">再測一次</button>
 
   <div class="native-banner-slot">
     <script async="async" data-cfasync="false" src="https://pl29896037.effectivecpmnetwork.com/0e5dc60a78df647eea1f986081f2e5a4/invoke.js"></script>
@@ -243,8 +243,6 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 const i18n = {
   zh: {
     backLink: '← 回 QuizDrop 首頁',
-    heroTitle: '【辦公室宮鬥傳】你在職場上的「反派大魔王」與「暗黑權謀」天賦鑑定',
-    heroSub: '10題職場實戰情境，測出你的辦公室生存人格與心機指數',
     startBtn: '開始診斷 →',
     notice: '共 10 題 · 約 3 分鐘 · 結果僅供娛樂參考',
     qLabel: (c, t) => `問題 ${c} / ${t}`,
@@ -257,39 +255,109 @@ const i18n = {
     copied: '已複製！',
     retry: '再測一次',
     loading: '載入測驗中...',
+    loadFail: '載入測驗失敗，請重新整理頁面',
     guestMsg: '🔓 登入後系統會自動保存你的測驗紀錄，現在是訪客模式',
     savedMsg: '✅ 已自動保存到你的測驗紀錄',
     failMsg: '⚠️ 結果保存失敗，但你還是可以看診斷結果',
+    oldResult: '📜 這是你重溫的舊測驗結果',
+    shareText: (e, l, s) => `${e} 我的診斷結果是「${l}」(${s})\n\n你也來測測你的職場心機指數！`,
+  },
+  ja: {
+    backLink: '← QuizDrop ホームへ',
+    startBtn: '診断スタート →',
+    notice: '全10問 · 約3分 · 結果はエンタメ目的です',
+    qLabel: (c, t) => `質問 ${c} / ${t}`,
+    next: '次の質問 →',
+    finish: '診断結果を見る ✨',
+    prev: '← 前の質問',
+    warning: '⚠️ 回答を選んでから進んでください',
+    shareLabel: '診断結果をシェア',
+    copy: '📋 コピー',
+    copied: 'コピーしました！',
+    retry: 'もう一度診断する',
+    loading: '読み込み中...',
+    loadFail: '読み込みに失敗しました。ページを再読み込みしてください',
+    guestMsg: '🔓 ログインすると診断履歴が自動保存されます（現在ゲストモード）',
+    savedMsg: '✅ 診断履歴に保存しました',
+    failMsg: '⚠️ 保存に失敗しましたが、結果は表示できます',
+    oldResult: '📜 これは以前の診断結果です',
+    shareText: (e, l, s) => `${e} 私の診断結果は「${l}」(${s})\n\nあなたの職場腹黒度も診断してみない？`,
+  },
+  en: {
+    backLink: '← Back to QuizDrop',
+    startBtn: 'Start the test →',
+    notice: '10 questions · about 3 minutes · for entertainment only',
+    qLabel: (c, t) => `Question ${c} / ${t}`,
+    next: 'Next →',
+    finish: 'See my result ✨',
+    prev: '← Previous',
+    warning: '⚠️ Pick an answer to continue',
+    shareLabel: 'Share your result',
+    copy: '📋 Copy',
+    copied: 'Copied!',
+    retry: 'Take it again',
+    loading: 'Loading...',
+    loadFail: 'Failed to load. Please refresh the page',
+    guestMsg: '🔓 Log in to save your results automatically (currently guest mode)',
+    savedMsg: '✅ Saved to your history',
+    failMsg: '⚠️ Could not save, but your result is below',
+    oldResult: '📜 This is a result you took earlier',
+    shareText: (e, l, s) => `${e} My result: "${l}" (${s})\n\nFind out your corporate villain type:`,
   }
 };
-let currentLang = 'zh';
+let currentLang = localStorage.getItem('quizdrop_lang') || 'zh';
 
 function setLang(l) {
-  // 目前題庫只有中文版本，但保留切換按鈕架構供未來擴充
   currentLang = l;
+  localStorage.setItem('quizdrop_lang', l);
   document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === l));
-  localStorage.setItem('quizdrop_lang', l); // 跨頁面記住語言選擇
-  if (l !== 'zh') {
-    showToast('日文/英文版本即將推出，敬請期待！');
-    currentLang = 'zh';
-    localStorage.setItem('quizdrop_lang', 'zh');
-    document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === 'zh'));
-  }
+  applyLangToPage();
 }
 
-// 頁面載入時，讀取之前儲存的語言偏好
-(function initLangFromStorage() {
-  const saved = localStorage.getItem('quizdrop_lang');
-  if (saved && saved !== 'zh') {
-    // 目前題庫尚未支援日/英文，先固定使用中文，但保留偏好值供之後擴充使用
-  }
-  document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === currentLang));
-})();
+// 把當前語言套用到畫面上所有文字（包含題目、選項、結果，因為它們都存成多語系物件）
+function applyLangToPage() {
+  const t = i18n[currentLang];
+  if (!quizData) return; // 資料還沒載入完，等 loadQuiz 完成後會再呼叫一次
+
+  document.getElementById('hero-title').textContent = L(quizData.titleI18n);
+  document.getElementById('hero-sub').textContent = L(quizData.descI18n);
+  document.title = L(quizData.titleI18n) + ' - QuizDrop';
+
+  const startBtn = document.getElementById('start-btn');
+  if (startBtn) startBtn.textContent = t.startBtn;
+  const noticeEl = document.getElementById('notice-text');
+  if (noticeEl) noticeEl.textContent = t.notice;
+  const backEl = document.getElementById('back-link');
+  if (backEl) backEl.textContent = t.backLink;
+  const retryEl = document.getElementById('retry-btn');
+  if (retryEl) retryEl.textContent = t.retry;
+  const shareLabelEl = document.getElementById('share-label');
+  if (shareLabelEl) shareLabelEl.textContent = t.shareLabel;
+  const prevEl = document.getElementById('btn-prev');
+  if (prevEl) prevEl.textContent = t.prev;
+
+  // 如果正在作答中，重新渲染當前題目
+  const quizCard = document.getElementById('quiz-card');
+  if (quizCard && !quizCard.classList.contains('hidden')) renderQ();
+  // 如果正在看結果，重新渲染結果
+  const resultCard = document.getElementById('result-card');
+  if (resultCard && resultCard.style.display === 'block' && finalResult) renderResultTexts(finalResult);
+}
 
 const QUIZ_ID = '00000000-0000-0000-0000-000000000007'; // 對應 SQL 裡插入的官方測驗 ID（測驗七）
 const ACTIVE_DIMS = ['B', 'H', 'G']; // 會互相配對的三個維度；S 是「正直/白蓮花」維度，不參與配對
 
+// 多語系取值：資料庫的文字欄位是 { zh, ja, en } 物件；
+// 如果是舊格式的純字串（尚未翻譯的測驗），直接回傳原字串，確保向下相容
+function L(field) {
+  if (field == null) return '';
+  if (typeof field === 'string') return field;
+  return field[currentLang] || field.zh || '';
+}
+
 let quizData = null;   // { questions, results }
+let finalResult = null; // 提前宣告：applyLangToPage 切換語言時需要用到
+let finalScores = null;
 let quizTitle = '';
 let current = 0;
 let answers = [];      // 存每題選的 option 物件
@@ -308,16 +376,22 @@ async function loadQuiz() {
 
     const { data, error } = await supabaseClient
       .from('quizzes')
-      .select('title, questions, results')
+      .select('title, description, questions, results')
       .eq('id', QUIZ_ID)
       .single();
 
     if (error) throw error;
 
-    quizData = { questions: data.questions, results: data.results.results };
+    quizData = {
+      questions: data.questions,
+      results: data.results.results,
+      titleI18n: data.results.title_i18n || data.title,       // 多語系標題（舊測驗沒有這欄，就用純字串 title）
+      descI18n: data.results.description_i18n || data.description,
+    };
     quizTitle = data.title;
 
     document.getElementById('loading').classList.add('hidden');
+    applyLangToPage(); // 資料載入完成後，把當前語言套用到畫面
 
     // 檢查網址是否帶有 ?result=xxx 參數，代表是從個人頁面點過來「重溫結果」
     const urlParams = new URLSearchParams(window.location.search);
@@ -333,7 +407,7 @@ async function loadQuiz() {
 
     document.getElementById('start-screen').classList.remove('hidden');
   } catch (err) {
-    document.getElementById('loading').textContent = '載入測驗失敗，請重新整理頁面 (' + err.message + ')';
+    document.getElementById('loading').textContent = i18n[currentLang].loadFail + ' (' + err.message + ')';
     console.error(err);
   }
 }
@@ -359,17 +433,25 @@ function handleQuizPageLogout() {
   }
 }
 
+// 把結果的文字渲染到畫面上（抽成共用函式，切換語言時可以重新呼叫）
+function renderResultTexts(result) {
+  document.getElementById('r-emoji').textContent = result.emoji;
+  document.getElementById('r-title').textContent = L(result.label);
+  document.getElementById('r-subtitle').textContent = L(result.subtitle);
+  document.getElementById('r-desc').textContent = L(result.desc);
+  const traitList = L(result.traits) || [];
+  document.getElementById('r-traits').innerHTML = (Array.isArray(traitList) ? traitList : [])
+    .map(t => `<span class="trait">${escapeText(t)}</span>`).join('');
+}
+
 // 直接顯示已存的結果（從個人頁面點「重溫結果」過來時使用），不重新計分、不重複存檔
 function showSavedResult(result) {
-  document.getElementById('r-emoji').textContent = result.emoji;
-  document.getElementById('r-title').textContent = result.label;
-  document.getElementById('r-subtitle').textContent = result.subtitle;
-  document.getElementById('r-desc').textContent = result.desc;
-  document.getElementById('r-traits').innerHTML = result.traits.map(t => `<span class="trait">${escapeText(t)}</span>`).join('');
+  finalResult = result; // 記起來，切換語言時才能重新渲染
+  renderResultTexts(result);
 
   const statusEl = document.getElementById('save-status');
   statusEl.className = 'save-status saved';
-  statusEl.textContent = '📜 這是你重溫的舊測驗結果';
+  statusEl.textContent = i18n[currentLang].oldResult;
 
   document.getElementById('result-card').style.display = 'block';
 }
@@ -428,7 +510,7 @@ function renderQ() {
   const t = i18n[currentLang];
 
   document.getElementById('q-num').textContent = t.qLabel(current + 1, qs.length);
-  document.getElementById('q-text').textContent = q.text;
+  document.getElementById('q-text').textContent = L(q.text);
   document.getElementById('unanswered-warning').classList.remove('show');
 
   const opts = document.getElementById('options');
@@ -436,7 +518,7 @@ function renderQ() {
   q.options.forEach((o) => {
     const btn = document.createElement('button');
     btn.className = 'opt' + (answers[current]?.id === o.id ? ' selected' : '');
-    btn.textContent = escapeText(o.text);
+    btn.textContent = escapeText(L(o.text));
     btn.onclick = () => selectOpt(o, btn);
     opts.appendChild(btn);
   });
@@ -535,7 +617,7 @@ function matchResult(dims) {
   const activeVals = ACTIVE_DIMS.map(d => dims[d]);
   const maxActive = Math.max(...activeVals);
 
-  // 情況一：B/H/G 三個維度都偏低 → S（正直白蓮花）自然最高 → 均低結果
+  // 情況一：K/Z/T 三個維度都偏低 → S（佛系放養心）自然最高 → 均低結果
   if (maxActive <= 4) {
     return quizData.results.find(r => r.id === 'ALL_LOW');
   }
@@ -546,7 +628,7 @@ function matchResult(dims) {
     return quizData.results.find(r => r.id === 'ALL_HIGH');
   }
 
-  // 情況三：B/H/G 排序，找出第一名與第二名
+  // 情況三：K/Z/T 排序，找出第一名與第二名
   const sortedActive = [...ACTIVE_DIMS].sort((a, b) => dims[b] - dims[a]);
   const top1 = sortedActive[0], second = sortedActive[1];
 
@@ -561,9 +643,6 @@ function matchResult(dims) {
   return found || quizData.results.find(r => r.id === 'ALL_HIGH'); // fallback
 }
 
-let finalResult = null;
-let finalScores = null;
-
 async function showResult() {
   document.getElementById('quiz-card').classList.add('hidden');
   document.getElementById('progress-wrap').classList.add('hidden');
@@ -571,11 +650,7 @@ async function showResult() {
   finalScores = calcScores();
   finalResult = matchResult(finalScores);
 
-  document.getElementById('r-emoji').textContent = finalResult.emoji;
-  document.getElementById('r-title').textContent = finalResult.label;
-  document.getElementById('r-subtitle').textContent = finalResult.subtitle;
-  document.getElementById('r-desc').textContent = finalResult.desc;
-  document.getElementById('r-traits').innerHTML = finalResult.traits.map(t => `<span class="trait">${escapeText(t)}</span>`).join('');
+  renderResultTexts(finalResult);
 
   document.getElementById('result-card').style.display = 'block';
   document.getElementById('result-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -589,10 +664,11 @@ async function showResult() {
 /* ============================================================ */
 async function saveResultIfLoggedIn() {
   const statusEl = document.getElementById('save-status');
+  const t = i18n[currentLang];
 
   if (!currentUser) {
     statusEl.className = 'save-status guest';
-    statusEl.textContent = '🔓 登入後系統會自動保存你的測驗紀錄，現在是訪客模式';
+    statusEl.textContent = t.guestMsg;
     return;
   }
 
@@ -603,17 +679,19 @@ async function saveResultIfLoggedIn() {
         user_id: currentUser.id,
         quiz_id: QUIZ_ID,
         result_label: finalResult.id,
-        result_title: finalResult.label,
+        // 存中文標題：個人頁面的紀錄列表統一顯示中文，避免使用者用英文玩完、
+        // 之後切回中文看紀錄時出現看不懂的英文標題
+        result_title: (typeof finalResult.label === 'string') ? finalResult.label : finalResult.label.zh,
         scores: finalScores,
         played_at: new Date().toISOString(),
       }, { onConflict: 'user_id,quiz_id' });
     if (error) throw error;
 
     statusEl.className = 'save-status saved';
-    statusEl.textContent = '✅ 已自動保存到你的測驗紀錄';
+    statusEl.textContent = t.savedMsg;
   } catch (err) {
     statusEl.className = 'save-status guest';
-    statusEl.textContent = '⚠️ 結果保存失敗，但你還是可以看診斷結果';
+    statusEl.textContent = t.failMsg;
     console.error(err);
   }
 }
@@ -622,8 +700,9 @@ async function saveResultIfLoggedIn() {
 /* 5. 分享功能                                                     */
 /* ============================================================ */
 function getShareText() {
+  const t = i18n[currentLang];
   return {
-    text: `${finalResult.emoji} 我的診斷結果是「${finalResult.label}」(${finalResult.subtitle})\n\n你也來測測你的職場心機指數！`,
+    text: t.shareText(finalResult.emoji, L(finalResult.label), L(finalResult.subtitle)),
     url: window.location.href
   };
 }

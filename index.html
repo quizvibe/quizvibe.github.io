@@ -624,14 +624,42 @@ function toggleSidebar() {
 /*  Quiz Cards (demo data — replace with Supabase fetch later)   */
 /* ============================================================ */
 const quizzes = [
-  { id: 'edge-1', cat: 'edge', badge: 'badge-edge', icon: '🙈', img: 'card-edge.png', title: '【現代隱居邊緣人】社交疲勞與精神退化診斷', desc: '10題情境題，精準診斷你的社交能量與精神狀態', url: 'edge-quiz.html' },
-  { id: 'love-2', cat: 'love', badge: 'badge-love', icon: '💘', img: 'card-love.png', title: '【戀愛重症診斷】自毀傾向與暈船腦容量體檢', desc: '10題實戰情境，診斷你的暈船指數與吸渣體質', url: 'love-quiz-v2.html' },
-  { id: 'work-2', cat: 'work', badge: 'badge-work', icon: '🧭', img: 'card-work.png', title: '【職場生存戰】高功能瘋子定位測驗', desc: '10題職場實戰情境，找出你的辦公室人格分類', url: 'work-quiz-v2.html' },
-  { id: 'soul-3', cat: 'soul', badge: 'badge-soul', icon: '⏳', img: 'card-soul.png', title: '【靈魂老化度】精神退化/老化指數檢測', desc: '10題深度檢測，看看你的靈魂究竟幾歲了', url: 'soul-aging-quiz.html' },
-  { id: 'edge-2', cat: 'edge', badge: 'badge-edge', icon: '🌌', img: 'card-crazy.png', title: '【全網瘋傳盲盒】平行宇宙反骨瘋狂指數', desc: '10題荒誕情境題，測出你深藏的瘋狂人格', url: 'wild-quiz.html' },
-  { id: 'love-3', cat: 'love', badge: 'badge-love', icon: '😈', img: 'card-control.png', title: '【控制慾怪獸鑑定】窒息指數與安全感黑洞診斷', desc: '10題實戰情境，抓出你的追蹤監控與情緒勒索傾向', url: 'control-quiz.html' },
-  { id: 'work-3', cat: 'work', badge: 'badge-work', icon: '🕴️', img: 'card-office2.png', title: '【辦公室宮鬥傳】反派大魔王與暗黑權謀鑑定', desc: '10題職場實戰情境，測出你的辦公室生存人格', url: 'office-quiz.html' },
+  { id: 'edge-1', cat: 'edge', badge: 'badge-edge', icon: '🙈', img: 'card-edge.png',
+    title: { zh:'【現代隱居邊緣人】社交疲勞與精神退化診斷', ja:'【現代の隠れ引きこもり】社交疲労＆精神退化診断', en:'The Modern Hermit: Social Burnout & Brain-Rot Test' },
+    desc: { zh:'10題情境題，精準診斷你的社交能量與精神狀態', ja:'10問であなたの社交エネルギーと精神状態を診断', en:'10 questions to diagnose your social battery and mental state' },
+    url: 'edge-quiz.html' },
+  { id: 'love-2', cat: 'love', badge: 'badge-love', icon: '💘', img: 'card-love.png',
+    title: { zh:'【戀愛重症診斷】自毀傾向與暈船腦容量體檢', ja:'【恋愛重症診断】自滅傾向＆メンヘラ脳の容量チェック', en:'Love in Critical Condition: Your Self-Sabotage & Delulu Levels' },
+    desc: { zh:'10題實戰情境，診斷你的暈船指數與吸渣體質', ja:'10問であなたの恋愛依存度とダメ男（女）ホイホイ体質を診断', en:'10 scenarios to measure how delulu you get and whether you attract red flags' },
+    url: 'love-quiz-v2.html' },
+  { id: 'work-2', cat: 'work', badge: 'badge-work', icon: '🧭', img: 'card-work.png',
+    title: { zh:'【職場生存戰】高功能瘋子定位測驗', ja:'【職場サバイバル】高機能クレイジー診断', en:'Office Survival: Which High-Functioning Menace Are You?' },
+    desc: { zh:'10題職場實戰情境，找出你的辦公室人格分類', ja:'10問の職場シチュエーションであなたのオフィス人格を分類', en:'10 workplace scenarios to classify your office personality' },
+    url: 'work-quiz-v2.html' },
+  { id: 'soul-3', cat: 'soul', badge: 'badge-soul', icon: '⏳', img: 'card-soul.png',
+    title: { zh:'【靈魂老化度】精神退化/老化指數檢測', ja:'【魂の老化度】精神退化・老化指数チェック', en:'How Old Is Your Soul? The Mental Aging Index' },
+    desc: { zh:'10題深度檢測，看看你的靈魂究竟幾歲了', ja:'10問の深層診断で、あなたの魂の年齢が分かる', en:'10 deep questions to reveal your soul\'s true age' },
+    url: 'soul-aging-quiz.html' },
+  { id: 'edge-2', cat: 'edge', badge: 'badge-edge', icon: '🌌', img: 'card-crazy.png',
+    title: { zh:'【全網瘋傳盲盒】平行宇宙反骨瘋狂指數', ja:'【バズり中の闇ガチャ】パラレルワールド反骨クレイジー指数', en:'The Viral Chaos Box: Your Parallel-Universe Feral Index' },
+    desc: { zh:'10題荒誕情境題，測出你深藏的瘋狂人格', ja:'10問のぶっ飛んだ状況設定で、隠れたクレイジー人格を暴く', en:'10 absurd scenarios to expose the unhinged version of you' },
+    url: 'wild-quiz.html' },
+  { id: 'love-3', cat: 'love', badge: 'badge-love', icon: '😈', img: 'card-control.png',
+    title: { zh:'【控制慾怪獸鑑定】窒息指數與安全感黑洞診斷', ja:'【支配欲モンスター鑑定】窒息度＆不安の穴診断', en:'The Controlling Partner Test: How Much Are You Suffocating Them?' },
+    desc: { zh:'10題實戰情境，抓出你的追蹤監控與情緒勒索傾向', ja:'10問であなたの監視欲・独占欲・感情操作傾向を暴く', en:'10 scenarios to expose your surveillance habits and guilt-tripping' },
+    url: 'control-quiz.html' },
+  { id: 'work-3', cat: 'work', badge: 'badge-work', icon: '🕴️', img: 'card-office2.png',
+    title: { zh:'【辦公室宮鬥傳】反派大魔王與暗黑權謀鑑定', ja:'【オフィス宮廷バトル】悪役ボス＆腹黒権謀術数鑑定', en:'Office Power Games: What\'s Your Corporate Villain Archetype?' },
+    desc: { zh:'10題職場實戰情境，測出你的辦公室生存人格', ja:'10問の職場シチュエーションで、あなたのオフィス生存人格を診断', en:'10 workplace scenarios to reveal your office survival persona' },
+    url: 'office-quiz.html' },
 ];
+
+// 卡片標題/說明的多語系取值（相容舊的純字串格式）
+function LQ(field) {
+  if (field == null) return '';
+  if (typeof field === 'string') return field;
+  return field[currentLang] || field.zh || '';
+}
 
 const catLabels = {
   love: { zh:'戀愛系', ja:'恋愛系', en:'Love' },
@@ -658,8 +686,8 @@ function renderQuizCards() {
     <div class="quiz-card" onclick="window.location.href='${q.url}'">
       <span class="badge ${q.badge}">${catLabels[q.cat][currentLang]}</span>
       <img class="qimg" src="${q.img}" alt="" loading="lazy">
-      <h3>${q.title}</h3>
-      <p>${q.desc}</p>
+      <h3>${LQ(q.title)}</h3>
+      <p>${LQ(q.desc)}</p>
     </div>
   `).join('');
 }
@@ -946,15 +974,15 @@ function handleSearchInput(e) {
   const q = e.target.value.trim().toLowerCase();
   const grid = document.getElementById('quiz-grid');
   const filtered = quizzes.filter(qz =>
-    qz.title.toLowerCase().includes(q) || qz.desc.toLowerCase().includes(q)
+    LQ(qz.title).toLowerCase().includes(q) || LQ(qz.desc).toLowerCase().includes(q)
   );
   if (q === '') { renderQuizCards(); return; }
   grid.innerHTML = filtered.map(qz => `
     <div class="quiz-card" onclick="window.location.href='${qz.url}'">
       <span class="badge ${qz.badge}">${catLabels[qz.cat][currentLang]}</span>
       <img class="qimg" src="${qz.img}" alt="" loading="lazy">
-      <h3>${qz.title}</h3>
-      <p>${qz.desc}</p>
+      <h3>${LQ(qz.title)}</h3>
+      <p>${LQ(qz.desc)}</p>
     </div>
   `).join('') || '<p class="text-gray-400 text-sm col-span-full text-center py-10">沒有找到符合的測驗 🥲</p>';
 }
