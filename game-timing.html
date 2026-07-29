@@ -323,7 +323,7 @@ function generateNewTarget() {
   }
   const cleanTarget = mode === 'easy'
     ? String(targetSeconds).padStart(2, '0') + '--'
-    : String(Math.floor(targetSeconds)).padStart(2, '0') + String(Math.round((targetSeconds % 1) * 100)).padStart(2, '0');
+    : formatBoardDigits(targetSeconds);
   document.getElementById('tg1').textContent = cleanTarget[0];
   document.getElementById('tg2').textContent = cleanTarget[1];
   document.getElementById('tg3').textContent = cleanTarget[2];
@@ -334,6 +334,17 @@ function generateNewTarget() {
 function resetBoard() {
   setDigits('----');
   document.querySelectorAll('.board-digit-overlay').forEach(d => d.classList.remove('flash'));
+}
+
+// 把秒數轉成顯示板的 4 位字串（SS + CC）
+// 先四捨五入成「整數百分秒」再拆位，避免 99.5 進位成 100 時字串變 5 位（例如 8.9958 曾誤顯示成 08:10）
+function formatBoardDigits(seconds) {
+  let totalCenti = Math.round(seconds * 100);
+  if (totalCenti < 0) totalCenti = 0;
+  if (totalCenti > 9999) totalCenti = 9999; // 顯示板只有 4 位，超過就封頂
+  const sec = Math.floor(totalCenti / 100);
+  const centi = totalCenti % 100;
+  return String(sec).padStart(2, '0') + String(centi).padStart(2, '0');
 }
 
 function setDigits(clean) {
@@ -400,10 +411,7 @@ function updateTimerDisplay() {
     setDigits('----');
   } else {
     if (wholeSecond === 3) hasShownSecond3 = true;
-    const secStr = String(wholeSecond).padStart(2, '0');
-    const centiValue = Math.round((elapsed - wholeSecond) * 100);
-    const centiStr = String(centiValue).padStart(2, '0');
-    setDigits(secStr + centiStr);
+    setDigits(formatBoardDigits(elapsed));
 
     if (wholeSecond !== lastWholeSecond) {
       lastWholeSecond = wholeSecond;
@@ -432,9 +440,7 @@ function stopTiming(isTimeout) {
   btn.classList.add('state-ready');
   btn.textContent = 'AGAIN';
 
-  const finalSec = Math.floor(actual);
-  const finalCenti = Math.round((actual - finalSec) * 100);
-  setDigits(String(finalSec).padStart(2, '0') + String(finalCenti).padStart(2, '0'));
+  setDigits(formatBoardDigits(actual));
 
   const diff = Math.abs(actual - targetSeconds);
   const isWin = diff <= 0.3;
