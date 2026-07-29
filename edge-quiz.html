@@ -183,8 +183,8 @@
 <div id="loading" class="loading-state">載入測驗中...</div>
 
 <div id="start-screen" class="hidden">
-  <button class="btn-start" onclick="startQuiz()">開始診斷 →</button>
-  <p class="notice">共 10 題 · 約 3 分鐘 · 結果僅供娛樂參考</p>
+  <button class="btn-start" id="start-btn" onclick="startQuiz()">開始診斷 →</button>
+  <p class="notice" id="start-notice">共 10 題 · 約 3 分鐘 · 結果僅供娛樂參考</p>
 </div>
 
 <div class="progress-wrap hidden" id="progress-wrap">
@@ -219,14 +219,14 @@
     <button class="share-btn btn-fb" onclick="shareFacebook()">📘 Facebook</button>
     <button class="share-btn btn-copy" onclick="copyResult()">📋 複製</button>
   </div>
-  <button class="btn-retry" onclick="retry()">再測一次</button>
+  <button class="btn-retry" id="retry-btn" onclick="retry()">再測一次</button>
 
   <div class="native-banner-slot">
     <script async="async" data-cfasync="false" src="https://pl29896037.effectivecpmnetwork.com/0e5dc60a78df647eea1f986081f2e5a4/invoke.js"></script>
     <div id="container-0e5dc60a78df647eea1f986081f2e5a4"></div>
   </div>
 
-  <div class="home-link"><a href="index.html">← 回 QuizDrop 首頁</a></div>
+  <div class="home-link"><a href="index.html" id="back-link">← 回 QuizDrop 首頁</a></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -259,30 +259,109 @@ const i18n = {
     guestMsg: '🔓 登入後系統會自動保存你的測驗紀錄，現在是訪客模式',
     savedMsg: '✅ 已自動保存到你的測驗紀錄',
     failMsg: '⚠️ 結果保存失敗，但你還是可以看診斷結果',
+    savedOld: '📜 這是你重溫的舊測驗結果',
+    loadFail: '載入測驗失敗，請重新整理頁面',
+    shareText: (emoji, label, subtitle) => `${emoji} 我的診斷結果是「${label}」(${subtitle})\n\n你也來測測你的社交疲勞指數！`,
+  },
+  ja: {
+    backLink: '← QuizDrop トップへ',
+    heroTitle: '【現代のこもりびと】<br>あなたの「人疲れ・精神退行」総合診断',
+    heroSub: '10問のシチュエーション診断で、社会電池の残量と精神状態を丸裸に',
+    startBtn: '診断をはじめる →',
+    notice: '全10問 · 約3分 · 結果はエンタメとしてお楽しみください',
+    qLabel: (c, t) => `質問 ${c} / ${t}`,
+    next: '次の質問 →',
+    finish: '診断結果を見る ✨',
+    prev: '← 前の質問',
+    warning: '⚠️ 続けるには、まず答えを選んでください',
+    shareLabel: '診断結果をシェア',
+    copy: '📋 コピー',
+    copied: 'コピーしました！',
+    retry: 'もう一度診断する',
+    loading: '診断を読み込み中...',
+    guestMsg: '🔓 ログインすると診断履歴が自動保存されます。現在はゲストモードです',
+    savedMsg: '✅ 診断履歴に自動保存しました',
+    failMsg: '⚠️ 保存に失敗しましたが、診断結果はそのままご覧いただけます',
+    savedOld: '📜 これは過去の診断結果です',
+    loadFail: '読み込みに失敗しました。ページを再読み込みしてください',
+    shareText: (emoji, label, subtitle) => `${emoji} 私の診断結果は「${label}」(${subtitle})\n\nあなたの人疲れ度も測ってみて！`,
+  },
+  en: {
+    backLink: '← Back to QuizDrop',
+    heroTitle: 'Modern Hermit Diagnosis<br>Your Social Battery &amp; Mental Decay Report',
+    heroSub: '10 situational questions to diagnose your social battery and mental state',
+    startBtn: 'Start the diagnosis →',
+    notice: '10 questions · about 3 minutes · for entertainment only',
+    qLabel: (c, t) => `Question ${c} / ${t}`,
+    next: 'Next →',
+    finish: 'See my results ✨',
+    prev: '← Previous',
+    warning: '⚠️ Pick an answer before continuing',
+    shareLabel: 'Share your results',
+    copy: '📋 Copy',
+    copied: 'Copied!',
+    retry: 'Take it again',
+    loading: 'Loading the quiz...',
+    guestMsg: '🔓 Log in and your results are saved automatically. You are in guest mode',
+    savedMsg: '✅ Saved to your quiz history',
+    failMsg: '⚠️ Could not save your result, but you can still read the diagnosis',
+    savedOld: '📜 This is a past result you are revisiting',
+    loadFail: 'Failed to load the quiz. Please refresh the page',
+    shareText: (emoji, label, subtitle) => `${emoji} My result: "${label}" (${subtitle})\n\nCome find out how socially exhausted you are!`,
   }
 };
 let currentLang = 'zh';
 
+/* ------------------------------------------------------------ */
+/* i18n 核心：L() 讀取 { zh, ja, en } 物件                          */
+/* 舊資料若還是純字串，會原樣回傳（向後相容）                        */
+/* ------------------------------------------------------------ */
+function L(field) {
+  if (field === null || field === undefined) return '';
+  if (typeof field === 'string' || typeof field === 'number') return field;
+  if (Array.isArray(field)) return field; // 已經是陣列，直接用
+  return field[currentLang] ?? field.zh ?? Object.values(field)[0] ?? '';
+}
+
 function setLang(l) {
-  // 目前題庫只有中文版本，但保留切換按鈕架構供未來擴充
+  if (!i18n[l]) return;
   currentLang = l;
-  document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === l));
   localStorage.setItem('quizdrop_lang', l); // 跨頁面記住語言選擇
-  if (l !== 'zh') {
-    showToast('日文/英文版本即將推出，敬請期待！');
-    currentLang = 'zh';
-    localStorage.setItem('quizdrop_lang', 'zh');
-    document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === 'zh'));
-  }
+  document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === l));
+  applyStaticI18n();
+
+  // 動態內容也要跟著換：作答中就重畫題目，已出結果就重畫結果
+  if (quizData && !document.getElementById('quiz-card').classList.contains('hidden')) renderQ();
+  if (displayedResult) renderResultBody(displayedResult);
+}
+
+// 套用寫死在 HTML 裡的靜態文字
+function applyStaticI18n() {
+  const t = i18n[currentLang];
+  const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  const setHTML = (id, val) => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
+
+  setHTML('hero-title', t.heroTitle);
+  setText('hero-sub', t.heroSub);
+  setText('start-btn', t.startBtn);
+  setText('start-notice', t.notice);
+  setText('unanswered-warning', t.warning);
+  setText('btn-prev', t.prev);
+  setText('share-label', t.shareLabel);
+  setText('retry-btn', t.retry);
+  setText('back-link', t.backLink);
+  document.documentElement.lang = currentLang;
+
+  const loadingEl = document.getElementById('loading');
+  if (loadingEl && !loadingEl.classList.contains('hidden')) loadingEl.textContent = t.loading;
 }
 
 // 頁面載入時，讀取之前儲存的語言偏好
 (function initLangFromStorage() {
   const saved = localStorage.getItem('quizdrop_lang');
-  if (saved && saved !== 'zh') {
-    // 目前題庫尚未支援日/英文，先固定使用中文，但保留偏好值供之後擴充使用
-  }
+  if (saved && i18n[saved]) currentLang = saved;
   document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === currentLang));
+  applyStaticI18n();
 })();
 
 const QUIZ_ID = '00000000-0000-0000-0000-000000000001'; // 對應 SQL 裡插入的官方測驗 ID
@@ -293,6 +372,7 @@ let current = 0;
 let answers = [];      // 存每題選的 option 物件
 let selected = null;
 let currentUser = null;
+let displayedResult = null;  // 目前畫面上顯示的結果物件（供語言切換時重繪）
 
 /* ============================================================ */
 /* 1. 從 Supabase 載入測驗題目與結果定義                          */
@@ -331,7 +411,7 @@ async function loadQuiz() {
 
     document.getElementById('start-screen').classList.remove('hidden');
   } catch (err) {
-    document.getElementById('loading').textContent = '載入測驗失敗，請重新整理頁面 (' + err.message + ')';
+    document.getElementById('loading').textContent = i18n[currentLang].loadFail + ' (' + err.message + ')';
     console.error(err);
   }
 }
@@ -357,17 +437,24 @@ function handleQuizPageLogout() {
   }
 }
 
+// 共用的結果渲染（showResult 與 showSavedResult 都走這裡，語言切換時也重呼叫）
+function renderResultBody(result) {
+  displayedResult = result;
+  document.getElementById('r-emoji').textContent = result.emoji;
+  document.getElementById('r-title').textContent = L(result.label);
+  document.getElementById('r-subtitle').textContent = L(result.subtitle);
+  document.getElementById('r-desc').textContent = L(result.desc);
+  const traits = L(result.traits) || [];
+  document.getElementById('r-traits').innerHTML = traits.map(t => `<span class="trait">${escapeText(t)}</span>`).join('');
+}
+
 // 直接顯示已存的結果（從個人頁面點「重溫結果」過來時使用），不重新計分、不重複存檔
 function showSavedResult(result) {
-  document.getElementById('r-emoji').textContent = result.emoji;
-  document.getElementById('r-title').textContent = result.label;
-  document.getElementById('r-subtitle').textContent = result.subtitle;
-  document.getElementById('r-desc').textContent = result.desc;
-  document.getElementById('r-traits').innerHTML = result.traits.map(t => `<span class="trait">${escapeText(t)}</span>`).join('');
+  renderResultBody(result);
 
   const statusEl = document.getElementById('save-status');
   statusEl.className = 'save-status saved';
-  statusEl.textContent = '📜 這是你重溫的舊測驗結果';
+  statusEl.textContent = i18n[currentLang].savedOld;
 
   document.getElementById('result-card').style.display = 'block';
 }
@@ -426,15 +513,16 @@ function renderQ() {
   const t = i18n[currentLang];
 
   document.getElementById('q-num').textContent = t.qLabel(current + 1, qs.length);
-  document.getElementById('q-text').textContent = q.text;
+  document.getElementById('q-text').textContent = L(q.text);
   document.getElementById('unanswered-warning').classList.remove('show');
+  document.getElementById('unanswered-warning').textContent = t.warning;
 
   const opts = document.getElementById('options');
   opts.innerHTML = '';
   q.options.forEach((o) => {
     const btn = document.createElement('button');
     btn.className = 'opt' + (answers[current]?.id === o.id ? ' selected' : '');
-    btn.textContent = escapeText(o.text);
+    btn.textContent = escapeText(L(o.text));
     btn.onclick = () => selectOpt(o, btn);
     opts.appendChild(btn);
   });
@@ -557,10 +645,7 @@ async function showResult() {
   finalResult = matchResult(finalScores);
 
   document.getElementById('r-emoji').textContent = finalResult.emoji;
-  document.getElementById('r-title').textContent = finalResult.label;
-  document.getElementById('r-subtitle').textContent = finalResult.subtitle;
-  document.getElementById('r-desc').textContent = finalResult.desc;
-  document.getElementById('r-traits').innerHTML = finalResult.traits.map(t => `<span class="trait">${escapeText(t)}</span>`).join('');
+  renderResultBody(finalResult);
 
   document.getElementById('result-card').style.display = 'block';
   document.getElementById('result-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -577,7 +662,7 @@ async function saveResultIfLoggedIn() {
 
   if (!currentUser) {
     statusEl.className = 'save-status guest';
-    statusEl.textContent = '🔓 登入後系統會自動保存你的測驗紀錄，現在是訪客模式';
+    statusEl.textContent = i18n[currentLang].guestMsg;
     return;
   }
 
@@ -588,17 +673,17 @@ async function saveResultIfLoggedIn() {
         user_id: currentUser.id,
         quiz_id: QUIZ_ID,
         result_label: finalResult.id,
-        result_title: finalResult.label,
+        result_title: L(finalResult.label),
         scores: finalScores,
         played_at: new Date().toISOString(),
       }, { onConflict: 'user_id,quiz_id' });
     if (error) throw error;
 
     statusEl.className = 'save-status saved';
-    statusEl.textContent = '✅ 已自動保存到你的測驗紀錄';
+    statusEl.textContent = i18n[currentLang].savedMsg;
   } catch (err) {
     statusEl.className = 'save-status guest';
-    statusEl.textContent = '⚠️ 結果保存失敗，但你還是可以看診斷結果';
+    statusEl.textContent = i18n[currentLang].failMsg;
     console.error(err);
   }
 }
@@ -607,8 +692,9 @@ async function saveResultIfLoggedIn() {
 /* 5. 分享功能                                                     */
 /* ============================================================ */
 function getShareText() {
+  const r = displayedResult || finalResult;
   return {
-    text: `${finalResult.emoji} 我的診斷結果是「${finalResult.label}」(${finalResult.subtitle})\n\n你也來測測你的社交疲勞指數！`,
+    text: i18n[currentLang].shareText(r.emoji, L(r.label), L(r.subtitle)),
     url: window.location.href
   };
 }
@@ -655,7 +741,7 @@ function shareFacebook() {
 }
 function copyResult() {
   const { text, url } = getShareText();
-  navigator.clipboard.writeText(text + '\n' + url).then(() => showToast('已複製！'));
+  navigator.clipboard.writeText(text + '\n' + url).then(() => showToast(i18n[currentLang].copied));
 }
 function showToast(msg, duration = 2500) {
   const t = document.getElementById('toast');
