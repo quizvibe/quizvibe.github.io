@@ -333,6 +333,10 @@ function setLang(l) {
   // 動態內容也要跟著換：作答中就重畫題目，已出結果就重畫結果
   if (quizData && !document.getElementById('quiz-card').classList.contains('hidden')) renderQ();
   if (displayedResult) renderResultBody(displayedResult);
+  if (saveStatusKey) {
+    const el = document.getElementById('save-status');
+    if (el) el.textContent = i18n[currentLang][saveStatusKey];
+  }
 }
 
 // 套用寫死在 HTML 裡的靜態文字
@@ -373,6 +377,17 @@ let answers = [];      // 存每題選的 option 物件
 let selected = null;
 let currentUser = null;
 let displayedResult = null;  // 目前畫面上顯示的結果物件（供語言切換時重繪）
+let saveStatusKey = null;    // 目前狀態列顯示的是哪一則訊息（供語言切換時重譯）
+
+// 設定存檔狀態列。存的是 i18n 的 key 而非翻好的字串，這樣切語言才能重譯
+function setSaveStatus(key, cls) {
+  saveStatusKey = key;
+  const el = document.getElementById('save-status');
+  if (!el) return;
+  el.className = 'save-status ' + cls;
+  el.textContent = i18n[currentLang][key];
+  el.dataset.statusCls = cls;
+}
 
 /* ============================================================ */
 /* 1. 從 Supabase 載入測驗題目與結果定義                          */
@@ -452,9 +467,7 @@ function renderResultBody(result) {
 function showSavedResult(result) {
   renderResultBody(result);
 
-  const statusEl = document.getElementById('save-status');
-  statusEl.className = 'save-status saved';
-  statusEl.textContent = i18n[currentLang].savedOld;
+  setSaveStatus('savedOld', 'saved');
 
   document.getElementById('result-card').style.display = 'block';
 }
@@ -658,11 +671,8 @@ async function showResult() {
 /* 4. 存結果到 quiz_results（登入者才存，訪客顯示提示）             */
 /* ============================================================ */
 async function saveResultIfLoggedIn() {
-  const statusEl = document.getElementById('save-status');
-
   if (!currentUser) {
-    statusEl.className = 'save-status guest';
-    statusEl.textContent = i18n[currentLang].guestMsg;
+    setSaveStatus('guestMsg', 'guest');
     return;
   }
 
@@ -679,11 +689,9 @@ async function saveResultIfLoggedIn() {
       }, { onConflict: 'user_id,quiz_id' });
     if (error) throw error;
 
-    statusEl.className = 'save-status saved';
-    statusEl.textContent = i18n[currentLang].savedMsg;
+    setSaveStatus('savedMsg', 'saved');
   } catch (err) {
-    statusEl.className = 'save-status guest';
-    statusEl.textContent = i18n[currentLang].failMsg;
+    setSaveStatus('failMsg', 'guest');
     console.error(err);
   }
 }
