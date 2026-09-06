@@ -318,6 +318,8 @@ const i18nProfile = {
       return `最佳・${themeNames[theme] || theme}${diffNames[diff] || diff}：${sec.toFixed(0)} 秒`;
     },
     memoryNoBest: '尚無最佳紀錄',
+    sequenceLast: (size, ms) => `最新：${size}×${size}・${formatMs(ms)}`,
+    sequenceBest: (size, ms) => `最佳・${size}×${size}：${formatMs(ms)}`,
     confirmLogout: '要登出嗎？',
   },
   ja: {
@@ -352,6 +354,8 @@ const i18nProfile = {
       return `ベスト・${themeNames[theme] || theme}${diffNames[diff] || diff}：${sec.toFixed(0)} 秒`;
     },
     memoryNoBest: 'ベスト記録なし',
+    sequenceLast: (size, ms) => `最新：${size}×${size}・${formatMs(ms)}`,
+    sequenceBest: (size, ms) => `ベスト・${size}×${size}：${formatMs(ms)}`,
     confirmLogout: 'ログアウトしますか？',
   },
   en: {
@@ -386,6 +390,8 @@ const i18nProfile = {
       return `Best・${themeNames[theme] || theme} ${diffNames[diff] || diff}: ${sec.toFixed(0)}s`;
     },
     memoryNoBest: 'No best record yet',
+    sequenceLast: (size, ms) => `Latest: ${size}×${size}・${formatMs(ms)}`,
+    sequenceBest: (size, ms) => `Best・${size}×${size}: ${formatMs(ms)}`,
     confirmLogout: 'Log out?',
   },
 };
@@ -493,6 +499,21 @@ async function init() {
     cachedRemoteProgress = null;
   }
 
+  // 數字順序大挑戰：獨立查 game_results，不混進上面的 game_progress
+  try {
+    const { data: seqRows, error: seqError } = await supabaseClient
+      .from('game_results')
+      .select('record_detail, created_at')
+      .eq('user_id', currentUser.id)
+      .eq('game_id', 'sequence')
+      .order('created_at', { ascending: false })
+      .limit(200);
+    sequenceResults = (!seqError && seqRows) ? seqRows : [];
+  } catch (err) {
+    console.warn('讀取數字順序大挑戰紀錄失敗:', err);
+    sequenceResults = [];
+  }
+
   loadHistory(); // 確認登入與使用者資料載入完成後才讀取測驗紀錄
 }
 
@@ -504,7 +525,22 @@ const GAMES_META = [
   { id: 'chicken', title: '社畜超度：尖叫鴨進化論', emoji: '🦆', url: 'game-chicken.html' },
   { id: 'bubble', title: '強迫症救星：無限捏泡泡紙', emoji: '🫧', url: 'game-bubble.html' },
   { id: 'memory', title: '記憶力大挑戰', emoji: '🃏', url: 'game-memory.html' },
+  { id: 'sequence', title: '數字順序大挑戰', emoji: '🔢', url: 'game-sequence.html' },
 ];
+
+// 「數字順序大挑戰」的紀錄直接查 game_results 表（game_id = 'sequence'），
+// 不走其他四款遊戲共用的 game_progress 混合物件／mergeProgress 邏輯，
+// 避免改動既有的合併規則、影響到其他遊戲已經上線的資料
+let sequenceResults = [];
+function formatMs(ms) {
+  if (ms == null) return '--:--';
+  const totalCenti = Math.floor(ms / 10);
+  const centi = totalCenti % 100;
+  const totalSec = Math.floor(totalCenti / 100);
+  const sec = totalSec % 60;
+  const min = Math.floor(totalSec / 60);
+  return `${min}:${String(sec).padStart(2, '0')}.${String(centi).padStart(2, '0')}`;
+}
 
 function switchTab(tab) {
   document.getElementById('tab-quiz').classList.toggle('active', tab === 'quiz');
@@ -580,6 +616,21 @@ function renderGameHistory() {
           lines.push(t.memoryBestCombo(theme, diff, record.timeSec));
         });
       }
+    } else if (g.id === 'sequence' && sequenceResults.length > 0) {
+      const latest = sequenceResults[0].record_detail;
+      lines = [t.sequenceLast(latest.grid_size, latest.time_ms)];
+      const bestBySize = {};
+      sequenceResults.forEach(r => {
+        const d = r.record_detail;
+        if (d && d.grid_size != null && d.time_ms != null) {
+          if (!(d.grid_size in bestBySize) || d.time_ms < bestBySize[d.grid_size]) {
+            bestBySize[d.grid_size] = d.time_ms;
+          }
+        }
+      });
+      Object.keys(bestBySize).map(Number).sort((a, b) => a - b).forEach(size => {
+        lines.push(t.sequenceBest(size, bestBySize[size]));
+      });
     }
 
     const recordHtml = lines.map(l => `<div class="ghi-line">${l}</div>`).join('');

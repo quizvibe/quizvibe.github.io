@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>數字順序大挑戰 - QuizDrop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans TC', sans-serif; }
+  html { overflow-y: scroll; }
+  body { background: #f7f2e9; color: #4a3f35; min-height: 100vh; padding-bottom: 60px; }
+  .hidden { display: none !important; }
+
+  .topbar { height: 58px; background: #fffdf8; border-bottom: 1px solid #ece4d4; display: flex; align-items: center; padding: 0 16px; gap: 12px; position: sticky; top: 0; z-index: 50; }
+  .back { color: #9c8f7e; font-size: 13px; text-decoration: none; }
+  .spacer { flex: 1; }
+
+  .qt-lang-pill { display: flex; gap: 3px; background: #f1e9da; border-radius: 10px; padding: 3px; }
+  .qt-lang-pill button { padding: 4px 9px; border-radius: 8px; font-size: 11.5px; font-weight: 600; color: #9c8f7e; border: none; background: none; cursor: pointer; transition: all .2s; }
+  .qt-lang-pill button.active { background: #fffdf8; color: #a9633a; box-shadow: 0 1px 4px rgba(80,60,30,0.1); }
+
+  .qt-btn { padding: 7px 13px; border-radius: 4px; font-size: 12.5px; font-weight: 700; border: 1.5px solid #d9cbb3; background: #fffdf8; cursor: pointer; color: #4a3f35; }
+  .qt-btn.qt-signup { background: #4a3f35; color: #fff; border: none; }
+
+  .qt-user-wrap { position: relative; }
+  .qt-user-chip { display: flex; align-items: center; gap: 7px; background: #f1e9da; border-radius: 10px; padding: 5px 12px 5px 5px; cursor: pointer; font-size: 12.5px; font-weight: 600; color: #4a3f35; }
+  .qt-avatar { width: 24px; height: 24px; border-radius: 50%; background: #a9633a; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 800; }
+  .qt-dropdown {
+    position: absolute; top: 100%; right: 0; margin-top: 8px; background: #fffdf8;
+    border: 1px solid #ece4d4; border-radius: 12px; min-width: 160px;
+    box-shadow: 0 12px 32px -8px rgba(80,60,30,0.15); overflow: hidden; z-index: 200; display: none;
+  }
+  .qt-dropdown.show { display: block; }
+  .qt-dropdown button { width: 100%; text-align: left; padding: 12px 16px; background: none; border: none; color: #4a3f35; font-size: 13.5px; cursor: pointer; transition: background .15s; font-family: inherit; }
+  .qt-dropdown button:hover { background: #f7f2e9; }
+  .qt-dropdown button.danger { color: #b14a35; }
+
+  .wrap { max-width: 480px; margin: 0 auto; padding: 24px 20px; text-align: center; }
+  .game-title { font-size: 21px; font-weight: 900; margin-bottom: 4px; color: #4a3f35; }
+  .game-sub { color: #9c8f7e; font-size: 13px; margin-bottom: 18px; line-height: 1.6; }
+
+  /* ---- 格數選擇 ---- */
+  .size-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
+  .size-chip { padding: 9px 0; width: 44px; border-radius: 10px; font-size: 13px; font-weight: 800; border: 1.5px solid #d9cbb3; background: #fffdf8; cursor: pointer; color: #4a3f35; }
+  .size-chip.active { border-color: #a9633a; color: #fff; background: #a9633a; }
+
+  .start-btn { width: 100%; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 800; border: none; background: #4a3f35; color: #fff; cursor: pointer; margin-bottom: 20px; }
+  .start-btn:active { transform: translateY(1px); }
+
+  /* ---- 計時器 ---- */
+  .timer-display { font-size: 34px; font-weight: 900; font-variant-numeric: tabular-nums; margin-bottom: 14px; color: #4a3f35; }
+  .mistake-display { font-size: 12.5px; color: #b14a35; font-weight: 700; margin-bottom: 10px; min-height: 16px; }
+
+  /* ---- 遊戲格子 ---- */
+  .board-wrap { margin: 0 auto 20px; max-width: 420px; }
+  .board { display: grid; gap: 6px; }
+  .cell {
+    aspect-ratio: 1 / 1; border-radius: 8px; border: 1.5px solid #d9cbb3; background: #fffdf8;
+    display: flex; align-items: center; justify-content: center; font-weight: 900;
+    color: #4a3f35; cursor: pointer; user-select: none; transition: background .12s, color .12s, transform .08s;
+  }
+  .cell:active { transform: scale(0.94); }
+  .cell.done { background: #a9633a; color: #fff; border-color: #a9633a; cursor: default; opacity: .55; }
+  .cell.shake { animation: cellShake .3s; border-color: #d83b3b; }
+  @keyframes cellShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+
+  .result-panel { margin-top: 8px; background: #fffdf8; border: 2px solid #d9cbb3; border-radius: 16px; padding: 20px; display: none; text-align: left; }
+  .result-panel.show { display: block; }
+  .result-time { font-size: 30px; font-weight: 900; margin-bottom: 4px; text-align: center; color: #a9633a; }
+  .result-text { font-size: 13px; line-height: 1.6; color: #6b5d4d; margin-bottom: 14px; text-align: center; }
+  .result-btns { display: flex; gap: 8px; margin-bottom: 18px; }
+  .result-btns button { flex: 1; padding: 11px; border-radius: 10px; font-weight: 700; font-size: 13px; border: none; cursor: pointer; }
+  .btn-copy-result { background: #4a3f35; color: #fff; }
+  .btn-again { background: #a9633a; color: #fff; }
+
+  .lb-submit { border-top: 1px solid #ece4d4; padding-top: 16px; }
+  .lb-submit-label { font-size: 12px; font-weight: 800; color: #999; margin-bottom: 8px; }
+  .lb-submit-row { display: flex; gap: 8px; }
+  .lb-submit-row input {
+    flex: 1; padding: 10px 12px; border-radius: 10px; border: 1.5px solid #d9cbb3; font-size: 13.5px;
+    font-family: inherit; background: #fff;
+  }
+  .lb-submit-row button {
+    padding: 10px 16px; border-radius: 10px; border: none; font-weight: 700; font-size: 13px; cursor: pointer;
+    background: #a9633a; color: #fff; white-space: nowrap;
+  }
+  .lb-submit-row button:disabled { background: #d9cbb3; cursor: not-allowed; }
+  .lb-status { font-size: 12px; margin-top: 8px; min-height: 16px; }
+  .lb-status.ok { color: #2da44e; }
+  .lb-status.err { color: #d83b3b; }
+
+  .lb-panel { margin-top: 20px; background: #fffdf8; border: 1.5px solid #d9cbb3; border-radius: 16px; padding: 18px; text-align: left; }
+  .lb-title { font-size: 13.5px; font-weight: 800; margin-bottom: 10px; color: #4a3f35; }
+  .lb-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #ece4d4; font-size: 13px; }
+  .lb-rank { width: 22px; flex-shrink: 0; font-weight: 800; color: #9c8f7e; text-align: center; }
+  .lb-rank.top1 { color: #d4a017; }
+  .lb-rank.top2 { color: #9c9c9c; }
+  .lb-rank.top3 { color: #b5651d; }
+  .lb-nick { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+  .lb-time { font-weight: 800; color: #a9633a; font-variant-numeric: tabular-nums; }
+  .lb-empty { font-size: 12.5px; color: #bbb; padding: 6px 0; }
+
+  .recent-list { margin-top: 20px; text-align: left; }
+  .recent-title { font-size: 12px; font-weight: 800; color: #999; margin-bottom: 8px; }
+  .recent-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ece4d4; font-size: 12.5px; color: #6b5d4d; }
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="games.html" class="back" data-i18n-back>← 糞Game大廳</a>
+  <div class="spacer"></div>
+  <div class="qt-lang-pill">
+    <button class="active" onclick="setLang('zh')" data-lang-btn="zh">中</button>
+    <button onclick="setLang('ja')" data-lang-btn="ja">日</button>
+    <button onclick="setLang('en')" data-lang-btn="en">EN</button>
+  </div>
+  <div id="qt-auth-buttons" style="display:flex; gap:8px;">
+    <button class="qt-btn qt-login" onclick="window.location.href='index.html?auth=login'">登入</button>
+    <button class="qt-btn qt-signup" onclick="window.location.href='index.html?auth=signup'">註冊</button>
+  </div>
+  <div id="qt-user-chip-wrap" class="hidden qt-user-wrap">
+    <div class="qt-user-chip" onclick="toggleUserDropdown()">
+      <div class="qt-avatar" id="qt-avatar-initial">U</div>
+      <span id="qt-username-display">用戶</span>
+    </div>
+    <div class="qt-dropdown" id="qt-dropdown">
+      <button onclick="window.location.href='profile.html'">👤 個人頁面</button>
+      <button class="danger" onclick="handleLogoutGames()">🚪 登出</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="game-title" id="game-title-text">🔢 數字順序大挑戰</div>
+  <div class="game-sub" id="game-sub-text">從 1 開始依序點到最後一個數字，格子越大越燒腦，比比看誰手速最快！</div>
+
+  <div id="setup-view">
+    <div class="size-row" id="size-row"></div>
+    <button class="start-btn" id="start-btn" onclick="startGame()">開始挑戰</button>
+  </div>
+
+  <div id="play-view" class="hidden">
+    <div class="timer-display led" id="timer-display">0:00.00</div>
+    <div class="mistake-display" id="mistake-display"></div>
+    <div class="board-wrap">
+      <div class="board" id="board"></div>
+    </div>
+  </div>
+
+  <div class="result-panel" id="result-panel">
+    <div class="result-time" id="result-time"></div>
+    <div class="result-text" id="result-text"></div>
+    <div class="result-btns">
+      <button class="btn-copy-result" onclick="copyResultText()" id="copy-btn-text">📋 複製成績</button>
+      <button class="btn-again" onclick="resetToSetup()" id="again-btn-text">🔁 再玩一次</button>
+    </div>
+
+    <div class="lb-submit">
+      <div class="lb-submit-label" id="lb-submit-label">上傳到排行榜（需填暱稱）</div>
+      <div class="lb-submit-row">
+        <input type="text" id="nickname-input" maxlength="20" oninput="onNicknameInput()" placeholder="輸入暱稱">
+        <button id="submit-btn" onclick="submitToLeaderboard()" disabled>送出</button>
+      </div>
+      <div class="lb-status" id="lb-status"></div>
+    </div>
+  </div>
+
+  <div class="lb-panel">
+    <div class="lb-title" id="lb-title-text">🏆 <span id="lb-title-size">5×5</span> 排行榜（前 20 名）</div>
+    <div id="lb-list"></div>
+  </div>
+
+  <div class="recent-list">
+    <div class="recent-title" id="recent-title-text">📋 最近 10 次紀錄（本機）</div>
+    <div id="recent-list"></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://xsflpzozgdgbtrtdzdlj.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzZmxwem96Z2RnYnRydGR6ZGxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTMyMzUsImV4cCI6MjA5NzE4OTIzNX0.Uyi5dYa73h0JJ9KwT2bP0C79wV_H-PoYneiR5xsbT6I';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let currentUser = null;
+
+function getGuestId() {
+  let gid = localStorage.getItem('quizdrop_guest_id');
+  if (!gid) { gid = 'guest_' + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('quizdrop_guest_id', gid); }
+  return gid;
+}
+
+/* ---------------- 遊戲狀態 ---------------- */
+let gridSize = 5;
+let order = [];        // 洗牌後的數字排列
+let nextExpected = 1;  // 下一個要按的數字
+let mistakes = 0;
+let startTime = 0;
+let timerHandle = null;
+let elapsedMsFinal = 0;
+let gameActive = false;
+
+function fisherYatesShuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function renderSizeRow() {
+  const row = document.getElementById('size-row');
+  row.innerHTML = '';
+  for (let n = 3; n <= 8; n++) {
+    const btn = document.createElement('button');
+    btn.className = 'size-chip' + (n === gridSize ? ' active' : '');
+    btn.textContent = `${n}×${n}`;
+    btn.onclick = () => { gridSize = n; renderSizeRow(); renderLeaderboard(); };
+    row.appendChild(btn);
+  }
+}
+
+function startGame() {
+  const total = gridSize * gridSize;
+  order = fisherYatesShuffle(Array.from({ length: total }, (_, i) => i + 1));
+  nextExpected = 1;
+  mistakes = 0;
+
+  document.getElementById('setup-view').classList.add('hidden');
+  document.getElementById('play-view').classList.remove('hidden');
+  document.getElementById('result-panel').classList.remove('show');
+  document.getElementById('mistake-display').textContent = '';
+
+  const board = document.getElementById('board');
+  board.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+  board.innerHTML = order.map(num => {
+    const size = gridSize >= 7 ? '15px' : gridSize >= 5 ? '18px' : '22px';
+    return `<div class="cell" style="font-size:${size}" data-num="${num}" onclick="onCellClick(this, ${num})">${num}</div>`;
+  }).join('');
+
+  gameActive = true;
+  startTime = performance.now();
+  timerHandle = requestAnimationFrame(timerLoop);
+}
+
+function timerLoop() {
+  if (!gameActive) return;
+  const elapsed = performance.now() - startTime;
+  document.getElementById('timer-display').textContent = formatElapsed(elapsed);
+  timerHandle = requestAnimationFrame(timerLoop);
+}
+
+function formatElapsed(ms) {
+  let totalCenti = Math.floor(ms / 10);
+  if (totalCenti < 0) totalCenti = 0;
+  const centi = totalCenti % 100;
+  const totalSec = Math.floor(totalCenti / 100);
+  const sec = totalSec % 60;
+  const min = Math.floor(totalSec / 60);
+  return `${min}:${String(sec).padStart(2, '0')}.${String(centi).padStart(2, '0')}`;
+}
+
+function onCellClick(el, num) {
+  if (!gameActive || el.classList.contains('done')) return;
+  if (num === nextExpected) {
+    el.classList.add('done');
+    nextExpected++;
+    if (nextExpected > gridSize * gridSize) {
+      finishGame();
+    }
+  } else {
+    mistakes++;
+    document.getElementById('mistake-display').textContent = i18nSeq[currentLang].mistakeCount(mistakes);
+    el.classList.remove('shake');
+    void el.offsetWidth;
+    el.classList.add('shake');
+  }
+}
+
+function finishGame() {
+  gameActive = false;
+  cancelAnimationFrame(timerHandle);
+  elapsedMsFinal = Math.round(performance.now() - startTime);
+  document.getElementById('timer-display').textContent = formatElapsed(elapsedMsFinal);
+
+  document.getElementById('play-view').classList.add('hidden');
+  document.getElementById('setup-view').classList.remove('hidden');
+
+  showResultPanel();
+  pushRecentResult(gridSize, elapsedMsFinal, mistakes);
+
+  // 只要有登入，每玩一次就自動存到個人紀錄（跟排行榜是否上傳無關，不需要暱稱）
+  if (currentUser) {
+    saveGameResult('sequence', { grid_size: gridSize, time_ms: elapsedMsFinal, mistakes });
+  }
+
+  // 重置暱稱輸入與送出狀態，避免沿用上一局的內容
+  document.getElementById('nickname-input').value = '';
+  document.getElementById('submit-btn').disabled = true;
+  document.getElementById('lb-status').textContent = '';
+  document.getElementById('lb-status').className = 'lb-status';
+
+  renderLeaderboard();
+}
+
+function resetToSetup() {
+  document.getElementById('result-panel').classList.remove('show');
+  document.getElementById('setup-view').classList.remove('hidden');
+  document.getElementById('play-view').classList.add('hidden');
+}
+
+function showResultPanel() {
+  const t = i18nSeq[currentLang];
+  document.getElementById('result-time').textContent = formatElapsed(elapsedMsFinal);
+  document.getElementById('result-text').textContent = t.resultText(gridSize, mistakes);
+  document.getElementById('result-panel').classList.add('show');
+}
+
+function copyResultText() {
+  const t = i18nSeq[currentLang];
+  const text = t.shareTemplate(gridSize, formatElapsed(elapsedMsFinal), mistakes);
+  navigator.clipboard.writeText(text).then(() => alert(t.copySuccess));
+}
+
+/* ---------------- 排行榜上傳與顯示 ---------------- */
+function onNicknameInput() {
+  const val = document.getElementById('nickname-input').value.trim();
+  document.getElementById('submit-btn').disabled = val.length === 0;
+}
+
+async function submitToLeaderboard() {
+  const nickname = document.getElementById('nickname-input').value.trim();
+  const t = i18nSeq[currentLang];
+  if (!nickname) return; // 按鈕本來就會被 disable，這裡多一層保險
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; // 先停用避免連點造成重複上傳（競態條件）
+  const statusEl = document.getElementById('lb-status');
+  try {
+    await supabaseClient.from('game_leaderboard').insert({
+      game_id: 'sequence',
+      grid_size: gridSize,
+      nickname,
+      time_ms: elapsedMsFinal,
+      mistakes,
+      user_id: currentUser?.id || null,
+      guest_id: currentUser ? null : getGuestId(),
+    });
+    statusEl.textContent = t.submitSuccess;
+    statusEl.className = 'lb-status ok';
+    renderLeaderboard();
+  } catch (err) {
+    console.warn('上傳排行榜失敗:', err);
+    statusEl.textContent = t.submitFail;
+    statusEl.className = 'lb-status err';
+    btn.disabled = false;
+  }
+}
+
+async function renderLeaderboard() {
+  document.getElementById('lb-title-size').textContent = `${gridSize}×${gridSize}`;
+  const listEl = document.getElementById('lb-list');
+  const t = i18nSeq[currentLang];
+  try {
+    const { data, error } = await supabaseClient
+      .from('game_leaderboard')
+      .select('nickname, time_ms')
+      .eq('game_id', 'sequence')
+      .eq('grid_size', gridSize)
+      .order('time_ms', { ascending: true })
+      .limit(20);
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      listEl.innerHTML = `<div class="lb-empty">${t.leaderboardEmpty}</div>`;
+      return;
+    }
+    listEl.innerHTML = data.map((row, i) => {
+      const rank = i + 1;
+      const rankCls = rank === 1 ? 'top1' : rank === 2 ? 'top2' : rank === 3 ? 'top3' : '';
+      return `
+        <div class="lb-row">
+          <span class="lb-rank ${rankCls}">${rank}</span>
+          <span class="lb-nick">${escapeHtml(row.nickname)}</span>
+          <span class="lb-time">${formatElapsed(row.time_ms)}</span>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    console.warn('讀取排行榜失敗:', err);
+    listEl.innerHTML = `<div class="lb-empty">${t.leaderboardLoadFail}</div>`;
+  }
+}
+
+function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+/* ---------------- 個人紀錄（登入者自動存，跟排行榜上傳分開） ---------------- */
+async function saveGameResult(gameId, recordDetail) {
+  try {
+    await supabaseClient.from('game_results').insert({
+      user_id: currentUser?.id || null,
+      guest_id: currentUser ? null : getGuestId(),
+      game_id: gameId,
+      record_detail: recordDetail,
+    });
+  } catch (err) { console.warn('紀錄遊戲結果失敗（不影響遊玩）:', err); }
+}
+
+/* ---------------- 訪客／所有人的本機最近紀錄（固定只留最近 10 次） ---------------- */
+const RECENT_KEY = 'quizdrop_sequence_recent';
+function pushRecentResult(size, ms, mistakeCount) {
+  let recent = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+  recent.unshift({ size, ms, mistakes: mistakeCount, at: Date.now() });
+  recent = recent.slice(0, 10);
+  localStorage.setItem(RECENT_KEY, JSON.stringify(recent));
+  renderRecentList();
+}
+
+function renderRecentList() {
+  const recent = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+  const listEl = document.getElementById('recent-list');
+  const t = i18nSeq[currentLang];
+  document.getElementById('recent-title-text').textContent = t.recentTitle;
+  if (recent.length === 0) {
+    listEl.innerHTML = `<div style="font-size:12.5px;color:#bbb;">${t.recentEmpty}</div>`;
+    return;
+  }
+  listEl.innerHTML = recent.map(r => `
+    <div class="recent-row">
+      <span>${t.recentRow(r.size)}</span>
+      <span>${formatElapsed(r.ms)}</span>
+    </div>
+  `).join('');
+}
+
+/* ---------------- 登入狀態判斷 + 頭像顯示（不碰其他遊戲共用的 game_progress 混合物件，避免互相影響） ---------------- */
+async function initAuthUI() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session?.user) {
+    currentUser = session.user;
+    showLoggedInUI(session.user);
+  }
+  supabaseClient.auth.onAuthStateChange((event, newSession) => {
+    if (newSession?.user) {
+      currentUser = newSession.user;
+      showLoggedInUI(newSession.user);
+    } else {
+      document.getElementById('qt-auth-buttons').classList.remove('hidden');
+      document.getElementById('qt-user-chip-wrap').classList.add('hidden');
+      currentUser = null;
+    }
+  });
+}
+
+async function showLoggedInUI(user) {
+  document.getElementById('qt-auth-buttons').classList.add('hidden');
+  document.getElementById('qt-user-chip-wrap').classList.remove('hidden');
+
+  let nickname = user.email?.split('@')[0] || '用戶';
+  try {
+    const { data: userRow } = await supabaseClient.from('users').select('display_name').eq('id', user.id).single();
+    if (userRow?.display_name) nickname = userRow.display_name;
+  } catch (err) {
+    console.warn('讀取暱稱失敗，改用 email 帳號名顯示:', err);
+  }
+
+  document.getElementById('qt-username-display').textContent = nickname;
+  document.getElementById('qt-avatar-initial').textContent = nickname.charAt(0).toUpperCase();
+}
+
+function toggleUserDropdown() {
+  document.getElementById('qt-dropdown').classList.toggle('show');
+}
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('qt-user-chip-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('qt-dropdown')?.classList.remove('show');
+  }
+});
+function handleLogoutGames() {
+  const t = i18nSeq[currentLang];
+  if (confirm(t.confirmLogout)) {
+    supabaseClient.auth.signOut().then(() => { window.location.reload(); });
+  }
+}
+
+/* ---------------- 語言切換 ---------------- */
+const i18nSeq = {
+  zh: {
+    back: '← 糞Game大廳', login: '登入', signup: '註冊', profile: '👤 個人頁面', logout: '🚪 登出', confirmLogout: '要登出嗎？',
+    gameTitle: '🔢 數字順序大挑戰', gameSub: '從 1 開始依序點到最後一個數字，格子越大越燒腦，比比看誰手速最快！',
+    startBtn: '開始挑戰',
+    mistakeCount: (n) => `😵 按錯 ${n} 次`,
+    resultText: (size, m) => `${size}×${size} 挑戰完成！按錯 ${m} 次。`,
+    shareTemplate: (size, time, m) => `🔢 QuizDrop 數字順序大挑戰\n${size}×${size}，成績：${time}（按錯 ${m} 次）\n\n👉 來挑戰我：https://www.quizdrop.me/game-sequence.html`,
+    copySuccess: '已複製！貼到 Threads 分享吧',
+    lbSubmitLabel: '上傳到排行榜（需填暱稱）', nicknamePlaceholder: '輸入暱稱', submitBtn: '送出',
+    submitSuccess: '✅ 已上傳到排行榜！', submitFail: '⚠️ 上傳失敗，請稍後再試',
+    leaderboardEmpty: '還沒有人上榜，快來搶第一名！', leaderboardLoadFail: '排行榜載入失敗',
+    recentTitle: '📋 最近 10 次紀錄（本機）', recentEmpty: '還沒有紀錄，快來挑戰第一次！',
+    recentRow: (size) => `${size}×${size}`,
+  },
+  ja: {
+    back: '← ゲームロビー', login: 'ログイン', signup: '登録', profile: '👤 プロフィール', logout: '🚪 ログアウト', confirmLogout: 'ログアウトしますか？',
+    gameTitle: '🔢 数字順番チャレンジ', gameSub: '1から順番に最後の数字までタップ！マスが大きいほど頭を使う、手の速さを競おう！',
+    startBtn: 'スタート',
+    mistakeCount: (n) => `😵 ミス ${n} 回`,
+    resultText: (size, m) => `${size}×${size} クリア！ミス ${m} 回。`,
+    shareTemplate: (size, time, m) => `🔢 QuizDrop 数字順番チャレンジ\n${size}×${size}、タイム：${time}（ミス ${m} 回）\n\n👉 挑戦してみて：https://www.quizdrop.me/game-sequence.html`,
+    copySuccess: 'コピーしました！Threadsでシェアしよう',
+    lbSubmitLabel: 'ランキングに登録（ニックネーム必須）', nicknamePlaceholder: 'ニックネームを入力', submitBtn: '送信',
+    submitSuccess: '✅ ランキングに登録しました！', submitFail: '⚠️ 送信に失敗しました、後でもう一度お試しください',
+    leaderboardEmpty: 'まだ誰も登録していません、1位を狙おう！', leaderboardLoadFail: 'ランキングの読み込みに失敗しました',
+    recentTitle: '📋 直近10回の記録（このデバイス）', recentEmpty: 'まだ記録がありません、挑戦してみよう！',
+    recentRow: (size) => `${size}×${size}`,
+  },
+  en: {
+    back: '← Game Lobby', login: 'Log in', signup: 'Sign up', profile: '👤 Profile', logout: '🚪 Log out', confirmLogout: 'Log out?',
+    gameTitle: '🔢 Number Order Challenge', gameSub: 'Tap the numbers in order starting from 1. Bigger grids, bigger brain workout — race the clock!',
+    startBtn: 'Start',
+    mistakeCount: (n) => `😵 ${n} mistake${n === 1 ? '' : 's'}`,
+    resultText: (size, m) => `${size}×${size} cleared! ${m} mistake${m === 1 ? '' : 's'}.`,
+    shareTemplate: (size, time, m) => `🔢 QuizDrop Number Order Challenge\n${size}×${size}, time: ${time} (${m} mistakes)\n\n👉 Try to beat me: https://www.quizdrop.me/game-sequence.html`,
+    copySuccess: 'Copied! Paste it into Threads',
+    lbSubmitLabel: 'Submit to leaderboard (nickname required)', nicknamePlaceholder: 'Enter nickname', submitBtn: 'Submit',
+    submitSuccess: '✅ Submitted to the leaderboard!', submitFail: '⚠️ Submission failed, please try again later',
+    leaderboardEmpty: 'No entries yet — be the first!', leaderboardLoadFail: 'Failed to load leaderboard',
+    recentTitle: '📋 Last 10 runs (this device)', recentEmpty: 'No runs yet — give it a try!',
+    recentRow: (size) => `${size}×${size}`,
+  },
+};
+
+let currentLang = 'zh';
+
+function setLang(l) {
+  currentLang = l;
+  document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === l));
+  localStorage.setItem('quizdrop_lang', l);
+  applyLang();
+}
+
+function applyLang() {
+  const t = i18nSeq[currentLang];
+  document.querySelector('.back').textContent = t.back;
+  document.getElementById('game-title-text').textContent = t.gameTitle;
+  document.getElementById('game-sub-text').textContent = t.gameSub;
+  document.getElementById('start-btn').textContent = t.startBtn;
+  document.getElementById('copy-btn-text').textContent = '📋 ' + (currentLang === 'zh' ? '複製成績' : currentLang === 'ja' ? '記録をコピー' : 'Copy result');
+  document.getElementById('again-btn-text').textContent = '🔁 ' + (currentLang === 'zh' ? '再玩一次' : currentLang === 'ja' ? 'もう一度' : 'Play again');
+  document.getElementById('lb-submit-label').textContent = t.lbSubmitLabel;
+  document.getElementById('nickname-input').placeholder = t.nicknamePlaceholder;
+  document.getElementById('submit-btn').textContent = t.submitBtn;
+
+  const loginBtn = document.querySelector('.qt-login');
+  const signupBtn = document.querySelector('.qt-signup');
+  if (loginBtn) loginBtn.textContent = t.login;
+  if (signupBtn) signupBtn.textContent = t.signup;
+  const dropdownBtns = document.querySelectorAll('#qt-dropdown button');
+  if (dropdownBtns[0]) dropdownBtns[0].textContent = t.profile;
+  if (dropdownBtns[1]) dropdownBtns[1].textContent = t.logout;
+
+  renderLeaderboard();
+  renderRecentList();
+
+  if (mistakes > 0 && !gameActive) {
+    // 語言切換時，如果結果面板正開著，重新渲染文字
+  }
+  if (document.getElementById('result-panel').classList.contains('show')) {
+    document.getElementById('result-text').textContent = t.resultText(gridSize, mistakes);
+  }
+  if (gameActive) {
+    document.getElementById('mistake-display').textContent = mistakes > 0 ? t.mistakeCount(mistakes) : '';
+  }
+}
+
+(function initLangFromStorage() {
+  const saved = localStorage.getItem('quizdrop_lang') || 'zh';
+  currentLang = saved;
+  document.querySelectorAll('[data-lang-btn]').forEach(b => b.classList.toggle('active', b.dataset.langBtn === saved));
+})();
+
+renderSizeRow();
+applyLang();
+initAuthUI();
+</script>
+</body>
+</html>
